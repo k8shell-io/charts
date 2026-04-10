@@ -22,12 +22,12 @@ usage() {
 Usage: $(basename "$0") [OPTIONS]
 
 Options:
-  -v, --version VERSION     Helm chart version         (default: latest)
-  -n, --namespace NS        k8shell release namespace  (default: $NAMESPACE)
-  -t, --target-namespace NS Workspace target namespace (default: $TARGET_NAMESPACE)
-      --node-port PORT      Expose SSH via NodePort     (default: $NODE_PORT)
+  -v, --version VERSION      Helm chart version (default: latest)
+  -n, --namespace NS         k8shell release namespace (default: $NAMESPACE)
+  -t, --target-namespace NS  Workspace target namespace (default: $TARGET_NAMESPACE)
+      --node-port PORT       Expose SSH via NodePort (default: $NODE_PORT)
       --disable-node-port    Disable NodePort SSH service
-  -h, --help                Show this help message
+  -h, --help                 Show this help message
 EOF
     exit 0
 }
@@ -176,9 +176,9 @@ check_prereqs
 
 mkdir -p "$QUICKSTART_DIR"
 
-serverKeyDesc=$(describe_ec_key "$QUICKSTART_DIR/server-key.pem")
-issuerKeyDesc=$(describe_ec_key "$QUICKSTART_DIR/issuer-key.pem")
-adminKeySource=$(detect_admin_key_source)
+serverKeyDesc=$(describe_ec_key "$QUICKSTART_DIR/server-key.pem" | sed "s|$HOME|\$HOME|g")
+issuerKeyDesc=$(describe_ec_key "$QUICKSTART_DIR/issuer-key.pem" | sed "s|$HOME|\$HOME|g")
+adminKeySource=$(detect_admin_key_source | sed "s|$HOME|\$HOME|g")
 
 if kubectl get namespace "$TARGET_NAMESPACE" &>/dev/null; then
     targetNsStatus="exists"
@@ -217,7 +217,7 @@ fi
 serverKey=$(ensure_ec_key "$QUICKSTART_DIR/server-key.pem")
 issuerKey=$(ensure_ec_key "$QUICKSTART_DIR/issuer-key.pem")
 adminKey=$(generate_admin_public_key)
-privateKeyPath=$(resolve_private_key_path)
+privateKeyPath=$(resolve_private_key_path | sed "s|$HOME|\$HOME|g")
 
 nodeIp=""
 if [ "$NODE_PORT_ENABLED" = "true" ]; then
