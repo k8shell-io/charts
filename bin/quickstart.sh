@@ -219,6 +219,14 @@ issuerKey=$(ensure_ec_key "$QUICKSTART_DIR/issuer-key.pem")
 adminKey=$(generate_admin_public_key)
 privateKeyPath=$(resolve_private_key_path)
 
+nodeIp=""
+if [ "$NODE_PORT_ENABLED" = "true" ]; then
+    nodeIp=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="ExternalIP")].address}' 2>/dev/null || true)
+    if [ -z "$nodeIp" ]; then
+        nodeIp=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}' 2>/dev/null || true)
+    fi
+fi
+
 info "Running helm $helmAction for k8shell ${CHART_VERSION:-latest}..."
 
 helm $helmAction k8shell oci://registry.k8shell.io/charts/k8shell \
@@ -247,13 +255,7 @@ cat <<EOF
   1. Connect to the workspace 'ubuntu' as 'admin' user:
 $(if [ "$NODE_PORT_ENABLED" = "true" ]; then
 echo ""
-echo "     Get the node IP:"
-echo ""
-echo "       NODE_IP=\$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type==\"ExternalIP\")].address}')"
-echo ""
-echo "     Connect:"
-echo ""
-echo "       ssh -p $NODE_PORT -i ${privateKeyPath} admin~ubuntu@\$NODE_IP"
+echo "       ssh -p $NODE_PORT -i ${privateKeyPath} admin~ubuntu@${nodeIp:-<node-ip>}"
 else
 echo ""
 echo "     Start port-forwarding:"
