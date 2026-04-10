@@ -1,8 +1,8 @@
-# charts
-
 [![Build k8shell chart](https://github.com/k8shell-io/charts/actions/workflows/chart-k8shell.yaml/badge.svg)](https://github.com/k8shell-io/charts/actions/workflows/chart-k8shell.yaml)
 
-Helm charts for [k8shell](https://k8shell.io) — Cloud-native Development Environment
+# charts
+
+Helm charts for [k8shell](https://k8shell.io) — Cloud-native Development Environment.
 
 ## Charts
 
