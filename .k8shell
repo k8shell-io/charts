@@ -14,7 +14,3 @@ blueprint:
         go env -w GOPRIVATE=github.com/k8shell-io/*
         cd $HOME/$GIT_REPONAME
         GOPATH="$HOME/go" go mod tidy
-
-  apps:
-    vscode:
-      enabled: true
