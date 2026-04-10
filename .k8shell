@@ -1,0 +1,20 @@
+blueprint:
+  template: development
+  shell: /bin/zsh
+  image: workspaces/dev:1.10
+  sudo: true
+  resources:
+    cpu: 8
+    memory: 8Gi
+  network:
+    networkPolicy: system
+
+  initScripts:
+    - init_repo@&: |
+        go env -w GOPRIVATE=github.com/k8shell-io/*
+        cd $HOME/$GIT_REPONAME
+        GOPATH="$HOME/go" go mod tidy
+
+  apps:
+    vscode:
+      enabled: true
