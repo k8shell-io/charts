@@ -1,0 +1,23 @@
+{{- range .Values.identity.users }}
+{{- $pwd := default "" .password }}
+{{- $pub := default "" .publicKey }}
+{{- if or (ne $pwd "") (ne $pub "") }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: identity-user-{{ .username }}-credentials
+  labels:
+    {{- include "k8shell.labels" $ | nindent 4 }}
+type: Opaque
+stringData:
+{{- if ne $pwd "" }}
+  password: {{ $pwd | quote }}
+{{- end }}
+{{- if ne $pub "" }}
+  publickey: |
+    {{ $pub | trim }}
+{{- end }}
+{{- end }}
+{{- end }}
+

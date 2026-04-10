@@ -1,0 +1,71 @@
+{{- if .Values.session.enabled }}
+{{- if not .Values.postgresql.enabled -}}
+{{- fail "session requires a database" -}}
+{{- end -}}
+{{- if not .Values.nats.enabled -}}
+{{- fail "session service requires NATS" -}}
+{{- end -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: session-config
+  labels:
+    app: session
+data:
+  config.yaml: |
+    # grpc server
+    grpc:
+      port: 9010
+
+      {{- if .Values.certManager.enabled }}
+      enableTLS: true
+      certFile: /etc/tls/session/tls.crt
+      keyFile: /etc/tls/session/tls.key
+      {{- else }}
+      enableTLS: false
+      {{- end }}
+
+      # JWT required claims for authentication
+      authEnabled: {{ .Values.authEnabled }}
+      audience: session
+      allowed:
+        - serviceAccount: provisioner
+        - serviceAccount: api-server
+        - serviceAccount: ssh-proxy
+
+    nats:
+      enabled: {{ .Values.nats.enabled }}
+      url: nats://{{ .Values.nats.host }}:{{ .Values.nats.port }}
+      username: {{ .Values.nats.username }}
+      password: ${NATS_K8SHELL_PASSWORD}
+
+    # DB configuration
+    db:
+      enabled: {{ .Values.postgresql.enabled }}
+      database: {{ .Values.postgresql.database }}
+      hostname: {{ .Values.postgresql.host }}
+      port: {{ .Values.postgresql.port }}
+      username: ${POSTGRES_USERNAME}
+      password: ${POSTGRES_PASSWORD}
+
+    # Janitor ends sessions that stop sending upserts (e.g. client killed).
+    # pg_try_advisory_lock ensures only one replica runs the sweep at a time.
+    janitor:
+      ttl: {{ .Values.session.janitor.ttl }}
+      interval: {{ .Values.session.janitor.interval }}
+      batchSize: {{ .Values.session.janitor.batchSize }}
+
+    # Recording stores terminal sessions as asciinema v2 (.cast) files.
+    recording:
+      {{- if .Values.session.recording.persistentVolumeClaim.install }}
+      enabled: true
+      {{- else }}
+      enabled: false
+      {{- end }}
+      storagePath: /app/recordings
+      gzip: {{ .Values.session.recording.gzip }}
+      formats:
+        shell: asciinema
+        exec: asciinema
+        tcpip: pcap
+{{- end }}

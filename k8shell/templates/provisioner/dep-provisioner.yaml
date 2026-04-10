@@ -1,0 +1,197 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: provisioner
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: provisioner
+spec:
+  replicas: {{ .Values.provisioner.replicas }}
+  selector:
+    matchLabels:
+      k8shell.io/app: provisioner
+  template:
+    metadata:
+      labels:
+        k8shell.io/app: provisioner
+        {{- include "k8shell.labels" . | nindent 8 }}
+    spec:
+      {{- include "k8shell.imagePullSecrets" . | nindent 6 }}      
+      serviceAccountName: provisioner
+      containers:
+      - name: provisioner
+        image: {{ .Values.imageRegistry.host }}/{{ .Values.provisioner.image.name }}:{{ .Values.provisioner.image.tag }}
+        workingDir: /app
+        command: ["./provisioner", "--config", "config/config.yaml", "--logtext"]
+        ports:
+        - containerPort: 9030
+          name: grpc
+        env:
+        {{- if .Values.provisioner.defaultRegistry.enabled }}
+        {{- if .Values.provisioner.defaultRegistry.host }}
+        {{- include "k8shell.secretEnv" (dict 
+          "enabled" true 
+          "name" "DEFAULT_REGISTRY_HOST" 
+          "secretDef" .Values.provisioner.defaultRegistry.host
+          "defaultSecret" "provisioner" 
+          "context" .) | nindent 8 
+        }}
+        {{- else }}
+        - name: DEFAULT_REGISTRY_HOST
+          value: {{ .Values.imageRegistry.host | quote }}
+        {{- end }}
+        {{- if .Values.provisioner.defaultRegistry.username }}
+        {{- include "k8shell.secretEnv" (dict 
+          "enabled" true
+          "name" "DEFAULT_REGISTRY_USERNAME" 
+          "secretDef" .Values.provisioner.defaultRegistry.username
+          "defaultSecret" "provisioner" 
+          "context" .) | nindent 8 
+        }}
+        {{- else }}
+        {{- if .Values.imageRegistry.existingSecret }}
+        - name: DEFAULT_REGISTRY_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.imageRegistry.existingSecret }}
+              key: username
+        {{- else if .Values.imageRegistry.username }}
+        - name: DEFAULT_REGISTRY_USERNAME
+          value: {{ .Values.imageRegistry.username | quote }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.provisioner.defaultRegistry.password }}
+        {{- include "k8shell.secretEnv" (dict 
+          "enabled" true
+          "name" "DEFAULT_REGISTRY_PASSWORD" 
+          "secretDef" .Values.provisioner.defaultRegistry.password
+          "defaultSecret" "provisioner" 
+          "context" .) | nindent 8 
+        }}
+        {{- else }}
+        {{- if .Values.imageRegistry.existingSecret }}
+        - name: DEFAULT_REGISTRY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.imageRegistry.existingSecret }}
+              key: password
+        {{- else if .Values.imageRegistry.password }}
+        - name: DEFAULT_REGISTRY_PASSWORD
+          value: {{ .Values.imageRegistry.password | quote }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- include "k8shell.secretEnv" (dict
+          "enabled" .Values.nats.enabled
+          "name" "NATS_K8SHELL_PASSWORD"
+          "secretDef" .Values.nats.password
+          "defaultSecret" "nats"
+          "context" .) | nindent 8 }}
+        - name: JWT_SIGNING_METHOD
+          valueFrom:
+            secretKeyRef:
+              {{- if .Values.identity.jwtIssuer.signingMethod.secretName }}
+              name: {{ .Values.identity.jwtIssuer.signingMethod.secretName }}
+              key: {{ .Values.identity.jwtIssuer.signingMethod.secretKey }}
+              {{- else }}
+              name: jwt-issuer
+              key: JWT_SIGNING_METHOD
+              {{- end }}
+        volumeMounts:
+        - name: provisioner-config
+          mountPath: /app/config
+          readOnly: true
+        - name: blueprint-files
+          mountPath: /app/blueprints
+          readOnly: true
+        {{ if .Values.provisioner.defaultRegistry.cert }}
+        - name: regcert
+          mountPath: /app/secrets
+          readOnly: true
+        {{- end }}
+        - name: jwt
+          mountPath: /var/run/secrets/k8shell.io
+          readOnly: true          
+        {{- if .Values.certManager.enabled }}
+        - name: provisioner-cert
+          mountPath: /etc/tls/provisioner
+          readOnly: true
+        - name: ca-cert
+          mountPath: /etc/k8shell/ca
+          readOnly: true
+        {{- end }}
+        - name: jwt-issuer
+          mountPath: /run/secrets/jwt-issuer
+          readOnly: true
+      volumes:
+      - name: provisioner-config
+        configMap:
+          name: provisioner-config
+      - name: blueprint-files
+        projected:
+          sources:
+          - configMap:
+              name: blueprint-base-files
+          {{- if .Values.provisioner.blueprintFilesConfigMaps }}
+          {{- range .Values.provisioner.blueprintFilesConfigMaps }}
+          - configMap:
+              name: {{ . }}
+          {{- end }}
+          {{- end }}
+      {{ if .Values.provisioner.defaultRegistry.cert }}
+      - name: regcert
+        secret:
+          {{- if .Values.provisioner.defaultRegistry.cert.secretName }}
+          secretName: {{ .Values.provisioner.defaultRegistry.cert.secretName }}
+          {{- else }}
+          secretName: int-provisioner
+          {{- end }}
+          items:
+          {{- $key := .Values.provisioner.defaultRegistry.cert }}
+          - key: {{ if $key.secretKey }}{{ $key.secretKey }}{{ else }}regcert.pem{{ end }}
+            path: regcert.pem
+            mode: 0600
+      {{- end }}
+      - name: jwt
+        projected:
+          sources:
+            - serviceAccountToken:
+                path: session
+                audience: session    
+                expirationSeconds: {{ .Values.tokenExpiration }}
+            - serviceAccountToken:
+                path: identity
+                audience: identity
+                expirationSeconds: {{ .Values.tokenExpiration }}
+      {{- if .Values.certManager.enabled }}
+      - name: provisioner-cert
+        secret:
+          secretName: provisioner-tls
+      - name: ca-cert
+        secret:
+          secretName: k8shell-cluster-ca
+      {{- end }}
+      - name: jwt-issuer
+        projected:
+          sources:
+            {{- if .Values.identity.jwtIssuer.privateKey.secretName }}
+            - secret:
+                name: {{ .Values.identity.jwtIssuer.privateKey.secretName }}
+                items:
+                  - key: {{ .Values.identity.jwtIssuer.privateKey.secretKey }}
+                    path: private-key.pem
+            {{- else }}
+            - secret:
+                name: jwt-issuer
+                items:
+                  - key: private-key.pem
+                    path: private-key.pem
+            {{- end }}
+            {{- if not .Values.identity.jwtIssuer.signingMethod.secretName }}
+            - secret:
+                name: jwt-issuer
+                items:
+                  - key: JWT_SIGNING_METHOD
+                    path: JWT_SIGNING_METHOD
+            {{- end }}
+

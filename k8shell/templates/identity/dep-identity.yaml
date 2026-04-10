@@ -1,0 +1,150 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: identity
+spec:
+  replicas: {{ .Values.identity.replicas }}
+  selector:
+    matchLabels:
+      k8shell.io/app: identity
+  template:
+    metadata:
+      labels:
+        k8shell.io/app: identity
+        {{- include "k8shell.labels" . | nindent 8 }}
+    spec:
+      {{- include "k8shell.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: identity
+      containers:
+        - name: identity
+          image: {{ .Values.imageRegistry.host }}/{{ .Values.identity.image.name }}:{{ .Values.identity.image.tag }}
+          workingDir: /app
+          args: ["--config", "config/config.yaml", "--logtext"]
+          ports:
+            - containerPort: 9020
+              name: grpc
+          env:
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" .Values.nats.enabled
+            "name" "NATS_K8SHELL_PASSWORD"
+            "secretDef" .Values.nats.password
+            "defaultSecret" "nats"
+            "context" .) | nindent 12 }}
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" .Values.postgresql.enabled
+            "name" "POSTGRES_USERNAME"
+            "secretDef" .Values.postgresql.username
+            "defaultSecret" "identity"
+            "context" .) | nindent 12 }}
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" .Values.postgresql.enabled 
+            "name" "POSTGRES_PASSWORD"
+            "secretDef" .Values.postgresql.password
+            "defaultSecret" "identity"
+            "context" .) | nindent 12 }}
+            - name: JWT_SIGNING_METHOD
+              valueFrom:
+                secretKeyRef:
+                  {{- if .Values.identity.jwtIssuer.signingMethod.secretName }}
+                  name: {{ .Values.identity.jwtIssuer.signingMethod.secretName }}
+                  key: {{ .Values.identity.jwtIssuer.signingMethod.secretKey }}
+                  {{- else }}
+                  name: jwt-issuer
+                  key: JWT_SIGNING_METHOD
+                  {{- end }}
+          volumeMounts:
+            - name: identity-config
+              mountPath: /app/config
+              readOnly: true
+            - name: identity-files
+              mountPath: /app/files
+              readOnly: true
+            - name: jwt
+              mountPath: /var/run/secrets/k8shell.io
+              readOnly: true
+            - name: jwt-issuer
+              mountPath: /run/secrets/jwt-issuer
+              readOnly: true
+          {{- range .Values.identity.users }}
+          {{- $pwd := default "" .password }}
+          {{- $pub := default "" .publicKey }}
+          {{- if or (ne $pwd "") (ne $pub "") }}
+            - name: identity-user-{{ .username }}-credentials
+              mountPath: /app/secrets/users/{{ .username }}
+              readOnly: true
+          {{- end }}
+          {{- end }}
+          {{- if .Values.certManager.enabled }}
+            - name: identity-cert
+              mountPath: /etc/tls/identity
+              readOnly: true
+            - name: ca-cert
+              mountPath: /etc/k8shell/ca
+              readOnly: true
+          {{- end }}
+
+      volumes:
+        - name: identity-config
+          configMap:
+            name: identity-config
+        - name: identity-files
+          {{- if gt (len .Values.identity.users) 0 }}
+          configMap:
+            name: identity-users
+            items:
+              - key: identity-users.yaml
+                path: identity-users.yaml
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- range .Values.identity.users }}
+        {{- $pwd := default "" .password }}
+        {{- $pub := default "" .publicKey }}
+        {{- if or (ne $pwd "") (ne $pub "") }}
+        - name: identity-user-{{ .username }}-credentials
+          secret:
+            secretName: identity-user-{{ .username }}-credentials
+        {{- end }}
+        {{- end }}
+        - name: jwt-issuer
+          projected:
+            sources:
+              {{- if .Values.identity.jwtIssuer.privateKey.secretName }}
+              - secret:
+                  name: {{ .Values.identity.jwtIssuer.privateKey.secretName }}
+                  items:
+                    - key: {{ .Values.identity.jwtIssuer.privateKey.secretKey }}
+                      path: private-key.pem
+              {{- else }}
+              - secret:
+                  name: jwt-issuer
+                  items:
+                    - key: private-key.pem
+                      path: private-key.pem
+              {{- end }}
+              {{- if not .Values.identity.jwtIssuer.signingMethod.secretName }}
+              - secret:
+                  name: jwt-issuer
+                  items:
+                    - key: JWT_SIGNING_METHOD
+                      path: JWT_SIGNING_METHOD
+              {{- end }}
+        {{- if .Values.certManager.enabled }}
+        - name: identity-cert
+          secret:
+            secretName: identity-tls
+        - name: ca-cert
+          secret:
+            secretName: k8shell-cluster-ca
+        {{- end }}
+        - name: jwt
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: identity
+                  audience: identity
+                  expirationSeconds: {{ .Values.tokenExpiration }}
+

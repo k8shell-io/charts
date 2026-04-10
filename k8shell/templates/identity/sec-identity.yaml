@@ -1,0 +1,22 @@
+{{- $secrets := dict -}}
+{{- if .Values.postgresql.enabled -}}
+{{- $postgresSecrets := dict
+  "POSTGRES_USERNAME" .Values.postgresql.username.value
+  "POSTGRES_PASSWORD" .Values.postgresql.password.value
+-}}
+{{- range $key, $value := $postgresSecrets }}
+{{- if $value }}
+  {{- $_ := set $secrets $key $value }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- if $secrets }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: int-identity
+type: Opaque
+data:
+{{ include "k8shell.secretData" $secrets | nindent 2 }}
+{{- end }}

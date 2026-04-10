@@ -1,0 +1,233 @@
+# values.yaml for k8shell Helm chart
+#
+# This file contains the default values for all configurable parameters of the
+# k8shell Helm chart. Users can override these values by providing their own
+# values.yaml file or by using --set during helm install/upgrade commands.
+#
+# NOTE on usernames/passwords:
+# usernames and passwords are provided as env variables in Pods.
+# When a field with name "field1" has a value of {}, there can be following
+# options:
+#
+# 1. field1.value: the actual value will be used to create a Kubernetes secret
+#    with key equal to env variable name. For example, see
+#    templates/identity/sec-identity.yaml how the secret is created and
+#    templates/identity/dep-identity.yaml how the secret is consumed using
+#    k8shell.secretEnv helper function.
+#
+# 2. field1.secretName and field1.secretKey - this will use an existing
+#    Kubernetes secret with the specified name and key
+
+# imageRegistry is the container registry for all k8shell service images. 
+imageRegistry: 
+  host: registry.k8shell.io
+
+  # only one of username/password or existingSecret should be set
+  username: ""
+  password: ""
+  existingSecret: ""
+
+# Enable JWT authentication for all services
+authEnabled: true
+
+# JWT token expiration time for all services
+tokenExpiration: 600 # in seconds
+
+# Enable cert-manager to issue TLS certificates for the services.
+# This requires cert-manager to be installed in the cluster and a
+# ClusterIssuer configured referring a CA issuer such as HashiCorp Vault or
+# cert-manager's own CA issuer. If cert-manager is not enabled, TLS will be
+# disabled for all services and they will fall back to plaintext communication.
+certManager:
+  enabled: false
+  issuer:
+    name: vault-root-issuer
+    kind: ClusterIssuer
+  duration: 24h
+  renewBefore: 12h
+
+k8shellCapabilities:
+  apiServerEnabled: false
+
+sshProxy:
+  replicas: 1
+  
+  image:
+    name: k8shell-base/ssh-proxy
+    tag: pr-14-6dfd1b6
+  
+  proxyProtocol: false
+  
+  writerOptions:
+    showProvisionInfo: false
+    showPulse: true
+    showPercentage: true
+    showErrors: true
+    showSystemErrors: true
+  
+  serverKey: {}
+  
+  publishSshFailures:
+    enabled: false
+    subject: ssh.failures
+    publicIPOnly: true
+  
+  # enable/disable session recording per stream type
+  # requires session service to be configured
+  recording:
+    recordShell: false
+    recordExec: false
+    recordDirectTCPIP: false
+
+  loadBalancer:
+    enabled: false
+    annotations: {}
+    port: 22
+
+  nodePort:
+    enabled: false
+    port: 30022
+  
+identity:
+  replicas: 1
+  image:
+    name: k8shell-base/identity
+    tag: pr-13-ea7d45e
+
+  jwtIssuer:
+    expiry: 60m
+    privateKey: {}
+    signingMethod: {}
+    refreshInterval: 1m
+    refreshLookahead: 2m
+
+  users:
+    - username: "admin"
+      uid: 1001
+      gid: 1001
+      fullname: "Administrator"
+      email: "admin@k8shell"
+      blueprints: ["*"]
+      sudo: true
+      shell: /bin/bash
+      roles: [admin]
+      organization: "default"
+      password: ""  
+      publicKey: ""
+
+    # additional users can be added in the same format as above
+    # - username: "alice"
+    #   uid: 1002
+    #   gid: 1002
+    #   fullname: "Alice"
+    #   email: "alice@k8shell"
+    #   blueprints: ["*"]
+    #   sudo: false
+    #   shell: /bin/bash
+    #   roles: [workspace-user]
+    #   organization: "default"
+    #   password: ""  
+    #   publicKey: ""
+
+  # list of remote identity providers running in the cluster that the identity
+  # service can delegate authentication to. Provide the list in the following
+  # format (idp-github is an example and should be replaced with the actual
+  # service name of the remote provider in the cluster):
+  # remoteProviders:
+  #   - address: idp-github:9030
+  #     serverName: idp-github.<namespace>.svc
+
+provisioner:
+  replicas: 1
+  image:
+    name: k8shell-base/provisioner
+    tag: pr-26-672aa85
+
+  # optional list of configmaps that provide extra files for workspace blueprints
+  # their files are mounted into /app/blueprints together with blueprint-base-files
+  blueprintFilesConfigMaps: []
+
+  # targetNamespace is the namespace where provisioner will create workspaces.
+  # if not set, helm chart installation will fail.
+  targetNamespace: ""
+
+  # Default registry is used for pulling images for k8shell workspaces when
+  # no registry is specified in a workspace blueprint. If not set, it will
+  # default to the imageRegistry defined above.
+  defaultRegistry:
+    enabled: true
+    host: {}
+    username: {}
+    password: {}
+    cert: {}
+
+  nats:
+    provisionBucketTTL: 48h
+
+# Below services are disabled in k8shell chart. They are used in k8shell-bundle
+# that provides full set of k8shell services with postgresql and nats
+# dependencies.
+
+frontend:
+  enabled: false
+  replicas: 1
+  image:
+    name: k8shell-base/frontend
+    tag: v0.12.15
+  scheme: "http"
+  host: "localtest.me"
+  sessionCookie:
+    secure: false
+    httpOnly: true
+    sameSite: Lax
+    maxAgeSeconds: 86400
+    path: /api/v1
+
+apiServer:
+  enabled: false
+  replicas: 1
+  image:
+    name: k8shell-base/api-server
+    tag: pr-53-58b909d
+  logging:
+    requestHeaders: false
+    responseHeaders: false
+
+session:
+  enabled: false
+  replicas: 1
+  image:
+    name: k8shell-base/session
+    tag: pr-4-20fd48a
+
+  # Janitor ends sessions that stop sending upserts (e.g. client killed).
+  # pg_try_advisory_lock ensures only one replica runs the sweep at a time.
+  janitor:
+    ttl: 5m
+    interval: 1m
+    batchSize: 100
+
+  # Recording stores terminal sessions as asciinema v2 (.cast) files.
+  recording:
+    enabled: false
+    gzip: false
+    persistentVolumeClaim:
+      install: false
+      storageClassName: ""
+      size: 10Gi
+      annotations: {}
+
+postgresql:
+  enabled: false
+  host: "postgresql"
+  port: 5432
+  database: ""
+  username: {}
+  password: {}
+
+nats:
+  enabled: false
+  host: "nats"
+  port: 4222
+  username: "k8shell-service"
+  password: {}

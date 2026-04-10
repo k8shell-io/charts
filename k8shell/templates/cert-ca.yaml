@@ -1,0 +1,20 @@
+# This is a "dummy" certificate which purpose is to get hold of the CA cert used to issue certificates in the cluster. 
+# When a service A needs to connect to another service B but service A does not provide grpc interface and hence 
+# does not require a certificate, the service A uses the CA cert from this certificate to verify the 
+# certificate of the service B. Example of service A is ssh-proxy, and service B is identity. 
+
+{{- if .Values.certManager.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: k8shell-cluster-ca-publisher
+spec:
+  secretName: k8shell-cluster-ca
+  commonName: k8shell.cluster.ca
+  duration: 2160h           
+  renewBefore: 360h         
+  usages: ["server auth","client auth"]
+  issuerRef:
+    name: {{ .Values.certManager.issuer.name }}
+    kind: {{ .Values.certManager.issuer.kind }}
+{{- end }}

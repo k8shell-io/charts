@@ -1,0 +1,22 @@
+{{- if .Values.session.enabled }}
+{{- if .Values.certManager.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: session-cert
+spec:
+  secretName: session-tls
+  duration: {{ .Values.certManager.duration }}
+  renewBefore: {{ .Values.certManager.renewBefore }}
+  commonName: session.{{ .Release.Namespace }}.svc.cluster.local
+  dnsNames:
+    - session
+    - session.{{ .Release.Namespace }}.svc
+    - session.{{ .Release.Namespace }}.svc.cluster.local
+  usages:
+    - server auth
+  issuerRef:
+    name: {{ .Values.certManager.issuer.name }}
+    kind: {{ .Values.certManager.issuer.kind }}
+{{- end }}
+{{- end }}

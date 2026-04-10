@@ -1,0 +1,26 @@
+{{- $secrets := dict -}}
+{{- if .Values.provisioner.defaultRegistry.enabled -}}
+{{- $registrySecrets := dict
+  "DEFAULT_REGISTRY_HOST" .Values.provisioner.defaultRegistry.host.value
+  "DEFAULT_REGISTRY_USERNAME" .Values.provisioner.defaultRegistry.username.value
+  "DEFAULT_REGISTRY_PASSWORD" .Values.provisioner.defaultRegistry.password.value
+-}}
+{{- range $key, $value := $registrySecrets }}
+{{- if $value }}
+  {{- $_ := set $secrets $key $value }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- with .Values.provisioner.defaultRegistry.cert.value }}
+  {{- $_ := set $secrets "regcert.pem" . }}
+{{- end }}
+
+{{- if $secrets }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: int-provisioner
+type: Opaque
+data:
+{{ include "k8shell.secretData" $secrets | nindent 2 }}
+{{- end }}

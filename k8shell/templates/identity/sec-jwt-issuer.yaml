@@ -1,0 +1,23 @@
+{{- $pk := .Values.identity.jwtIssuer.privateKey -}}
+{{- $sm := .Values.identity.jwtIssuer.signingMethod -}}
+{{- if and (or $pk.secretName $pk.value) (not (or $sm.secretName $sm.value)) -}}
+{{- fail "identity.jwtIssuer.signingMethod must specify value or secretName when privateKey is explicitly set" -}}
+{{- end -}}
+{{- if not (and $pk.secretName $sm.secretName) }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jwt-issuer
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+type: Opaque
+data:
+  {{- if not $pk.secretName }}
+  {{- $privKey := default (genPrivateKey "ecdsa") $pk.value }}
+  private-key.pem: {{ $privKey | b64enc }}
+  {{- end }}
+  {{- if not $sm.secretName }}
+  {{- $signingMethod := default "es256" $sm.value }}
+  JWT_SIGNING_METHOD: {{ $signingMethod | b64enc }}
+  {{- end }}
+{{- end }}

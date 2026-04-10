@@ -1,0 +1,39 @@
+{{- if .Values.apiServer.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-api-server
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: k8shell-ingress
+  rules:
+    - host: "{{ .Values.frontend.host }}"
+      http:
+        paths:
+          - path: /api/v1/
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: api-server
+                port:
+                  number: 9101
+    - host: "*.{{ .Values.frontend.host }}"
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: api-server
+                port:
+                  number: 9101
+
+  tls:
+    - hosts:
+        - "{{ .Values.frontend.host }}"
+      secretName: ingress-tls
+    - hosts:
+        - "*.{{ .Values.frontend.host }}"
+      secretName: ingress-tls
+{{- end }}

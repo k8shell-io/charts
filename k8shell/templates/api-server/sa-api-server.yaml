@@ -1,0 +1,10 @@
+{{- if .Values.apiServer.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: api-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api-server
+{{- end }}

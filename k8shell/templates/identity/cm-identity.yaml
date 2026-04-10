@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: identity-config
+  labels:
+    app: identity
+data:
+  config.yaml: |
+    # grpc server
+    grpc:
+      port: 9020
+
+      {{- if .Values.certManager.enabled }}
+      enableTLS: true
+      certFile: /etc/tls/identity/tls.crt
+      keyFile: /etc/tls/identity/tls.key
+      {{- else }}
+      enableTLS: false
+      {{- end }}
+
+      # JWT required claims for authentication
+      authEnabled: {{ .Values.authEnabled }}
+      audience: identity
+      allowed:
+        - serviceAccount: provisioner
+        - serviceAccount: ssh-proxy
+        - serviceAccount: api-server
+
+    nats:
+      enabled: {{ .Values.nats.enabled }}
+      url: nats://{{ .Values.nats.host }}:{{ .Values.nats.port }}
+      username: {{ .Values.nats.username }}
+      password: ${NATS_K8SHELL_PASSWORD}
+
+    db:
+      enabled: {{ .Values.postgresql.enabled }}
+      database: {{ .Values.postgresql.database }}
+      hostname: {{ .Values.postgresql.host }}
+      port: {{ .Values.postgresql.port }}
+      username: ${POSTGRES_USERNAME}
+      password: ${POSTGRES_PASSWORD}
+
+    # Organization management
+    organizations:
+      # autoCreate lists organizations that are created automatically when a user
+      # with that organization is first seen. Use ["*"] to allow all organizations.
+      autoCreate:
+        - "*"
+
+    {{- if .Values.identity.users }}
+    localProviders:
+      enabled: true
+      files:
+        - /app/files/identity-users.yaml
+    {{- end }}
+
+    {{- if .Values.identity.remoteProviders }}
+    {{- $root := . }}
+    remoteProviders:
+    {{- range .Values.identity.remoteProviders }}
+      - address: {{ .address }}
+        tokenFilePath: /var/run/secrets/k8shell.io/identity
+        {{- if $root.Values.certManager.enabled }}
+        caCertPath: /etc/k8shell/ca/ca.crt
+        serverName: {{ .serverName }}.{{ $root.Release.Namespace }}.svc
+        {{- end }}
+    {{- end }}
+    {{- end }}
+
+    # JWT token issuance
+    jwtIssuer:
+      issuer: identity.k8shell
+      audience: k8shell
+      expiry: {{ .Values.identity.jwtIssuer.expiry }}
+      signingMethod: ${JWT_SIGNING_METHOD}
+      privateKeyFile: /run/secrets/jwt-issuer/private-key.pem
+
+    kubernetes:
+      namespace: {{ .Values.provisioner.targetNamespace }}
+      leaseName: identity-token-refresh
+      refreshInterval: {{ .Values.identity.jwtIssuer.refreshInterval }}
+      refreshLookahead: {{ .Values.identity.jwtIssuer.refreshLookahead }}

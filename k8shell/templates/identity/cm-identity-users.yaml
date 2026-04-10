@@ -1,0 +1,43 @@
+{{- range .Values.identity.users }}
+{{- if not .username }}
+{{- fail "identity.users: each user must have a non-empty username" }}
+{{- end }}
+{{- end }}
+{{- if .Values.identity.users -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: identity-users
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+data:
+  identity-users.yaml: |
+    users:
+    {{- range .Values.identity.users }}
+    {{- $pwd := default "" .password }}
+    {{- $pub := default "" .publicKey }}
+    {{- $uid := default "1001" .uid }}
+    {{- $auths := list }}
+    {{- if ne $pub "" }}{{- $auths = append $auths "publickey" }}{{- end }}
+    {{- if ne $pwd "" }}{{- $auths = append $auths "password" }}{{- end }}
+    - username: {{ .username | quote }}
+      isValid: true
+      uid: {{ default $uid .uid }}
+      gid: {{ default $uid .gid }}
+      fullname: {{ default .username .fullname | quote }}
+      email: {{ default (printf "%s@k8shell" .username) .email | quote }}
+      locked: false
+      blueprints: {{ default (list "*") .blueprints | toJson }}
+      sudo: {{ default false .sudo }}
+      shell: {{ default "/bin/bash" .shell }}
+      auths: [{{ $auths | join ", " }}]
+      roles: {{ .roles | toJson }}
+      organization: {{ default "default" .organization | quote }}
+    {{- if ne $pub "" }}
+      authKeys: !file /app/secrets/users/{{ .username }}/publickey
+    {{- end }}
+    {{- if ne $pwd "" }}
+      password: !file /app/secrets/users/{{ .username }}/password
+    {{- end }}
+    {{- end }}
+{{- end }}

@@ -1,0 +1,572 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "k8shell values",
+    "type": "object",
+    "additionalProperties": false,
+    "definitions": {
+        "image": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                }
+            }
+        },
+        "secretRef": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "value": {
+                    "type": "string"
+                },
+                "secretName": {
+                    "type": "string"
+                },
+                "secretKey": {
+                    "type": "string"
+                }
+            }
+        },
+        "natsPassword": {
+            "$ref": "#/definitions/secretRef"
+        },
+        "serviceNats": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "username"
+            ],
+            "properties": {
+                "username": {
+                    "type": "string"
+                },
+                "password": {
+                    "$ref": "#/definitions/natsPassword"
+                }
+            }
+        },
+        "replicas": {
+            "type": "integer",
+            "minimum": 0
+        }
+    },
+    "required": [
+        "provisioner"
+    ],
+    "properties": {
+        "imageRegistry": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "host": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "existingSecret": {
+                    "type": "string"
+                }
+            }
+        },
+        "authEnabled": {
+            "type": "boolean"
+        },
+        "tokenExpiration": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "certManager": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "issuer": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "kind": {
+                            "type": "string",
+                            "enum": [
+                                "Issuer",
+                                "ClusterIssuer"
+                            ]
+                        }
+                    }
+                },
+                "duration": {
+                    "type": "string"
+                },
+                "renewBefore": {
+                    "type": "string"
+                }
+            }
+        },
+        "k8shellCapabilities": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "apiServerEnabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "sshProxy": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "replicas": {
+                    "$ref": "#/definitions/replicas"
+                },
+                "image": {
+                    "$ref": "#/definitions/image"
+                },
+                "proxyProtocol": {
+                    "type": "boolean"
+                },
+                "writerOptions": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "showProvisionInfo": {
+                            "type": "boolean"
+                        },
+                        "showPulse": {
+                            "type": "boolean"
+                        },
+                        "showPercentage": {
+                            "type": "boolean"
+                        },
+                        "showErrors": {
+                            "type": "boolean"
+                        },
+                        "showSystemErrors": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "serverKey": {
+                    "$ref": "#/definitions/secretRef"
+                },
+                "publishSshFailures": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "subject": {
+                            "type": "string"
+                        },
+                        "publicIPOnly": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "recording": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "recordShell": {
+                            "type": "boolean"
+                        },
+                        "recordExec": {
+                            "type": "boolean"
+                        },
+                        "recordDirectTCPIP": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "loadBalancer": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "annotations": {
+                            "type": "object"
+                        },
+                        "port": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
+        "identity": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "replicas": {
+                    "$ref": "#/definitions/replicas"
+                },
+                "image": {
+                    "$ref": "#/definitions/image"
+                },
+                "jwtIssuer": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "expiry": {
+                            "type": "string"
+                        },
+                        "privateKey": {
+                            "$ref": "#/definitions/secretRef"
+                        },
+                        "signingMethod": {
+                            "$ref": "#/definitions/secretRef"
+                        },
+                        "refreshInterval": {
+                            "type": "string"
+                        },
+                        "refreshLookahead": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                            "username",
+                            "uid",
+                            "gid"
+                        ],
+                        "properties": {
+                            "username": {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            "uid": {
+                                "type": "integer",
+                                "minimum": 1
+                            },
+                            "gid": {
+                                "type": "integer",
+                                "minimum": 1
+                            },
+                            "fullname": {
+                                "type": "string"
+                            },
+                            "email": {
+                                "type": "string"
+                            },
+                            "blueprints": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "sudo": {
+                                "type": "boolean"
+                            },
+                            "shell": {
+                                "type": "string"
+                            },
+                            "roles": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "organization": {
+                                "type": "string"
+                            },
+                            "password": {
+                                "type": "string"
+                            },
+                            "publicKey": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "remoteProviders": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                            "address"
+                        ],
+                        "properties": {
+                            "address": {
+                                "type": "string"
+                            },
+                            "serverName": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "provisioner": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "targetNamespace"
+            ],
+            "properties": {
+                "replicas": {
+                    "$ref": "#/definitions/replicas"
+                },
+                "image": {
+                    "$ref": "#/definitions/image"
+                },
+                "blueprintFilesConfigMaps": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "targetNamespace": {
+                    "type": "string"
+                },
+                "workspaceStorageClass": {
+                    "type": "string"
+                },
+                "defaultRegistry": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "host": {
+                            "$ref": "#/definitions/secretRef"
+                        },
+                        "username": {
+                            "$ref": "#/definitions/secretRef"
+                        },
+                        "password": {
+                            "$ref": "#/definitions/secretRef"
+                        },
+                        "cert": {
+                            "$ref": "#/definitions/secretRef"
+                        }
+                    }
+                },
+                "nats": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "provisionBucketTTL": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "frontend": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "replicas": {
+                    "$ref": "#/definitions/replicas"
+                },
+                "image": {
+                    "$ref": "#/definitions/image"
+                },
+                "scheme": {
+                    "type": "string",
+                    "enum": [
+                        "http",
+                        "https"
+                    ]
+                },
+                "host": {
+                    "type": "string"
+                },
+                "sessionCookie": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "secure": {
+                            "type": "boolean"
+                        },
+                        "httpOnly": {
+                            "type": "boolean"
+                        },
+                        "sameSite": {
+                            "type": "string",
+                            "enum": [
+                                "Strict",
+                                "Lax",
+                                "None"
+                            ]
+                        },
+                        "maxAgeSeconds": {
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        "path": {
+                            "type": "string"
+                        },
+                        "domain": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "apiServer": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "replicas": {
+                    "$ref": "#/definitions/replicas"
+                },
+                "image": {
+                    "$ref": "#/definitions/image"
+                },
+                "logging": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "requestHeaders": {
+                            "type": "boolean"
+                        },
+                        "responseHeaders": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "session": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "replicas": {
+                    "$ref": "#/definitions/replicas"
+                },
+                "image": {
+                    "$ref": "#/definitions/image"
+                },
+                "janitor": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "ttl": {
+                            "type": "string"
+                        },
+                        "interval": {
+                            "type": "string"
+                        },
+                        "batchSize": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                },
+                "recording": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "gzip": {
+                            "type": "boolean"
+                        },
+                        "persistentVolumeClaim": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "install": {
+                                    "type": "boolean"
+                                },
+                                "storageClassName": {
+                                    "type": "string"
+                                },
+                                "size": {
+                                    "type": "string"
+                                },
+                                "annotations": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "postgresql": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "database": {
+                    "type": "string"
+                },
+                "username": {
+                    "$ref": "#/definitions/secretRef"
+                },
+                "password": {
+                    "$ref": "#/definitions/secretRef"
+                }
+            }
+        },
+        "nats": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "host",
+                "port",
+                "username",
+                "password"
+            ],
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "password": {
+                    "$ref": "#/definitions/natsPassword"
+                }
+            }
+        }
+    }
+}

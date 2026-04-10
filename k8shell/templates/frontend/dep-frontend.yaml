@@ -1,0 +1,36 @@
+{{- if .Values.frontend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: {{ .Values.frontend.replicas }}
+  selector:
+    matchLabels:
+      k8shell.io/app: frontend
+  template:
+    metadata:
+      labels:
+        k8shell.io/app: frontend
+        {{- include "k8shell.labels" . | nindent 8 }}
+    spec:
+      {{- include "k8shell.imagePullSecrets" . | nindent 6 }}      
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
+      containers:
+      - name: frontend
+        image: {{ .Values.imageRegistry.host }}/{{ .Values.frontend.image.name }}:{{ .Values.frontend.image.tag }}
+        ports:
+        - containerPort: 8101
+          name: http
+        env:
+        - name: EXT_VAR_VITE_HOST
+          value: "{{ .Values.frontend.host }}"
+        - name: EXT_VAR_VITE_SCHEME
+          value: "{{ .Values.frontend.scheme }}"
+{{- end }}

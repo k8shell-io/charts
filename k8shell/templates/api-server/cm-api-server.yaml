@@ -1,0 +1,77 @@
+{{- if .Values.apiServer.enabled }}
+{{- if not .Values.session.enabled -}}
+{{- fail "api-server requires session service" -}}
+{{- end -}}
+{{- if not .Values.nats.enabled -}}
+{{- fail "api-server requires NATS" -}}
+{{- end -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-server-config
+  labels:
+    app: api-server
+data:
+  config.yaml: |
+    http:
+      port: 9101
+
+      cookie:
+        name: k8shell-session
+        secure: {{ .Values.frontend.sessionCookie.secure }}
+        httpOnly: {{ .Values.frontend.sessionCookie.httpOnly }}
+        sameSite: {{ .Values.frontend.sessionCookie.sameSite }}
+        maxAgeSeconds: {{ .Values.frontend.sessionCookie.maxAgeSeconds }}
+        path: {{ .Values.frontend.sessionCookie.path }}
+        domain: .{{ .Values.frontend.host }}
+
+      logging:
+        enabled: true
+        requestHeaders: {{ .Values.apiServer.logging.requestHeaders }}
+        responseHeaders: {{ .Values.apiServer.logging.responseHeaders }}
+
+    nats:
+      enabled: {{ .Values.nats.enabled }}
+      url: nats://{{ .Values.nats.host }}:{{ .Values.nats.port }}
+      username: {{ .Values.nats.username }}
+      password: ${NATS_K8SHELL_PASSWORD}
+
+    # JWT verifier configuration for validating tokens from remote identity providers
+    jwtVerifier:
+      signingMethod: ${JWT_SIGNING_METHOD}
+      privateKeyFile: /run/secrets/jwt-issuer/private-key.pem
+
+    # Identity service configuration
+    identity:
+      address: identity:9020
+      tokenFilePath: /var/run/secrets/k8shell.io/identity
+      {{- if .Values.certManager.enabled }}
+      caCertPath: /etc/k8shell/ca/ca.crt
+      serverName: identity.{{ .Release.Namespace }}.svc
+      {{- end }}
+
+    # Session service configuration
+    session:
+      address: session:9010
+      tokenFilePath: /var/run/secrets/k8shell.io/session
+      {{- if .Values.certManager.enabled }}
+      caCertPath: /etc/k8shell/ca/ca.crt
+      serverName: session.{{ .Release.Namespace }}.svc
+      {{- end }}
+
+    # Session service configuration
+    provisioner:
+      address: provisioner:9030
+      tokenFilePath: /var/run/secrets/k8shell.io/provisioner
+      {{- if .Values.certManager.enabled }}
+      caCertPath: /etc/k8shell/ca/ca.crt
+      serverName: provisioner.{{ .Release.Namespace }}.svc
+      {{- end }}
+
+    # worksspace client configuration
+    k8shelld:
+      tokenFilePath: /var/run/secrets/k8shell.io/k8shelld
+      {{- if .Values.certManager.enabled }}
+      caCertPath: /etc/k8shell/ca/ca.crt
+      {{- end }}
+{{- end }}

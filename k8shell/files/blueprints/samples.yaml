@@ -1,0 +1,23 @@
+blueprints:
+  - name: dev
+    template: base
+    image: workspaces/dev:1.12
+
+    resources:
+      cpu: 8
+      memory: 4Gi
+
+    docker:
+      enabled: true
+
+  - name: ubuntu
+    template: base
+    image: docker.io/ubuntu:latest
+
+  - name: alpine
+    template: base
+    image: docker.io/alpine:latest
+
+  - name: bbox
+    template: base
+    image: docker.io/busybox:latest

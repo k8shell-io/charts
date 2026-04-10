@@ -1,0 +1,18 @@
+{{- $pvc := .Values.session.recording.persistentVolumeClaim }}
+{{- if $pvc.install }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-session-recording
+  {{- if $pvc.annotations }}
+  annotations:
+    {{- toYaml $pvc.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: {{ $pvc.storageClassName }}
+  resources:
+    requests:
+      storage: {{ $pvc.size }}
+{{- end }}

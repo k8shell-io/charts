@@ -1,0 +1,95 @@
+{{- $serverKey := default dict .Values.sshProxy.serverKey -}}
+{{- $hasServerKeyValue := ne (default "" $serverKey.value) "" -}}
+{{- $hasServerKeySecret := ne (default "" $serverKey.secretName) "" -}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ssh-proxy
+spec:
+  replicas: {{ .Values.sshProxy.replicas }}
+  selector:
+    matchLabels:
+      k8shell.io/app: ssh-proxy
+  template:
+    metadata:
+      labels:
+        k8shell.io/app: ssh-proxy
+        {{- include "k8shell.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: ssh-proxy
+      {{- include "k8shell.imagePullSecrets" . | nindent 6 }}      
+      containers:
+      - name: ssh-proxy
+        image: {{ .Values.imageRegistry.host }}/{{ .Values.sshProxy.image.name }}:{{ .Values.sshProxy.image.tag }}
+        # command: ["sleep", "infinity" ]
+        workingDir: /app
+        command: ["./ssh-proxy", "--config", "config/config.yaml", "--logtext"]
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        workingDir: /app
+        env:
+        {{- include "k8shell.secretEnv" (dict 
+          "enabled" .Values.nats.enabled
+          "name" "NATS_K8SHELL_PASSWORD" 
+          "secretDef" .Values.nats.password 
+          "defaultSecret" "nats" 
+          "context" .) | nindent 8 
+        }}
+        ports:
+          - containerPort: 2022
+            name: ssh
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+          readOnly: true
+        - name: ssh-server-key
+          mountPath: /app/secrets
+          readOnly: true
+        - name: jwt
+          mountPath: /var/run/secrets/k8shell.io
+          readOnly: true          
+        {{- if .Values.certManager.enabled }}
+        - name: ca-cert
+          mountPath: /etc/k8shell/ca
+          readOnly: true
+        {{- end }}
+
+      volumes:
+      - name: config-volume
+        configMap:
+          name: ssh-proxy-config
+      - name: ssh-server-key
+        secret:
+          {{- if $hasServerKeySecret }}
+          secretName: {{ $serverKey.secretName }}
+          {{- else }}
+          secretName: int-ssh-proxy
+          {{- end }}
+          items:
+          - key: {{ if $serverKey.secretKey }}{{ $serverKey.secretKey }}{{ else }}server_key{{ end }}
+            path: server_key
+            mode: 0600
+      - name: jwt
+        projected:
+          sources:
+            - serviceAccountToken:
+                path: session
+                audience: session    
+                expirationSeconds: {{ .Values.tokenExpiration }}
+            - serviceAccountToken:
+                path: identity
+                audience: identity
+                expirationSeconds: {{ .Values.tokenExpiration }}
+            - serviceAccountToken:
+                path: provisioner
+                audience: provisioner
+                expirationSeconds: {{ .Values.tokenExpiration }}
+            - serviceAccountToken:
+                path: k8shelld
+                audience: k8shelld
+                expirationSeconds: {{ .Values.tokenExpiration }}
+      {{- if .Values.certManager.enabled }}
+      - name: ca-cert
+        secret:
+          secretName: k8shell-cluster-ca
+      {{- end }}

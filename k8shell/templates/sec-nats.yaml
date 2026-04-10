@@ -1,0 +1,17 @@
+{{- $secrets := dict -}}
+{{- if .Values.nats.enabled -}}
+{{- if .Values.nats.password.value -}}
+{{- $_ := set $secrets "NATS_K8SHELL_PASSWORD" .Values.nats.password.value -}}
+{{- end -}}
+{{- end -}}
+{{- if $secrets }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: int-nats
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+type: Opaque
+data:
+{{ include "k8shell.secretData" $secrets | nindent 2 }}
+{{- end }}

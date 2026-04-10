@@ -1,0 +1,17 @@
+{{- $sk := .Values.sshProxy.serverKey -}}
+{{- $serverKey := "" -}}
+{{- if $sk.value -}}
+  {{- $serverKey = $sk.value -}}
+{{- else if not (and $sk.secretName $sk.secretKey) -}}
+  {{- $serverKey = genPrivateKey "ecdsa" -}}
+{{- end -}}
+
+{{- if $serverKey }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: int-ssh-proxy
+type: Opaque
+data:
+  server_key: {{ $serverKey | b64enc }}
+{{- end }}

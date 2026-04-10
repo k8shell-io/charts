@@ -1,0 +1,90 @@
+{{- if not .Values.provisioner.targetNamespace }}
+{{- fail "provisioner.targetNamespace is required and it must be an existing namespace name" }}
+{{- end }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: provisioner-config
+  labels:
+    app: provisioner
+data:
+  config.yaml: |
+    targetNamespace: {{ .Values.provisioner.targetNamespace }}
+
+    {{- if .Values.provisioner.defaultRegistry.enabled }}
+    defaultRegistry:
+      host: ${DEFAULT_REGISTRY_HOST}
+      {{- if .Values.provisioner.defaultRegistry.cert }}
+      certCA: !file /app/secrets/regcert.pem
+      {{- end }}
+      username: ${DEFAULT_REGISTRY_USERNAME}
+      password: ${DEFAULT_REGISTRY_PASSWORD}
+    {{- end }}
+
+    k8shellCapabilities:
+      apiServerEnabled: {{ .Values.k8shellCapabilities.apiServerEnabled }}
+
+    certManager:
+      enabled: {{ .Values.certManager.enabled }}
+      issuer:
+        name: {{ .Values.certManager.issuer.name }}
+        kind: {{ .Values.certManager.issuer.kind }}
+      duration: {{ .Values.certManager.duration }}
+      renewBefore: {{ .Values.certManager.renewBefore }}
+
+    # grpc server
+    grpc:
+      port: 9030
+
+      {{- if .Values.certManager.enabled }}
+      enableTLS: true
+      certFile: /etc/tls/provisioner/tls.crt
+      keyFile: /etc/tls/provisioner/tls.key
+      {{- else }}
+      enableTLS: false
+      {{- end }}
+
+      # JWT required claims for authentication
+      authEnabled: {{ .Values.authEnabled }}
+      audience: provisioner
+      allowed:
+        - serviceAccount: ssh-proxy
+        - serviceAccount: api-server
+
+    nats:
+      enabled: {{ .Values.nats.enabled }}
+      url: nats://{{ .Values.nats.host }}:{{ .Values.nats.port }}
+      username: {{ .Values.nats.username }}
+      password: ${NATS_K8SHELL_PASSWORD}
+      kv:
+        provisionBucketTTL: {{ .Values.provisioner.nats.provisionBucketTTL }}
+
+    # Identity service configuration
+    identity:
+      address: identity:9020
+      tokenFilePath: /var/run/secrets/k8shell.io/identity
+      {{- if .Values.certManager.enabled }}
+      caCertPath: /etc/k8shell/ca/ca.crt
+      serverName: identity.{{ .Release.Namespace }}.svc
+      {{- end }}
+
+    {{- if .Values.session.enabled }}
+    # Session service configuration
+    session:
+      address: session:9010
+      tokenFilePath: /var/run/secrets/k8shell.io/session
+      {{- if .Values.certManager.enabled }}
+      caCertPath: /etc/k8shell/ca/ca.crt
+      serverName: session.{{ .Release.Namespace }}.svc
+      {{- end }}
+    {{- end }}
+
+    # JWT verifier configuration for validating tokens from remote identity providers
+    jwtVerifier:
+      signingMethod: ${JWT_SIGNING_METHOD}
+      privateKeyFile: /run/secrets/jwt-issuer/private-key.pem
+
+    # Blueprints configuration
+    blueprints:
+      directory: /app/blueprints

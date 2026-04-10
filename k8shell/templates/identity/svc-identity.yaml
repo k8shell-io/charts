@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: identity
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9020
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
+  selector:
+    k8shell.io/app: identity

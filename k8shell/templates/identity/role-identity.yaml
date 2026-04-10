@@ -1,0 +1,23 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: identity
+  namespace: {{ .Values.provisioner.targetNamespace }}
+rules:
+  - apiGroups: [""]
+    resources:
+      [
+        "secrets",
+      ]
+    verbs:
+      [
+        "create",
+        "delete",
+        "get",
+        "list",
+        "patch",
+        "update",
+      ]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["create", "get", "list", "delete", "watch", "update", "patch"]

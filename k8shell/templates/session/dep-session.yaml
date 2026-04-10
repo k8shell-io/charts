@@ -1,0 +1,78 @@
+{{- if .Values.session.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: session
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: session
+spec:
+  replicas: {{ .Values.session.replicas }}
+  selector:
+    matchLabels:
+      k8shell.io/app: session
+  template:
+    metadata:
+      labels:
+        k8shell.io/app: session
+        {{- include "k8shell.labels" . | nindent 8 }}
+    spec:
+      {{- include "k8shell.imagePullSecrets" . | nindent 6 }}      
+      containers:
+      - name: session
+        image: {{ .Values.imageRegistry.host }}/{{ .Values.session.image.name }}:{{ .Values.session.image.tag }}
+        workingDir: /app
+        command: ["./session", "--config", "config/config.yaml", "--logtext"]
+        ports:
+        - containerPort: 9010
+          name: grpc
+        env:
+        {{- include "k8shell.secretEnv" (dict 
+          "enabled" .Values.postgresql.enabled
+          "name" "POSTGRES_USERNAME" 
+          "secretDef" .Values.postgresql.username 
+          "defaultSecret" "session" 
+          "context" .) | nindent 8 
+        }}
+        {{- include "k8shell.secretEnv" (dict 
+          "enabled" .Values.postgresql.enabled
+          "name" "POSTGRES_PASSWORD" 
+          "secretDef" .Values.postgresql.password 
+          "defaultSecret" "session" 
+          "context" .) | nindent 8 
+        }}
+        {{- include "k8shell.secretEnv" (dict 
+          "enabled" .Values.nats.enabled
+          "name" "NATS_K8SHELL_PASSWORD" 
+          "secretDef" .Values.nats.password 
+          "defaultSecret" "nats" 
+          "context" .) | nindent 8 
+        }}
+        volumeMounts:
+        - name: session-config
+          mountPath: /app/config
+          readOnly: true
+        {{- if .Values.certManager.enabled }}
+        - name: session-cert
+          mountPath: /etc/tls/session
+          readOnly: true
+        {{- end }}
+        {{- if .Values.session.recording.persistentVolumeClaim.install }}
+        - name: session-recording
+          mountPath: /app/recordings
+        {{- end }}
+      volumes:
+      - name: session-config
+        configMap:
+          name: session-config
+      {{- if .Values.certManager.enabled }}
+      - name: session-cert
+        secret:
+          secretName: session-tls
+      {{- end }}
+      {{- if .Values.session.recording.persistentVolumeClaim.install }}
+      - name: session-recording
+        persistentVolumeClaim:
+          claimName: pvc-session-recording
+      {{- end }}
+{{- end }}

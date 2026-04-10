@@ -1,0 +1,54 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: provisioner
+  namespace: {{ .Values.provisioner.targetNamespace }}
+rules:
+  - apiGroups: ["", "apps", "metrics.k8s.io"]
+    resources:
+      [
+        "pods",
+        "pods/resize",
+        "pods/exec",
+        "pods/log",
+        "pods/portforward",
+        "pods/attach",
+        "pods/proxy",
+        "pods/binding",
+        "configmaps",
+        "endpoints",
+        "persistentvolumeclaims",
+        "secrets",
+        "events",
+        "services",
+        "services/proxy",
+        "serviceaccounts",
+      ]
+    verbs:
+      [
+        "create",
+        "delete",
+        "deletecollection",
+        "get",
+        "list",
+        "patch",
+        "update",
+        "watch",
+      ]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["create", "get", "list", "delete", "watch", "update", "patch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["create", "delete", "get", "list", "watch", "update", "patch"]
+{{- if .Capabilities.APIVersions.Has "cilium.io/v2/CiliumNetworkPolicy" }}
+  - apiGroups: ["cilium.io"]
+    resources: ["ciliumnetworkpolicies"]
+    verbs: ["create", "delete", "get", "list", "watch", "update", "patch"]
+{{- end }}
+{{- if .Values.certManager.enabled }}
+  - apiGroups: ["cert-manager.io"]
+    resources:
+      - certificates
+    verbs: ["create","get","list","watch","update","patch","delete"]
+{{- end }}

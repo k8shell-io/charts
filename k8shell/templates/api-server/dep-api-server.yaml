@@ -1,0 +1,114 @@
+{{- if .Values.apiServer.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-server
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api-server
+spec:
+  replicas: {{ .Values.apiServer.replicas }}
+  selector:
+    matchLabels:
+      k8shell.io/app: api-server
+  template:
+    metadata:
+      labels:
+        k8shell.io/app: api-server
+        {{- include "k8shell.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: api-server
+      {{- include "k8shell.imagePullSecrets" . | nindent 6 }}      
+      containers:
+      - name: api-server
+        image: {{ .Values.imageRegistry.host }}/{{ .Values.apiServer.image.name }}:{{ .Values.apiServer.image.tag }}
+        workingDir: /app
+        command: ["./api-server", "--config", "config/config.yaml", "--logtext"]
+        ports:
+        - containerPort: 9101
+          name: http
+        env:
+        {{- include "k8shell.secretEnv" (dict 
+          "enabled" .Values.nats.enabled
+          "name" "NATS_K8SHELL_PASSWORD" 
+          "secretDef" .Values.nats.password 
+          "defaultSecret" "nats" 
+          "context" .) | nindent 8 
+        }}
+        - name: JWT_SIGNING_METHOD
+          valueFrom:
+            secretKeyRef:
+              {{- if .Values.identity.jwtIssuer.signingMethod.secretName }}
+              name: {{ .Values.identity.jwtIssuer.signingMethod.secretName }}
+              key: {{ .Values.identity.jwtIssuer.signingMethod.secretKey }}
+              {{- else }}
+              name: jwt-issuer
+              key: JWT_SIGNING_METHOD
+              {{- end }}
+        volumeMounts:
+        - name: api-server-config
+          mountPath: /app/config
+          readOnly: true
+        - name: jwt
+          mountPath: /var/run/secrets/k8shell.io
+          readOnly: true
+        {{- if .Values.certManager.enabled }}
+        - name: ca-cert
+          mountPath: /etc/k8shell/ca
+          readOnly: true
+        {{- end }}
+        - name: jwt-issuer
+          mountPath: /run/secrets/jwt-issuer
+          readOnly: true
+      volumes:
+      - name: api-server-config
+        configMap:
+          name: api-server-config
+      - name: jwt
+        projected:
+          sources:
+            - serviceAccountToken:
+                path: session
+                audience: session
+                expirationSeconds: {{ .Values.tokenExpiration }}
+            - serviceAccountToken:
+                path: identity
+                audience: identity
+                expirationSeconds: {{ .Values.tokenExpiration }}
+            - serviceAccountToken:
+                path: provisioner
+                audience: provisioner
+                expirationSeconds: {{ .Values.tokenExpiration }}
+            - serviceAccountToken:
+                path: k8shelld
+                audience: k8shelld
+                expirationSeconds: {{ .Values.tokenExpiration }}
+      {{- if .Values.certManager.enabled }}
+      - name: ca-cert
+        secret:
+          secretName: k8shell-cluster-ca
+      {{- end }}
+      - name: jwt-issuer
+        projected:
+          sources:
+            {{- if .Values.identity.jwtIssuer.privateKey.secretName }}
+            - secret:
+                name: {{ .Values.identity.jwtIssuer.privateKey.secretName }}
+                items:
+                  - key: {{ .Values.identity.jwtIssuer.privateKey.secretKey }}
+                    path: private-key.pem
+            {{- else }}
+            - secret:
+                name: jwt-issuer
+                items:
+                  - key: private-key.pem
+                    path: private-key.pem
+            {{- end }}
+            {{- if not .Values.identity.jwtIssuer.signingMethod.secretName }}
+            - secret:
+                name: jwt-issuer
+                items:
+                  - key: JWT_SIGNING_METHOD
+                    path: JWT_SIGNING_METHOD
+            {{- end }}
+{{- end }}
