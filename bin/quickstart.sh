@@ -1,10 +1,25 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# quickstart.sh — k8shell installation helper
+#
+# Installs k8shell into a Kubernetes cluster using Helm. Handles prerequisite
+# checks, cryptographic key generation, namespace setup, and prints connection
+# instructions on success.
+#
+# Version : 1.0.0
+# Authors : k8shell Authors
+# License : GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later)
+#           https://www.gnu.org/licenses/agpl-3.0.html
+# Source  : https://github.com/k8shell-io/charts
+# Copyright (c) 2026 k8shell Authors. All rights reserved.
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
 # k8shell quickstart
 # ---------------------------------------------------------------------------
 
+SCRIPT_VERSION="1.0.0"
 CHART_VERSION=""
 NAMESPACE="k8shell-system"
 TARGET_NAMESPACE="k8shell-workspaces"
@@ -20,6 +35,9 @@ NODE_PORT="30022"
 usage() {
     cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
+
+Version : $SCRIPT_VERSION
+License : AGPL-3.0-or-later — https://github.com/k8shell-io/charts
 
 Options:
   -v, --version VERSION      Helm chart version (default: latest)
@@ -167,7 +185,7 @@ generate_admin_public_key() {
 # ---------------------------------------------------------------------------
 
 cat <<EOF
-k8shell Quickstart — installs k8shell with minimal setup.
+k8shell Quickstart v${SCRIPT_VERSION} — installs k8shell with minimal setup.
 For more information, see https://docs.k8shell.io/quickstart
 
 EOF
@@ -176,9 +194,9 @@ check_prereqs
 
 mkdir -p "$QUICKSTART_DIR"
 
-serverKeyDesc=$(describe_ec_key "$QUICKSTART_DIR/server-key.pem" | sed "s|$HOME|\$HOME|g")
-issuerKeyDesc=$(describe_ec_key "$QUICKSTART_DIR/issuer-key.pem" | sed "s|$HOME|\$HOME|g")
-adminKeySource=$(detect_admin_key_source | sed "s|$HOME|\$HOME|g")
+serverKeyDesc=$(describe_ec_key "$QUICKSTART_DIR/server-key.pem" | sed "s|$HOME|~|g")
+issuerKeyDesc=$(describe_ec_key "$QUICKSTART_DIR/issuer-key.pem" | sed "s|$HOME|~|g")
+adminKeySource=$(detect_admin_key_source | sed "s|$HOME|~|g")
 
 if kubectl get namespace "$TARGET_NAMESPACE" &>/dev/null; then
     targetNsStatus="exists"
@@ -203,7 +221,7 @@ echo "  JWT issuer key     : $issuerKeyDesc"
 echo "  Admin user         : admin (sudo enabled, shell: /bin/bash)"
 echo "  Admin SSH key      : $adminKeySource"
 echo
-read -rp "Proceed with installation? [y/N] " confirm
+read -rp "Proceed with installation? [y/N] " confirm </dev/tty
 case "$confirm" in
     [yY][eE][sS]|[yY]) ;;
     *) info "Installation cancelled."; exit 0 ;;
@@ -217,7 +235,7 @@ fi
 serverKey=$(ensure_ec_key "$QUICKSTART_DIR/server-key.pem")
 issuerKey=$(ensure_ec_key "$QUICKSTART_DIR/issuer-key.pem")
 adminKey=$(generate_admin_public_key)
-privateKeyPath=$(resolve_private_key_path | sed "s|$HOME|\$HOME|g")
+privateKeyPath=$(resolve_private_key_path | sed "s|$HOME|~|g")
 
 nodeIp=""
 if [ "$NODE_PORT_ENABLED" = "true" ]; then
