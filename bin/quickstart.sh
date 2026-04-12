@@ -87,7 +87,7 @@ check_prereqs() {
 
     # Helm version >= 3
     local helm_major
-    helm_major=$(helm version --short 2>/dev/null | grep -oP 'v\K[0-9]+' | head -1)
+    helm_major=$(helm version --short 2>/dev/null | sed 's/^v\([0-9]*\).*/\1/' | head -1)
     if [ "${helm_major:-0}" -lt 3 ]; then
         error "Helm v3 or later is required (found: $(helm version --short 2>/dev/null))"
     fi
