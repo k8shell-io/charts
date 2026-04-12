@@ -266,23 +266,25 @@ helm $helmAction k8shell oci://registry.k8shell.io/charts/k8shell \
 
 info "k8shell ${helmAction}ed successfully."
 
+if [ "$NODE_PORT_ENABLED" = "true" ]; then
+    connect_instructions="       ssh -p $NODE_PORT -i ${privateKeyPath} admin~ubuntu@${nodeIp:-<node-ip>}"
+else
+    connect_instructions="\
+     Start port-forwarding:
+
+       kubectl port-forward svc/ssh-internal 2222:22 -n ${NAMESPACE}
+
+     Connect:
+
+       ssh -p 2222 -i ${privateKeyPath} admin~ubuntu@127.0.0.1"
+fi
+
 cat <<EOF
 
   Next steps
   ----------
   1. Connect to the workspace 'ubuntu' as 'admin' user:
-$(if [ "$NODE_PORT_ENABLED" = "true" ]; then
-echo ""
-echo "       ssh -p $NODE_PORT -i ${privateKeyPath} admin~ubuntu@${nodeIp:-<node-ip>}"
-else
-echo ""
-echo "     Start port-forwarding:"
-echo ""
-echo "       kubectl port-forward svc/ssh-internal 2222:22 -n ${NAMESPACE}"
-echo ""
-echo "     Connect:"
-echo ""
-echo "       ssh -p 2222 -i ${privateKeyPath} admin~ubuntu@127.0.0.1"
-fi)
+
+${connect_instructions}
 
 EOF
