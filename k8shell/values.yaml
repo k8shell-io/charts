@@ -141,7 +141,7 @@ provisioner:
   replicas: 1
   image:
     name: k8shell-base/provisioner
-    tag: pr-26-37ff5b4
+    tag: pr-26-9a168d7
 
   # optional list of configmaps that provide extra files for workspace blueprints
   # their files are mounted into /app/blueprints together with blueprint-base-files
