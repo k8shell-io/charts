@@ -14,7 +14,7 @@ blueprints:
     hostname: !cel "user.username + '-' + metadata.name"
 
     k8shelld:
-      image: k8shell-base/k8shelld:pr-50-cb152b5
+      image: k8shell-base/k8shelld:pr-50-e61ace8
       imagePullPolicy: IfNotPresent
       ignoreOrphans:
         - .*JetBrains.*
@@ -29,22 +29,16 @@ blueprints:
       cpu: 4
       memory: 4Gi
 
-    docker:
+    podman:
       enabled: false
-      image: docker:29.3.0-dind 
+      image: quay.io/podman/stable:v5.8.2
 
       resources:
         cpu: 2
         memory: 2Gi
 
-      # group id used in the dind image to create the docker socket; when the dind image is rootless
-      # the actual group id will be 100000 + group_id - 1 where 100000 is subordinate group id
+      # podman sock group id owner
       groupId: 999
-
-      # subordinate group id used in the dind image;
-      # this should be set to 100000 when the dind image is rootless otehrwise it should be set to 0
-      #subgid: 100000
-      subgid: 0
 
       # use the same volumes as in the main workspace
       parentStorages: true
