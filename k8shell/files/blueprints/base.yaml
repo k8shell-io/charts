@@ -37,11 +37,10 @@ blueprints:
         cpu: 2
         memory: 2Gi
 
-      # podman sock group id owner
-      groupId: 999
-
       # use the same volumes as in the main workspace
       parentStorages: true
+
+      createDockerSockSymlink: true
 
     # list of storages in the workspace
     # storages:
