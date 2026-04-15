@@ -31,7 +31,7 @@ blueprints:
 
     podman:
       enabled: false
-      image: quay.io/podman/stable:v5.8.2
+      image: quay.io/podman/stable:v5.8.1
 
       resources:
         cpu: 2
