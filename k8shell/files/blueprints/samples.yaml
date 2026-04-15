@@ -7,7 +7,7 @@ blueprints:
       cpu: 8
       memory: 4Gi
 
-    docker:
+    podman:
       enabled: true
 
   - name: ubuntu
