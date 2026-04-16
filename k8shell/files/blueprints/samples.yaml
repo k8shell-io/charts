@@ -1,7 +1,7 @@
 blueprints:
   - name: docker
     template: base
-    image: docker:24-cli
+    image: docker.io/docker:24-cli
 
     env:
       DOCKER_HOST: "unix:///var/run/podman/podman.sock"
