@@ -145,7 +145,7 @@ provisioner:
 
   # if true, the sample blueprints (samples.yaml) will be included alongside
   # the base blueprints (base.yaml). base.yaml is always included.
-  includeBlueprintSamples: false
+  includeBlueprintSamples: true
 
   # optional list of configmaps that provide extra files for workspace blueprints
   # their files are mounted into /app/blueprints together with blueprint-base-files
