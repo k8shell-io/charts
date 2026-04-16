@@ -141,7 +141,11 @@ provisioner:
   replicas: 1
   image:
     name: k8shell-base/provisioner
-    tag: pr-26-c80ee0f
+    tag: pr-26-1806fd4
+
+  # if true, the sample blueprints (samples.yaml) will be included alongside
+  # the base blueprints (base.yaml). base.yaml is always included.
+  includeBlueprintSamples: false
 
   # optional list of configmaps that provide extra files for workspace blueprints
   # their files are mounted into /app/blueprints together with blueprint-base-files

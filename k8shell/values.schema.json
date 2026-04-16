@@ -344,6 +344,9 @@
                 "image": {
                     "$ref": "#/definitions/image"
                 },
+                "includeBlueprintSamples": {
+                    "type": "boolean"
+                },
                 "blueprintFilesConfigMaps": {
                     "type": "array",
                     "items": {

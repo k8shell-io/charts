@@ -3,8 +3,9 @@ kind: ConfigMap
 metadata:
   name: blueprint-base-files
 data:
-{{- $files := .Files.Glob "files/blueprints/*" }}
-{{- range $path, $file := $files }}
-  {{ base $path }}: |
-{{ $file | toString | indent 4 }}
+  base.yaml: |
+{{ .Files.Get "files/blueprints/base.yaml" | indent 4 }}
+{{- if .Values.provisioner.includeBlueprintSamples }}
+  samples.yaml: |
+{{ .Files.Get "files/blueprints/samples.yaml" | indent 4 }}
 {{- end }}
