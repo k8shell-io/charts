@@ -54,7 +54,7 @@ sshProxy:
   
   image:
     name: k8shell-base/ssh-proxy
-    tag: pr-14-6dfd1b6
+    tag: pr-14-6097ff4
   
   proxyProtocol: false
   
@@ -141,7 +141,7 @@ provisioner:
   replicas: 1
   image:
     name: k8shell-base/provisioner
-    tag: pr-26-5852169
+    tag: pr-26-6dd8c77
 
   # if true, the sample blueprints (samples.yaml) will be included alongside
   # the base blueprints (base.yaml). base.yaml is always included.
