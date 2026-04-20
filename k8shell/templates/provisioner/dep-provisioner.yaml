@@ -58,6 +58,9 @@ spec:
         {{- else if .Values.imageRegistry.username }}
         - name: DEFAULT_REGISTRY_USERNAME
           value: {{ .Values.imageRegistry.username | quote }}
+        {{- else }}
+        - name: DEFAULT_REGISTRY_USERNAME
+          value: ""
         {{- end }}
         {{- end }}
         {{- if .Values.provisioner.defaultRegistry.password }}
@@ -78,6 +81,9 @@ spec:
         {{- else if .Values.imageRegistry.password }}
         - name: DEFAULT_REGISTRY_PASSWORD
           value: {{ .Values.imageRegistry.password | quote }}
+        {{- else }}
+        - name: DEFAULT_REGISTRY_PASSWORD
+          value: ""
         {{- end }}
         {{- end }}
         {{- end }}
