@@ -54,7 +54,7 @@ sshProxy:
   
   image:
     name: k8shell-base/ssh-proxy
-    tag: pr-14-335fa75
+    tag: v0.13.0
   
   proxyProtocol: false
   
@@ -92,7 +92,7 @@ identity:
   replicas: 1
   image:
     name: k8shell-base/identity
-    tag: pr-13-ea7d45e
+    tag: v0.13.0
 
   jwtIssuer:
     expiry: 60m
@@ -141,7 +141,7 @@ provisioner:
   replicas: 1
   image:
     name: k8shell-base/provisioner
-    tag: pr-26-aae8226
+    tag: v0.13.0
 
   # if true, the sample blueprints (samples.yaml) will be included alongside
   # the base blueprints (base.yaml). base.yaml is always included.
@@ -177,7 +177,7 @@ frontend:
   replicas: 1
   image:
     name: k8shell-base/frontend
-    tag: v0.12.15
+    tag: v0.13.0
   scheme: "http"
   host: "localtest.me"
   sessionCookie:
@@ -192,7 +192,7 @@ apiServer:
   replicas: 1
   image:
     name: k8shell-base/api-server
-    tag: pr-53-58b909d
+    tag: v0.13.0
   logging:
     requestHeaders: false
     responseHeaders: false
@@ -202,7 +202,7 @@ session:
   replicas: 1
   image:
     name: k8shell-base/session
-    tag: pr-4-20fd48a
+    tag: v0.13.0
 
   # Janitor ends sessions that stop sending upserts (e.g. client killed).
   # pg_try_advisory_lock ensures only one replica runs the sweep at a time.

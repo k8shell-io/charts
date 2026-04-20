@@ -30,6 +30,12 @@ blueprints:
       enabled: false
       image: quay.io/podman/stable:v5.8.1
 
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        appArmorProfile:
+          type: Unconfined
+
       resources:
         cpu: 2
         memory: 2Gi
