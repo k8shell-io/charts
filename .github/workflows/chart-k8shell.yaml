@@ -3,10 +3,7 @@ name: Build k8shell chart
 on:
   push:
     tags:
-      - "v*"
-    paths:
-      - "k8shell/**"
-      - ".github/workflows/chart-k8shell.yaml"
+      - "v*-k8shell"
 
   pull_request:
     branches:
