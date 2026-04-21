@@ -177,7 +177,7 @@ frontend:
   replicas: 1
   image:
     name: k8shell-base/frontend
-    tag: v0.13.0
+    tag: v0.14.0
   scheme: "http"
   host: "localtest.me"
   sessionCookie:
@@ -192,7 +192,7 @@ apiServer:
   replicas: 1
   image:
     name: k8shell-base/api-server
-    tag: v0.13.0
+    tag: v0.14.0
   logging:
     requestHeaders: false
     responseHeaders: false
