@@ -114,15 +114,6 @@
                 }
             }
         },
-        "k8shellCapabilities": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "apiServerEnabled": {
-                    "type": "boolean"
-                }
-            }
-        },
         "sshProxy": {
             "type": "object",
             "additionalProperties": false,
@@ -386,6 +377,21 @@
                     "properties": {
                         "provisionBucketTTL": {
                             "type": "string"
+                        }
+                    }
+                },
+                "shells": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "allowSessionDetach": {
+                            "type": "boolean"
+                        },
+                        "detachedTTL": {
+                            "type": "string"
+                        },
+                        "allowUnlimittedTTL": {
+                            "type": "boolean"
                         }
                     }
                 }
