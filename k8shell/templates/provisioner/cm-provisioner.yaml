@@ -24,9 +24,10 @@ data:
 
     k8shellCapabilities:
       apiServerEnabled: {{ .Values.apiServer.enabled }}
-      allowSessionDetach: {{ .Values.provisioner.shells.allowSessionDetach }}
-      detachedTTL: {{ .Values.provisioner.shells.detachedTTL }}
-      allowUnlimittedTTL: {{ .Values.provisioner.shells.allowUnlimittedTTL }}
+      shells:
+        allowSessionDetach: {{ .Values.provisioner.shells.allowSessionDetach }}
+        detachedTTL: {{ .Values.provisioner.shells.detachedTTL }}
+        allowUnlimittedTTL: {{ .Values.provisioner.shells.allowUnlimittedTTL }}
 
     certManager:
       enabled: {{ .Values.certManager.enabled }}
