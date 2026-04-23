@@ -46,9 +46,6 @@ certManager:
   duration: 24h
   renewBefore: 12h
 
-k8shellCapabilities:
-  apiServerEnabled: false
-
 sshProxy:
   replicas: 1
   
@@ -141,7 +138,7 @@ provisioner:
   replicas: 1
   image:
     name: k8shell-base/provisioner
-    tag: v0.13.0
+    tag: pr-28-d7425f2
 
   # if true, the sample blueprints (samples.yaml) will be included alongside
   # the base blueprints (base.yaml). base.yaml is always included.
@@ -167,6 +164,11 @@ provisioner:
 
   nats:
     provisionBucketTTL: 48h
+
+  shells:
+    allowSessionDetach: false
+    detachedTTL: "30m"
+    allowUnlimittedTTL: false
 
 # Below services are disabled in k8shell chart. They are used in k8shell-bundle
 # that provides full set of k8shell services with postgresql and nats
