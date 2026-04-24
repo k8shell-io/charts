@@ -51,7 +51,7 @@ sshProxy:
   
   image:
     name: k8shell-base/ssh-proxy
-    tag: v0.13.0
+    tag: v0.13.1
   
   proxyProtocol: false
   
@@ -89,7 +89,7 @@ identity:
   replicas: 1
   image:
     name: k8shell-base/identity
-    tag: v0.13.0
+    tag: v0.13.1
 
   jwtIssuer:
     expiry: 60m
@@ -138,7 +138,7 @@ provisioner:
   replicas: 1
   image:
     name: k8shell-base/provisioner
-    tag: pr-28-d7425f2
+    tag: v0.13.1
 
   # if true, the sample blueprints (samples.yaml) will be included alongside
   # the base blueprints (base.yaml). base.yaml is always included.
@@ -179,7 +179,7 @@ frontend:
   replicas: 1
   image:
     name: k8shell-base/frontend
-    tag: v0.14.0
+    tag: v0.14.2
   scheme: "http"
   host: "localtest.me"
   sessionCookie:
@@ -194,7 +194,7 @@ apiServer:
   replicas: 1
   image:
     name: k8shell-base/api-server
-    tag: v0.14.0
+    tag: v0.14.3
   logging:
     requestHeaders: false
     responseHeaders: false
