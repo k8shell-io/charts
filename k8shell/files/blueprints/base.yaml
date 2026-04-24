@@ -7,7 +7,7 @@ blueprints:
       Connected to k8shelld (version: {{.Version}}-{{.Commit}})
       For more information, visit https://k8shell.io
 
-    image: <image:tag>
+    image: docker.io/alpine:latest
     imagePullPolicy: IfNotPresent
 
     subdomain: !cel "user.organization"
