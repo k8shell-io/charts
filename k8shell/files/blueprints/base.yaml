@@ -20,7 +20,7 @@ blueprints:
         - .*JetBrains.*
 
     network:
-      networkPolicy: workspace
+      networkPolicyClass: workspace
 
     resources:
       cpu: 4
