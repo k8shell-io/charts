@@ -7,20 +7,20 @@ blueprints:
       Connected to k8shelld (version: {{.Version}}-{{.Commit}})
       For more information, visit https://k8shell.io
 
-    image: <image:tag>
+    image: docker.io/alpine:latest
     imagePullPolicy: IfNotPresent
 
     subdomain: !cel "user.organization"
     hostname: !cel "user.username + '-' + metadata.name"
 
     k8shelld:
-      image: k8shell-base/k8shelld:pr-55-latest
+      image: k8shell-base/k8shelld:pr-56-fb33dbf
       imagePullPolicy: IfNotPresent
       ignoreOrphans:
         - .*JetBrains.*
 
     network:
-      networkPolicy: workspace
+      networkPolicyClass: workspace
 
     resources:
       cpu: 4

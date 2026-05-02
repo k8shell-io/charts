@@ -170,6 +170,14 @@ provisioner:
     detachedTTL: "30m"
     allowUnlimittedTTL: false
 
+  # extra environment variables to inject into the provisioner pod.
+  # names must not conflict with reserved variables:
+  # DEFAULT_REGISTRY_HOST, DEFAULT_REGISTRY_USERNAME, DEFAULT_REGISTRY_PASSWORD,
+  # NATS_K8SHELL_PASSWORD, JWT_SIGNING_METHOD
+  extraEnv: []
+  # - name: MY_VAR
+  #   value: "my-value"
+
 # Below services are disabled in k8shell chart. They are used in k8shell-bundle
 # that provides full set of k8shell services with postgresql and nats
 # dependencies.

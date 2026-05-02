@@ -103,6 +103,16 @@ spec:
               name: jwt-issuer
               key: JWT_SIGNING_METHOD
               {{- end }}
+        {{- if .Values.provisioner.extraEnv }}
+        {{- $reserved := list "DEFAULT_REGISTRY_HOST" "DEFAULT_REGISTRY_USERNAME" "DEFAULT_REGISTRY_PASSWORD" "NATS_K8SHELL_PASSWORD" "JWT_SIGNING_METHOD" }}
+        {{- range .Values.provisioner.extraEnv }}
+        {{- if has .name $reserved }}
+        {{- fail (printf "provisioner.extraEnv: '%s' conflicts with a reserved environment variable" .name) }}
+        {{- end }}
+        - name: {{ .name }}
+          value: {{ .value | quote }}
+        {{- end }}
+        {{- end }}
         volumeMounts:
         - name: provisioner-config
           mountPath: /app/config
