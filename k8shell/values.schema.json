@@ -371,6 +371,9 @@
                 "includeBlueprintSamples": {
                     "type": "boolean"
                 },
+                "defaultCustomBlueprint": {
+                    "type": "string"
+                },
                 "blueprintFilesConfigMaps": {
                     "type": "array",
                     "items": {

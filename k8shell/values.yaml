@@ -91,7 +91,7 @@ identity:
   replicas: 1
   image:
     name: k8shell-base/identity
-    tag: pr-18-2fbf105
+    tag: pr-18-0ff2608
 
   # jwtIssuer configures JWT token issuance for k8shell services.
   jwtIssuer:
@@ -164,11 +164,15 @@ provisioner:
   replicas: 1
   image:
     name: k8shell-base/provisioner
-    tag: pr-31-ce6cf23
+    tag: pr-31-5656226
 
   # if true, the sample blueprints (samples.yaml) will be included alongside
   # the base blueprints (base.yaml). base.yaml is always included.
   includeBlueprintSamples: true
+
+  # defaultCustomBlueprint is the default blueprint when custom blueprint 
+  # does not exist in a git repository
+  defaultCustomBlueprint: base
 
   # optional list of configmaps that provide extra files for workspace blueprints
   # their files are mounted into /app/blueprints together with blueprint-base-files
@@ -215,6 +219,8 @@ provisioner:
   extraEnv: []
   # - name: MY_VAR
   #   value: "my-value"
+
+
 
 # Below services are disabled in k8shell chart. They are used in k8shell-bundle
 # that provides full set of k8shell services with postgresql and nats
