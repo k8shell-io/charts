@@ -24,6 +24,9 @@ data:
 
     k8shellCapabilities:
       apiServerEnabled: {{ .Values.apiServer.enabled }}
+      saToken:
+        enabled: {{ .Values.provisioner.saToken.enabled }}
+        cacheTokens: {{ .Values.provisioner.saToken.cacheTokens }}
       shells:
         allowSessionDetach: {{ .Values.provisioner.shells.allowSessionDetach }}
         detachedTTL: {{ .Values.provisioner.shells.detachedTTL }}

@@ -428,6 +428,18 @@
                         }
                     }
                 },
+                "saToken": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "cacheTokens": {
+                            "type": "boolean"
+                        }
+                    }
+                },
                 "extraEnv": {
                     "type": "array",
                     "items": {

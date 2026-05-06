@@ -30,14 +30,14 @@ imageRegistry:
 # Enable JWT authentication for all services
 authEnabled: true
 
-# JWT token expiration time for all services
-tokenExpiration: 600 # in seconds
+# JWT token expiration time for all services, in seconds
+tokenExpiration: 600
 
 # Enable cert-manager to issue TLS certificates for the services.
 # This requires cert-manager to be installed in the cluster and a
 # ClusterIssuer configured referring a CA issuer such as HashiCorp Vault or
 # cert-manager's own CA issuer. If cert-manager is not enabled, TLS will be
-# disabled for all services and they will fall back to plaintext communication.
+# disabled for all services and they will fall back to plaintext communication
 certManager:
   enabled: false
   issuer:
@@ -46,6 +46,7 @@ certManager:
   duration: 24h
   renewBefore: 12h
 
+# sshProxy is the SSH proxy service that handles incoming SSH connections
 sshProxy:
   replicas: 1
   
@@ -85,25 +86,40 @@ sshProxy:
     enabled: false
     port: 30022
   
+# identity is the authentication and user management service.
 identity:
   replicas: 1
   image:
     name: k8shell-base/identity
     tag: pr-18-2fbf105
 
+  # jwtIssuer configures JWT token issuance for k8shell services.
   jwtIssuer:
+    # expiry is the lifetime of issued JWT tokens
     expiry: 60m
+    # privateKey is the RSA/EC private key used to sign JWT tokens
     privateKey: {}
+    # signingMethod is the algorithm used to sign JWT tokens (e.g. RS256, ES256)
     signingMethod: {}
 
+  # kubernetes configures identity's integration with the Kubernetes API.
   kubernetes:
+    # lease configures distributed leader election for the JWT token refresh loop.
     lease:
+      # name is the name of the Kubernetes Lease object used for leader election
       name: identity-token-refresh
+      # refreshInterval is how often the token refresh loop runs
       refreshInterval: 1m
+      # refreshLookahead is how far ahead of expiry tokens are refreshed
       refreshLookahead: 2m
+
+    # saToken configures on-demand service-account token issuance via the Kubernetes TokenRequest API.
     saToken:
+      # enabled controls whether GetUserCredential issues Kubernetes service account tokens
       enabled: true
+      # ttl is the requested token lifetime (minimum 10m, Kubernetes enforced)
       ttl: 1h
+      # audiences are embedded in issued tokens
       audiences:
         - https://kubernetes.default.svc.cluster.local
 
@@ -143,6 +159,7 @@ identity:
   #   - address: idp-github:9030
   #     serverName: idp-github.<namespace>.svc
 
+# provisioner manages the lifecycle of k8shell workspace pods.
 provisioner:
   replicas: 1
   image:
@@ -172,12 +189,24 @@ provisioner:
     cert: {}
 
   nats:
+    # provisionBucketTTL is the TTL for entries in the NATS KV provisioning bucket
     provisionBucketTTL: 48h
 
+  # shells configures PTY shell session behavior for k8shell workspaces.
   shells:
+    # allowSessionDetach controls whether clients can detach from PTY shell sessions
     allowSessionDetach: false
+    # detachedTTL is how long a detached session is kept alive before automatic termination
     detachedTTL: "30m"
+    # allowUnlimittedTTL allows clients to set unlimited TTL for detached sessions
     allowUnlimittedTTL: false
+
+  # saToken configures the SA token credential helper for workspace Kubernetes access.
+  saToken:
+    # enabled controls whether the SA token credential helper is active
+    enabled: true
+    # cacheTokens controls whether retrieved tokens are cached to avoid redundant API server calls
+    cacheTokens: false
 
   # extra environment variables to inject into the provisioner pod.
   # names must not conflict with reserved variables:
@@ -191,6 +220,7 @@ provisioner:
 # that provides full set of k8shell services with postgresql and nats
 # dependencies.
 
+# frontend serves the k8shell web UI.
 frontend:
   enabled: false
   replicas: 1
@@ -206,6 +236,7 @@ frontend:
     maxAgeSeconds: 86400
     path: /api/v1
 
+# apiServer provides the k8shell REST API.
 apiServer:
   enabled: false
   replicas: 1
@@ -216,6 +247,7 @@ apiServer:
     requestHeaders: false
     responseHeaders: false
 
+# session manages terminal session state and recording.
 session:
   enabled: false
   replicas: 1
@@ -240,6 +272,7 @@ session:
       size: 10Gi
       annotations: {}
 
+# postgresql is the database backend for identity, session, and provisioner services.
 postgresql:
   enabled: false
   host: "postgresql"
@@ -248,6 +281,7 @@ postgresql:
   username: {}
   password: {}
 
+# nats is the message broker used for inter-service communication and KV storage.
 nats:
   enabled: false
   host: "nats"
