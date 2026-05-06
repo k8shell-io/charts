@@ -95,4 +95,4 @@ data:
     # Blueprints configuration
     blueprints:
       directory: /app/blueprints
-      defaultCustomBlueprint: {{ .Values.provisioner.defaultCustomBlueprint default "base" }}
+      defaultCustomBlueprint: {{ .Values.provisioner.defaultCustomBlueprint | default "base" }}
