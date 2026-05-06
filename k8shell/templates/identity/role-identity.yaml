@@ -21,3 +21,8 @@ rules:
   - apiGroups: ["coordination.k8s.io"]
     resources: ["leases"]
     verbs: ["create", "get", "list", "delete", "watch", "update", "patch"]
+  {{- if .Values.identity.kubernetes.saToken.enabled }}
+  - apiGroups: [""]
+    resources: ["serviceaccounts/token"]
+    verbs: ["create"]
+  {{- end }}
