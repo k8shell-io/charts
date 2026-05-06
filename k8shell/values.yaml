@@ -95,8 +95,17 @@ identity:
     expiry: 60m
     privateKey: {}
     signingMethod: {}
-    refreshInterval: 1m
-    refreshLookahead: 2m
+
+  kubernetes:
+    lease:
+      name: identity-token-refresh
+      refreshInterval: 1m
+      refreshLookahead: 2m
+    saToken:
+      enabled: true
+      ttl: 1h
+      audiences:
+        - https://kubernetes.default.svc.cluster.local
 
   users:
     - username: "admin"

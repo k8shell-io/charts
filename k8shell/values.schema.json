@@ -234,12 +234,45 @@
                         },
                         "signingMethod": {
                             "$ref": "#/definitions/secretRef"
+                        }
+                    }
+                },
+                "kubernetes": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "lease": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "name": {
+                                    "type": "string"
+                                },
+                                "refreshInterval": {
+                                    "type": "string"
+                                },
+                                "refreshLookahead": {
+                                    "type": "string"
+                                }
+                            }
                         },
-                        "refreshInterval": {
-                            "type": "string"
-                        },
-                        "refreshLookahead": {
-                            "type": "string"
+                        "saToken": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "enabled": {
+                                    "type": "boolean"
+                                },
+                                "ttl": {
+                                    "type": "string"
+                                },
+                                "audiences": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
                         }
                     }
                 },
