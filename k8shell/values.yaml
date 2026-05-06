@@ -51,7 +51,7 @@ sshProxy:
   
   image:
     name: k8shell-base/ssh-proxy
-    tag: v0.13.1
+    tag: pr-16-efa1261
   
   proxyProtocol: false
   
@@ -89,7 +89,7 @@ identity:
   replicas: 1
   image:
     name: k8shell-base/identity
-    tag: v0.13.2
+    tag: pr-18-2fbf105
 
   jwtIssuer:
     expiry: 60m
@@ -196,13 +196,13 @@ frontend:
   replicas: 1
   image:
     name: k8shell-base/frontend
-    tag: v0.14.3
+    tag: pr-58-108b617
   scheme: "http"
   host: "localtest.me"
   sessionCookie:
     secure: false
     httpOnly: true
-    sameSite: Lax
+    sameSite: Strict
     maxAgeSeconds: 86400
     path: /api/v1
 
@@ -211,7 +211,7 @@ apiServer:
   replicas: 1
   image:
     name: k8shell-base/api-server
-    tag: v0.14.4
+    tag: pr-63-2c896a4
   logging:
     requestHeaders: false
     responseHeaders: false
