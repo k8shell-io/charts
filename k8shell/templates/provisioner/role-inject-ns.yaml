@@ -1,0 +1,46 @@
+{{- if .Values.injectNamespaces }}
+{{- range .Values.injectNamespaces }}
+{{- $injectNamespace := . }}
+{{- $provisionerNamespace := $.Release.Namespace }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: provisioner-inject
+  namespace: {{ $injectNamespace }}
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+- apiGroups: ["apps"]
+  resources: ["replicasets"]
+  verbs: ["get"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "patch"]
+- apiGroups: [""]
+  resources: ["configmaps", "secrets", "services"]
+  verbs: ["get", "create", "update", "delete"]
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims"]
+  verbs: ["get", "create"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["networkpolicies"]
+  verbs: ["get", "create", "update", "delete", "patch"]
+- apiGroups: ["cert-manager.io"]
+  resources: ["certificates"]
+  verbs: ["get", "create", "update", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: provisioner-inject
+  namespace: {{ $injectNamespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: provisioner-inject
+subjects:
+- kind: ServiceAccount
+  name: provisioner
+  namespace: {{ $provisionerNamespace }}
+{{- end }}

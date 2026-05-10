@@ -383,6 +383,12 @@
                 "targetNamespace": {
                     "type": "string"
                 },
+                "injectNamespaces": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "workspaceStorageClass": {
                     "type": "string"
                 },

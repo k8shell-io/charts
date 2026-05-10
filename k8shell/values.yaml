@@ -182,6 +182,13 @@ provisioner:
   # if not set, helm chart installation will fail.
   targetNamespace: ""
 
+  # Namespaces where workspace injection is allowed.
+  # If omitted or empty, injection is disabled and all inject requests are rejected.
+  # Use explicit namespace names for Role-scoped operation.
+  # When you use ["*"] cluster-wide discovery/injection will be granted (ClusterRole).
+  # injectNamespaces:
+  #   - default
+
   # Default registry is used for pulling images for k8shell workspaces when
   # no registry is specified in a workspace blueprint. If not set, it will
   # default to the imageRegistry defined above.

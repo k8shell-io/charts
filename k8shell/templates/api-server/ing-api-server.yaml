@@ -5,6 +5,10 @@ metadata:
   name: api-api-server
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/server-snippet: |
+      location ~ /api/v1/internal {
+        deny all;
+      }
 spec:
   ingressClassName: k8shell-ingress
   rules:
