@@ -44,3 +44,4 @@ subjects:
   name: provisioner
   namespace: {{ $provisionerNamespace }}
 {{- end }}
+{{- end }}
