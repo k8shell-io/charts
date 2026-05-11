@@ -12,6 +12,13 @@ data:
   config.yaml: |
     targetNamespace: {{ .Values.provisioner.targetNamespace }}
 
+    {{- if .Values.provisioner.injectNamespaces }}
+    injectNamespaces:
+    {{- range .Values.provisioner.injectNamespaces }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+
     {{- if .Values.provisioner.defaultRegistry.enabled }}
     defaultRegistry:
       host: ${DEFAULT_REGISTRY_HOST}
