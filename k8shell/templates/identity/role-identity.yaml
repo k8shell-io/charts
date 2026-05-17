@@ -1,0 +1,25 @@
+{{- if .Values.identity.kubernetes.saToken.enabled }}
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: identity
+  namespace: {{ .Values.provisioner.targetNamespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["serviceaccounts/token"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: identity
+  namespace: {{ .Values.provisioner.targetNamespace }}
+subjects:
+  - kind: ServiceAccount
+    name: identity
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: identity
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
