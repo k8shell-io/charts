@@ -57,7 +57,7 @@ sshProxy:
   
   image:
     name: k8shell-base/ssh-proxy
-    tag: pr-16-efa1261
+    tag: v0.13.2
   
   proxyProtocol: false
   
@@ -96,7 +96,7 @@ identity:
   replicas: 1
   image:
     name: k8shell-base/identity
-    tag: pr-18-0ff2608
+    tag: v0.14.1
 
   # jwtIssuer configures JWT token issuance for k8shell services.
   jwtIssuer:
@@ -169,7 +169,7 @@ provisioner:
   replicas: 1
   image:
     name: k8shell-base/provisioner
-    tag: pr-31-5656226
+    tag: v0.14.0
 
   # if true, the sample blueprints (samples.yaml) will be included alongside
   # the base blueprints (base.yaml). base.yaml is always included.
@@ -244,7 +244,7 @@ frontend:
   replicas: 1
   image:
     name: k8shell-base/frontend
-    tag: pr-58-108b617
+    tag: v0.14.2
   scheme: "http"
   host: "localtest.me"
   sessionCookie:
@@ -260,7 +260,7 @@ apiServer:
   replicas: 1
   image:
     name: k8shell-base/api-server
-    tag: pr-63-2c896a4
+    tag: v0.15.0
   logging:
     requestHeaders: false
     responseHeaders: false
