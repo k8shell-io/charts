@@ -169,7 +169,7 @@ provisioner:
   replicas: 1
   image:
     name: k8shell-base/provisioner
-    tag: v0.14.0
+    tag: v0.14.2
 
   # if true, the sample blueprints (samples.yaml) will be included alongside
   # the base blueprints (base.yaml). base.yaml is always included.
