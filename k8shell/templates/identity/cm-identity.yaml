@@ -21,10 +21,15 @@ data:
       # JWT required claims for authentication
       authEnabled: {{ .Values.authEnabled }}
       audience: identity
+
       allowed:
         - serviceAccount: provisioner
         - serviceAccount: ssh-proxy
         - serviceAccount: api-server
+
+    # Provisioner service configuration
+    provisioner:
+      address: {{ if and .Values.grpc .Values.grpc.roundRobin }}dns:///provisioner:9030{{ else }}provisioner:9030{{ end }}
 
     nats:
       enabled: {{ .Values.nats.enabled }}

@@ -46,6 +46,11 @@ certManager:
   duration: 24h
   renewBefore: 12h
 
+grpc:
+  # enables client-side load balancing for gRPC communication between services.
+  # this will make services that expose grpc api to use headless 
+  roundRobin: true
+
 # sshProxy is the SSH proxy service that handles incoming SSH connections
 sshProxy:
   replicas: 1

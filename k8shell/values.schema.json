@@ -58,6 +58,15 @@
         "provisioner"
     ],
     "properties": {
+        "grpc": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "roundRobin": {
+                    "type": "boolean"
+                }
+            }
+        },
         "imageRegistry": {
             "type": "object",
             "additionalProperties": false,

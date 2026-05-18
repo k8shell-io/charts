@@ -7,6 +7,9 @@ metadata:
     app.kubernetes.io/component: identity
 spec:
   type: ClusterIP
+  {{- if and .Values.grpc .Values.grpc.roundRobin }}
+  clusterIP: None
+  {{- end }}
   ports:
     - port: 9020
       targetPort: grpc

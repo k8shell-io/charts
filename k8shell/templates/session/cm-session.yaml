@@ -14,6 +14,10 @@ metadata:
 data:
   config.yaml: |
     # grpc server
+
+    # Identity service configuration
+    identity:
+      address: {{ if and .Values.grpc .Values.grpc.roundRobin }}dns:///identity:9020{{ else }}identity:9020{{ end }}
     grpc:
       port: 9010
 

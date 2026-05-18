@@ -76,7 +76,7 @@ data:
 
     # Identity service configuration
     identity:
-      address: identity:9020
+      address: {{ if and .Values.grpc .Values.grpc.roundRobin }}dns:///identity:9020{{ else }}identity:9020{{ end }}
       tokenFilePath: /var/run/secrets/k8shell.io/identity
       {{- if .Values.certManager.enabled }}
       caCertPath: /etc/k8shell/ca/ca.crt
@@ -86,7 +86,7 @@ data:
     {{- if .Values.session.enabled }}
     # Session service configuration
     session:
-      address: session:9010
+      address: {{ if and .Values.grpc .Values.grpc.roundRobin }}dns:///session:9010{{ else }}session:9010{{ end }}
       tokenFilePath: /var/run/secrets/k8shell.io/session
       {{- if .Values.certManager.enabled }}
       caCertPath: /etc/k8shell/ca/ca.crt
