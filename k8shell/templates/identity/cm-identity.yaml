@@ -21,10 +21,15 @@ data:
       # JWT required claims for authentication
       authEnabled: {{ .Values.authEnabled }}
       audience: identity
+
       allowed:
         - serviceAccount: provisioner
         - serviceAccount: ssh-proxy
         - serviceAccount: api-server
+
+    # Provisioner service configuration
+    provisioner:
+      address: {{ if and .Values.grpc .Values.grpc.roundRobin }}dns:///provisioner:9030{{ else }}provisioner:9030{{ end }}
 
     nats:
       enabled: {{ .Values.nats.enabled }}
@@ -77,6 +82,14 @@ data:
 
     kubernetes:
       namespace: {{ .Values.provisioner.targetNamespace }}
-      leaseName: identity-token-refresh
-      refreshInterval: {{ .Values.identity.jwtIssuer.refreshInterval }}
-      refreshLookahead: {{ .Values.identity.jwtIssuer.refreshLookahead }}
+      lease:
+        name: {{ .Values.identity.kubernetes.lease.name }}
+        refreshInterval: {{ .Values.identity.kubernetes.lease.refreshInterval }}
+        refreshLookahead: {{ .Values.identity.kubernetes.lease.refreshLookahead }}
+      saToken:
+        enabled: {{ .Values.identity.kubernetes.saToken.enabled }}
+        ttl: {{ .Values.identity.kubernetes.saToken.ttl }}
+        audiences:
+        {{- range .Values.identity.kubernetes.saToken.audiences }}
+          - {{ . }}
+        {{- end }}

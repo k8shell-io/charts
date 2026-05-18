@@ -58,6 +58,15 @@
         "provisioner"
     ],
     "properties": {
+        "grpc": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "roundRobin": {
+                    "type": "boolean"
+                }
+            }
+        },
         "imageRegistry": {
             "type": "object",
             "additionalProperties": false,
@@ -234,12 +243,45 @@
                         },
                         "signingMethod": {
                             "$ref": "#/definitions/secretRef"
+                        }
+                    }
+                },
+                "kubernetes": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "lease": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "name": {
+                                    "type": "string"
+                                },
+                                "refreshInterval": {
+                                    "type": "string"
+                                },
+                                "refreshLookahead": {
+                                    "type": "string"
+                                }
+                            }
                         },
-                        "refreshInterval": {
-                            "type": "string"
-                        },
-                        "refreshLookahead": {
-                            "type": "string"
+                        "saToken": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "enabled": {
+                                    "type": "boolean"
+                                },
+                                "ttl": {
+                                    "type": "string"
+                                },
+                                "audiences": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
                         }
                     }
                 },
@@ -338,6 +380,9 @@
                 "includeBlueprintSamples": {
                     "type": "boolean"
                 },
+                "defaultCustomBlueprint": {
+                    "type": "string"
+                },
                 "blueprintFilesConfigMaps": {
                     "type": "array",
                     "items": {
@@ -346,6 +391,12 @@
                 },
                 "targetNamespace": {
                     "type": "string"
+                },
+                "injectNamespaces": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "workspaceStorageClass": {
                     "type": "string"
@@ -391,6 +442,18 @@
                             "type": "string"
                         },
                         "allowUnlimittedTTL": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "saToken": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "cacheTokens": {
                             "type": "boolean"
                         }
                     }

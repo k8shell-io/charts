@@ -8,6 +8,9 @@ metadata:
     app.kubernetes.io/component: session
 spec:
   type: ClusterIP
+  {{- if and .Values.grpc .Values.grpc.roundRobin }}
+  clusterIP: None
+  {{- end }}
   ports:
     - port: 9010
       targetPort: grpc

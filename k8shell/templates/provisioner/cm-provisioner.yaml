@@ -12,6 +12,13 @@ data:
   config.yaml: |
     targetNamespace: {{ .Values.provisioner.targetNamespace }}
 
+    {{- if .Values.provisioner.injectNamespaces }}
+    injectNamespaces:
+    {{- range .Values.provisioner.injectNamespaces }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+
     {{- if .Values.provisioner.defaultRegistry.enabled }}
     defaultRegistry:
       host: ${DEFAULT_REGISTRY_HOST}
@@ -24,6 +31,9 @@ data:
 
     k8shellCapabilities:
       apiServerEnabled: {{ .Values.apiServer.enabled }}
+      saToken:
+        enabled: {{ .Values.provisioner.saToken.enabled }}
+        cacheTokens: {{ .Values.provisioner.saToken.cacheTokens }}
       shells:
         allowSessionDetach: {{ .Values.provisioner.shells.allowSessionDetach }}
         detachedTTL: {{ .Values.provisioner.shells.detachedTTL }}
@@ -66,7 +76,7 @@ data:
 
     # Identity service configuration
     identity:
-      address: identity:9020
+      address: {{ if and .Values.grpc .Values.grpc.roundRobin }}dns:///identity:9020{{ else }}identity:9020{{ end }}
       tokenFilePath: /var/run/secrets/k8shell.io/identity
       {{- if .Values.certManager.enabled }}
       caCertPath: /etc/k8shell/ca/ca.crt
@@ -76,7 +86,7 @@ data:
     {{- if .Values.session.enabled }}
     # Session service configuration
     session:
-      address: session:9010
+      address: {{ if and .Values.grpc .Values.grpc.roundRobin }}dns:///session:9010{{ else }}session:9010{{ end }}
       tokenFilePath: /var/run/secrets/k8shell.io/session
       {{- if .Values.certManager.enabled }}
       caCertPath: /etc/k8shell/ca/ca.crt
@@ -92,3 +102,4 @@ data:
     # Blueprints configuration
     blueprints:
       directory: /app/blueprints
+      defaultCustomBlueprint: {{ .Values.provisioner.defaultCustomBlueprint | default "base" }}
