@@ -1,5 +1,5 @@
-{{- if .Values.injectNamespaces }}
-{{- range .Values.injectNamespaces }}
+{{- if .Values.provisioner.injectNamespaces }}
+{{- range .Values.provisioner.injectNamespaces }}
 {{- $injectNamespace := . }}
 {{- $provisionerNamespace := $.Release.Namespace }}
 apiVersion: rbac.authorization.k8s.io/v1
