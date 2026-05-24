@@ -195,7 +195,6 @@ check_prereqs
 mkdir -p "$QUICKSTART_DIR"
 
 serverKeyDesc=$(describe_ec_key "$QUICKSTART_DIR/server-key.pem" | sed "s|$HOME|~|g")
-issuerKeyDesc=$(describe_ec_key "$QUICKSTART_DIR/issuer-key.pem" | sed "s|$HOME|~|g")
 adminKeySource=$(detect_admin_key_source | sed "s|$HOME|~|g")
 
 if kubectl get namespace "$TARGET_NAMESPACE" &>/dev/null; then
@@ -217,7 +216,6 @@ echo "  Release namespace  : $NAMESPACE (will be created if absent)"
 echo "  Target namespace   : $TARGET_NAMESPACE ($targetNsStatus)"
 echo "  SSH NodePort       : $([ "$NODE_PORT_ENABLED" = "true" ] && echo "enabled (port $NODE_PORT)" || echo "disabled")"
 echo "  SSH proxy key      : $serverKeyDesc"
-echo "  JWT issuer key     : $issuerKeyDesc"
 echo "  Admin user         : admin (sudo enabled, shell: /bin/bash)"
 echo "  Admin SSH key      : $adminKeySource"
 echo
@@ -233,7 +231,6 @@ if [ "$targetNsStatus" = "will be created" ]; then
 fi
 
 serverKey=$(ensure_ec_key "$QUICKSTART_DIR/server-key.pem")
-issuerKey=$(ensure_ec_key "$QUICKSTART_DIR/issuer-key.pem")
 adminKey=$(generate_admin_public_key)
 privateKeyPath=$(resolve_private_key_path | sed "s|$HOME|~|g")
 
@@ -253,8 +250,6 @@ helm $helmAction k8shell oci://registry.k8shell.io/charts/k8shell \
   --create-namespace \
   --set provisioner.targetNamespace="$TARGET_NAMESPACE" \
   --set sshProxy.serverKey.value="$serverKey" \
-  --set identity.jwtIssuer.privateKey.value="$issuerKey" \
-  --set identity.jwtIssuer.signingMethod.value="es256" \
   --set identity.users[0].username=admin \
   --set identity.users[0].uid=1001 \
   --set identity.users[0].gid=1001 \
