@@ -1,0 +1,22 @@
+{{- if .Values.certManager.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: idp-github-cert
+  labels:
+    {{- include "idp-github.labels" . | nindent 4 }}
+spec:
+  secretName: idp-github-tls
+  duration: {{ .Values.certManager.duration }}
+  renewBefore: {{ .Values.certManager.renewBefore }}
+  commonName: idp-github.{{ .Release.Namespace }}.svc.cluster.local
+  dnsNames:
+    - idp-github
+    - idp-github.{{ .Release.Namespace }}.svc
+    - idp-github.{{ .Release.Namespace }}.svc.cluster.local
+  usages:
+    - server auth
+  issuerRef:
+    name: {{ .Values.certManager.issuer.name }}
+    kind: {{ .Values.certManager.issuer.kind }}
+{{- end }}

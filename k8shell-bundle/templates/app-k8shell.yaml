@@ -1,0 +1,45 @@
+{{- if not .Values.k8shell.provisioner.targetNamespace  }}
+{{- fail "k8shell.provisioner.targetNamespace is required and it must be an existing namespace name" }}
+{{- end }}
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: k8shell
+  namespace: {{ .Values.targetNamespace }}
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: 'default'
+  source:
+    chart: "{{ .Values.charts.k8shell.chartName }}"
+    repoURL: {{ .Values.charts.k8shell.repoURL }}
+    targetRevision: "{{ .Values.charts.k8shell.chartVersion }}"
+    helm:
+      valuesObject:
+        {{- $k8shell := deepCopy .Values.k8shell }}
+        {{- $addressPrefix := "" }}
+        {{- if and $k8shell.grpc (or $k8shell.grpc.roundRound $k8shell.grpc.roundRobin) }}
+        {{- $addressPrefix = "dns:///" }}
+        {{- end }}
+        {{- $existing := default list $k8shell.identity.remoteProviders }}
+        {{- if .Values.idpGithub.enabled }}
+        {{- $idpProvider := dict "address" (printf "%sidp-github:9030" $addressPrefix) "serverName" "idp-github" }}
+        {{- $existing = append $existing $idpProvider }}
+        {{- end }}
+        {{- if .Values.idpGitlab.enabled }}
+        {{- $idpProvider := dict "address" (printf "%sidp-gitlab:9030" $addressPrefix) "serverName" "idp-gitlab" }}
+        {{- $existing = append $existing $idpProvider }}
+        {{- end }}
+        {{- $_ := set $k8shell.identity "remoteProviders" $existing }}
+        {{- $cmaps := default list $k8shell.provisioner.blueprintFilesConfigMaps }}
+        {{- if or .Values.idpGithub.enabled .Values.idpGitlab.enabled }}
+        {{- $cmaps = append $cmaps "git-blueprints" }}
+        {{- end }}
+        {{- $_ := set $k8shell.provisioner "blueprintFilesConfigMaps" $cmaps }}
+        {{- toYaml $k8shell | nindent 8 }}
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ .Values.targetNamespace }}
+  {{- include "k8shell-bundle.syncPolicy" (dict "root" .) | nindent 2 }}

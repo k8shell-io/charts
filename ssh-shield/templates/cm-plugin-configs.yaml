@@ -1,0 +1,19 @@
+{{- if .Values.plugins }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ssh-shield-plugin-configs
+  labels:
+    {{- include "ssh-shield.labels" . | nindent 4 }}
+data:
+  {{- range $type, $config := .Values.plugins }}
+  {{- if eq $type "nfgate" }}
+  nfgate.yaml: |
+    {{- toYaml (omit $config "authKey") | nindent 4 }}
+    authKey: !file ${SECRET_FILES}/nfgate_authkey
+  {{- else }}
+  {{ $type }}.yaml: |
+    {{- toYaml $config | nindent 4 }}
+  {{- end }}
+  {{- end }}
+{{- end }}

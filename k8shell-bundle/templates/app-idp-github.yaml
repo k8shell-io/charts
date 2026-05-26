@@ -1,0 +1,54 @@
+{{- if .Values.idpGithub.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: idp-github
+  namespace: {{ .Values.targetNamespace }}
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: 'default'
+  source:
+    chart: "{{ .Values.charts.idpGithub.chartName }}"
+    repoURL: {{ .Values.charts.idpGithub.repoURL }}
+    targetRevision: "{{ .Values.charts.idpGithub.chartVersion }}"
+    helm:
+      valuesObject:
+        imageRegistry:
+          {{- toYaml .Values.k8shell.imageRegistry | nindent 10 }}
+
+        certManager:
+          {{- toYaml .Values.k8shell.certManager | nindent 10 }}
+
+        grpc:
+          {{- toYaml .Values.k8shell.grpc | nindent 10 }}
+
+        nats:
+          {{- merge .Values.idpGithub.nats (dict "enabled" .Values.k8shell.nats.enabled "host" .Values.k8shell.nats.host "port" .Values.k8shell.nats.port) | toYaml | nindent 10 }}
+
+        postgresql:
+          {{- toYaml .Values.k8shell.postgresql | nindent 10 }}
+
+        authEnabled: {{ .Values.k8shell.authEnabled }}
+
+        {{- with .Values.idpGithub }}
+        replicas: {{ .replicas }}
+        image:
+          {{- toYaml .image | nindent 10 }}
+        github:
+          {{- toYaml .github | nindent 10 }}
+        {{- if .githubTemplate }}
+        githubTemplate: |
+          {{- .githubTemplate | nindent 10 }}
+        {{- end }}
+        {{- if .defaultK8shellFile }}
+        defaultK8shellFile: |
+          {{- .defaultK8shellFile | nindent 10 }}
+        {{- end }}
+        {{- end }}
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ .Values.targetNamespace }}
+  {{- include "k8shell-bundle.syncPolicy" (dict "root" .) | nindent 2 }}
+{{- end }}

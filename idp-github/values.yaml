@@ -1,0 +1,82 @@
+# values.yaml for idp-github Helm chart
+#
+# NOTE on usernames/passwords:
+# usernames and passwords are provided as env variables in Pods.
+# When a field has a value of {}, there are two options:
+#
+# 1. field.value: the actual value will be used to create a Kubernetes secret with key equal
+#    to the env variable name. See templates/sec-idp-github.yaml for how the secret is created
+#    and dep-idp-github.yaml for how it is consumed via the idp-github.secretEnv helper.
+#
+# 2. field.secretName and field.secretKey: uses an existing Kubernetes secret.
+
+replicas: 1
+
+image:
+  name: k8shell-idp/idp-github
+  tag: v0.12.3
+
+imageRegistry:
+  host: registry.k8shell.io
+  existingSecret: ""
+  username: ""
+  password: ""
+
+authEnabled: true
+
+certManager:
+  enabled: false
+  issuer:
+    name: vault-root-issuer
+    kind: ClusterIssuer
+  duration: 24h
+  renewBefore: 12h
+
+grpc:
+  roundRobin: true
+
+nats:
+  enabled: true
+  host: nats
+  port: 4222
+  username: "k8shell-service"
+  password: {}
+
+postgresql:
+  enabled: true
+  host: "postgresql"
+  port: 5432
+  database: ""
+  username: {}
+  password: {}
+
+github:
+  clientId: {}
+  clientSecret: {}
+  allowAccess:
+    users: []
+    # teams:
+    #   - org: "my-org"
+    #     team: "my-team"
+    #     serviceToken: "ghp_..."
+  extra: {}
+
+# githubUserTemplate is used to map the user from github to the k8shell user.
+# Stored as a raw string to preserve !cel tags (Helm's YAML parser strips custom tags).
+githubUserTemplate: |
+  user:
+    username: !cel "user.login"
+    fullname: ""
+    uid: !cel "100000 + int(user.id)"
+    gid: !cel "100000 + int(user.id)"
+    email: !cel |
+      emails.exists(e, e.primary == true)
+        ? emails.filter(e, e.primary == true)[0].email
+        : "unknown@nowhere.com"
+    auths: [publickey]
+    blueprints: ["*"]
+    roles: ["workspace-user"]
+    isValid: true
+    shell: "/bin/bash"
+    sudo: true
+    organization: "github"

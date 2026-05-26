@@ -1,0 +1,162 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ssh-shield values",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "replicas": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 1
+        },
+        "image": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "name",
+                "tag"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                }
+            }
+        },
+        "imageRegistry": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "host": {
+                    "type": "string"
+                },
+                "existingSecret": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "nats": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "host",
+                "port",
+                "user",
+                "password"
+            ],
+            "properties": {
+                "host": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer",
+                    "default": 4222
+                },
+                "user": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "value": {
+                            "type": "string"
+                        },
+                        "secretName": {
+                            "type": "string"
+                        },
+                        "secretKey": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "sshFailures": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "subject": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "stateStore": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "memory",
+                        "nats-kv"
+                    ],
+                    "description": "State store backend type"
+                },
+                "bucket": {
+                    "type": "string",
+                    "description": "Bucket or key-value store name"
+                }
+            }
+        },
+        "blocker": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "window": {
+                    "type": "string",
+                    "description": "Sliding window duration (e.g. 5m)"
+                },
+                "threshold": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "decreasingThreshold": {
+                    "type": "boolean"
+                },
+                "idleCleanup": {
+                    "type": "string",
+                    "description": "Idle cleanup duration (e.g. 12h)"
+                },
+                "banSchedule": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Ordered list of ban durations for escalating strikes"
+                },
+                "maxIPState": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "gcInterval": {
+                    "type": "string",
+                    "description": "Garbage collection interval (e.g. 10m)"
+                },
+                "whitelist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "CIDR ranges to never ban"
+                }
+            }
+        },
+        "plugins": {
+            "type": "object",
+            "description": "Map of plugin type to config. Keys are plugin types (e.g. nfgate).",
+            "additionalProperties": {
+                "type": "object",
+                "description": "Plugin-specific configuration"
+            }
+        }
+    }
+}

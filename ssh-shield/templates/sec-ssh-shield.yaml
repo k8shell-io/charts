@@ -1,0 +1,30 @@
+{{- if and (not .Values.nats.password.value) (not .Values.nats.password.secretName) -}}
+{{- fail "nats.password is required (set .value or .secretName/.secretKey)" -}}
+{{- end -}}
+{{- if hasKey .Values.plugins "nfgate" -}}
+{{- $nfgate := get .Values.plugins "nfgate" -}}
+{{- if and (not $nfgate.authKey.value) (not $nfgate.authKey.secretName) -}}
+{{- fail "plugins.nfgate.authKey is required (set .value or .secretName/.secretKey)" -}}
+{{- end -}}
+{{- end -}}
+{{- $secrets := dict -}}
+{{- if .Values.nats.password.value -}}
+{{- $_ := set $secrets "sshshield_nats_token" .Values.nats.password.value -}}
+{{- end -}}
+{{- if hasKey .Values.plugins "nfgate" -}}
+{{- $nfgate := get .Values.plugins "nfgate" -}}
+{{- if $nfgate.authKey.value -}}
+{{- $_ := set $secrets "nfgate_authkey" $nfgate.authKey.value -}}
+{{- end -}}
+{{- end -}}
+{{- if $secrets }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: int-ssh-shield
+  labels:
+    {{- include "ssh-shield.labels" . | nindent 4 }}
+type: Opaque
+data:
+{{ include "ssh-shield.secretData" $secrets | nindent 2 }}
+{{- end }}

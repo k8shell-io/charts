@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: idp-gitlab
+  labels:
+    {{- include "idp-gitlab.labels" . | nindent 4 }}
+    app.kubernetes.io/component: idp-gitlab
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      k8shell.io/app: idp-gitlab
+  template:
+    metadata:
+      labels:
+        k8shell.io/app: idp-gitlab
+        {{- include "idp-gitlab.labels" . | nindent 8 }}
+    spec:
+      {{- include "idp-gitlab.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: idp-gitlab
+      containers:
+        - name: idp-gitlab
+          image: {{ .Values.imageRegistry.host }}/{{ .Values.image.name }}:{{ .Values.image.tag }}
+          workingDir: /app
+          command: ["./idp-gitlab", "--config", "config/config.yaml", "--logtext"]
+          ports:
+            - containerPort: 9030
+              name: grpc
+          env:
+          {{- include "idp-gitlab.secretEnv" (dict
+            "enabled" .Values.nats.enabled
+            "name" "NATS_K8SHELL_PASSWORD"
+            "secretDef" .Values.nats.password
+            "defaultSecret" "idp-gitlab"
+            "context" .) | nindent 12 }}
+          {{- include "idp-gitlab.secretEnv" (dict
+            "enabled" .Values.postgresql.enabled
+            "name" "POSTGRES_USERNAME"
+            "secretDef" .Values.postgresql.username
+            "defaultSecret" "idp-gitlab"
+            "context" .) | nindent 12 }}
+          {{- include "idp-gitlab.secretEnv" (dict
+            "enabled" .Values.postgresql.enabled
+            "name" "POSTGRES_PASSWORD"
+            "secretDef" .Values.postgresql.password
+            "defaultSecret" "idp-gitlab"
+            "context" .) | nindent 12 }}
+          {{- include "idp-gitlab.secretEnv" (dict
+            "enabled" true
+            "name" "GITLAB_CLIENT_ID"
+            "secretDef" .Values.gitlab.clientId
+            "defaultSecret" "idp-gitlab"
+            "context" .) | nindent 12 }}
+          {{- include "idp-gitlab.secretEnv" (dict
+            "enabled" true
+            "name" "GITLAB_CLIENT_SECRET"
+            "secretDef" .Values.gitlab.clientSecret
+            "defaultSecret" "idp-gitlab"
+            "context" .) | nindent 12 }}
+          volumeMounts:
+            - name: idp-gitlab-config
+              mountPath: /app/config
+              readOnly: true
+            - name: idp-gitlab-files
+              mountPath: /app/files
+              readOnly: true
+          {{- if .Values.certManager.enabled }}
+            - name: idp-gitlab-cert
+              mountPath: /etc/tls/identity
+              readOnly: true
+          {{- end }}
+
+      volumes:
+        - name: idp-gitlab-config
+          configMap:
+            name: idp-gitlab-config
+        - name: idp-gitlab-files
+          configMap:
+            name: idp-gitlab-files
+        {{- if .Values.certManager.enabled }}
+        - name: idp-gitlab-cert
+          secret:
+            secretName: idp-gitlab-tls
+        {{- end }}

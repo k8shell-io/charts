@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: idp-gitlab
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "idp-gitlab.labels" . | nindent 4 }}
+    app.kubernetes.io/component: idp-gitlab

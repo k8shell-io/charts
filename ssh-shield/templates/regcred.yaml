@@ -1,0 +1,9 @@
+{{- if and .Values.imageRegistry.username .Values.imageRegistry.password (not .Values.imageRegistry.existingSecret) }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ printf "%s-regcred" .Release.Name | trunc 63 | trimSuffix "-" }}
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: {{ printf "{\"auths\":{\"%s\":{\"username\":\"%s\",\"password\":\"%s\",\"auth\":\"%s\"}}}" .Values.imageRegistry.host .Values.imageRegistry.username .Values.imageRegistry.password (printf "%s:%s" .Values.imageRegistry.username .Values.imageRegistry.password | b64enc) | b64enc | quote }}
+{{- end }}
