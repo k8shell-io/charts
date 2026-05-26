@@ -10,7 +10,7 @@ charts:
   k8shell:
     repoURL: registry.k8shell.io
     chartName: "charts/k8shell"
-    chartVersion: 26.5.12-pr-6-2c2bf74
+    chartVersion: 26.5.12-pr-7-3e648c6
 
   idpGithub:
     repoURL: registry.k8shell.io
@@ -35,7 +35,7 @@ charts:
   sshShield:
     repoURL: registry.k8shell.io
     chartName: "charts/ssh-shield"
-    chartVersion: "0.2.0"
+    chartVersion: 0.2.0-pr-7-3e648c6
 
   postgresql:
     repoURL: registry-1.docker.io
