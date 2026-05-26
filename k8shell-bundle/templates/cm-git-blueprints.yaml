@@ -1,0 +1,12 @@
+{{- if or .Values.idpGithub.enabled .Values.idpGitlab.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: git-blueprints
+data:
+{{- $files := .Files.Glob "files/blueprints/*" }}
+{{- range $path, $file := $files }}
+  {{ base $path }}: |
+{{ $file | toString | indent 4 }}
+{{- end }}
+{{- end }}

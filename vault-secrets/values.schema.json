@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "secrets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "dockerconfigjson"
+            ]
+          },
+          "dockerConfigMapping": {
+            "type": "object",
+            "properties": {
+              "registryKey": {
+                "type": "string"
+              },
+              "usernameKey": {
+                "type": "string"
+              },
+              "passwordKey": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "registryKey",
+              "usernameKey",
+              "passwordKey"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "path"
+        ]
+      }
+    },
+    "serviceAccount": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "secrets",
+    "serviceAccount"
+  ]
+}

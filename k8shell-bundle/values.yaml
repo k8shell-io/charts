@@ -1,0 +1,323 @@
+
+targetNamespace: ""
+vaultAddress: ""
+
+syncPolicy:
+  automated: true
+
+#### Charts configuration
+charts:
+  k8shell:
+    repoURL: registry.k8shell.io
+    chartName: "charts/k8shell"
+    chartVersion: 26.5.12-pr-6-2c2bf74
+
+  idpGithub:
+    repoURL: registry.k8shell.io
+    chartName: "charts/idp-github"
+    chartVersion: 0.12.3
+
+  idpGitlab:
+    repoURL: registry.k8shell.io
+    chartName: "charts/idp-gitlab"
+    chartVersion: 0.1.6
+
+  nats:
+    repoURL: https://nats-io.github.io/k8s/helm/charts/
+    chartName: nats
+    chartVersion: "1.3.14"
+
+  vaultSecrets:
+    repoURL: registry.k8shell.io
+    chartName: "charts/vault-secrets"
+    chartVersion: "1.0.0"
+
+  sshShield:
+    repoURL: registry.k8shell.io
+    chartName: "charts/ssh-shield"
+    chartVersion: "0.2.0"
+
+  postgresql:
+    repoURL: registry-1.docker.io
+    chartName: "bitnamicharts/postgresql"
+    chartVersion: "18.2.3"
+
+#### Vault
+vault:
+  enabled: true
+  address: ""
+  roleName: ""
+
+#### K8shell app
+k8shell:
+  imageRegistry: 
+    host: registry.k8shell.io
+    existingSecret: regcred
+
+  authEnabled: true
+  tokenExpiration: 600 
+  certManager:
+    enabled: true
+    issuer:
+      name: vault-root-issuer
+      kind: ClusterIssuer
+    duration: 24h
+    renewBefore: 12h
+  
+  grpc:
+    roundRobin: true
+
+  sshProxy:
+    replicas: 2    
+    proxyProtocol: false
+    serverKey:
+      secretName: "vault-ssh"
+      secretKey: "SERVER_KEY"    
+    publishSshFailures:
+      enabled: false
+      subject: ssh.failures
+      publicIPOnly: true
+    
+    loadBalancer:
+      enabled: false
+      annotations: {}
+      port: 22
+    
+  identity:
+    replicas: 2
+
+    jwtIssuer:
+      expiry: 60m
+      privateKey:
+        secretName: "vault-jwt"
+        secretKey: "PRIVATE_KEY"
+      signingMethod: 
+        secretName: "vault-jwt"
+        secretKey: "SIGNING_METHOD"
+
+    # Static remote providers. idp-github is injected automatically when idpGithub.enabled=true.
+    remoteProviders: []
+
+  provisioner:
+    replicas: 2
+
+    # optional configmap that provides extra files for workspace blueprints
+    # its files are mounted into /app/blueprints together with blueprint-base-files
+    blueprintFilesConfigMaps: []
+
+    # defaultCustomBlueprint is the name of the default custom blueprint for git-based workspaces 
+    # that do not have .k8shell file in the repo
+    defaultCustomBlueprint: git-dev
+
+    # targetNamespace is the namespace where provisioner will create workspaces. 
+    # if not set, helm chart installation will fail.  
+    targetNamespace: ""
+
+    # injectNamespaces is a list of namespaces where provisioner will inject workspaces
+    injectNamespaces: []
+
+    # workspaceStorageClass is the storage class that provisioner will use for workspace PVCs.
+    # TODO: if not set, provisioner will use the default storage class of the cluster.
+    workspaceStorageClass: ""
+
+    # Default registry is used for pulling images for k8shell workspaces when no registry is specified
+    # in a workspace blueprint. If not set, it will default to the imageRegistrty defined above. 
+    defaultRegistry:
+      enabled: true
+      host:
+        secretName: "vault-registry-k8shell-io"
+        secretKey: "ADDRESS"      
+      username:
+        secretName: "vault-registry-k8shell-io"
+        secretKey: "USERNAME"
+      password:
+        secretName: "vault-registry-k8shell-io"
+        secretKey: "PASSWORD"      
+
+    # shell configuration for workspaces created by provisioner
+    shells:
+      allowSessionDetach: true
+      detachedTTL: "30m"
+      allowUnlimittedTTL: false
+
+    saToken:
+      enabled: true
+      cacheTokens: false
+
+  # Below services are disabled in k8shell chart. They are used in k8shell-bundle that provides full 
+  # set of k8shell services with postgresql and nats dependencies. 
+
+  frontend:
+    enabled: false
+    replicas: 2
+    scheme: "https"
+    host: "localtest.me"
+    sessionCookie:
+      secure: true
+      httpOnly: true
+      sameSite: Strict
+      maxAgeSeconds: 86400
+      path: /api/v1
+
+  apiServer:
+    enabled: true
+    replicas: 2
+    logging:
+      requestHeaders: false
+      responseHeaders: false
+
+  session:
+    enabled: true
+    replicas: 2
+
+  postgresql:
+    enabled: true
+    host: "db-postgresql"
+    port: 5432
+    username:
+      secretName: "vault-db"
+      secretKey: "POSTGRES_USERNAME"
+    password:
+      secretName: "vault-db"
+      secretKey: "POSTGRES_PASSWORD"    
+    database: "postgres"
+
+  nats:
+    enabled: true
+    host: "nats"
+    port: 4222
+    username: "k8shell-service"
+    password:
+      secretName: "vault-nats"
+      secretKey: "NATS_K8SHELL_PASSWORD"
+
+#### PostgreSQL app
+postgresql:
+  persistentVolumeClaim:
+    install: false
+    annotations: {}
+    spec: {}
+  nodePort:
+    enabled: false
+    port: ""
+
+#### NATS app
+nats:
+  imageTag: "2.11.9-alpine"
+
+  cluster:
+    enabled: true
+    replicas: 3
+
+  persistentVolumeClaim:
+    storageClassName: ""
+    size: 10Gi
+    reclaimPolicy: Delete
+
+  # loadbalancer is required to access NATS from outside the cluster
+  # when ssh-shield is not running, it can be disabled 
+  loadBalancer:
+    enabled: false
+    annotations: {}
+    port: 4222
+
+#### idp-github app
+idpGithub:
+  enabled: true
+  replicas: 1
+  image: {}
+
+  nats:
+    enabled: true
+    host: "nats"
+    port: 4222
+    username: "k8shell-service"
+    password:
+      secretName: "vault-nats"
+      secretKey: "NATS_K8SHELL_PASSWORD"
+
+  github:
+    clientId:
+      secretName: "vault-github"
+      secretKey: "K8SHELL_CLIENT_ID"
+    clientSecret: 
+      secretName: "vault-github"
+      secretKey: "K8SHELL_CLIENT_SECRET"
+    allowAccess:
+      users: []
+      # teams:
+      #   - org: "my-org"
+      #     team: "my-team"
+      #     serviceToken: "ghp_..."
+    extra: {}
+
+  # githubUserTemplate: |
+  #   user:
+  #     username: !cel "user.login"
+  #     ...
+
+idpGitlab:
+  enabled: true
+  replicas: 1
+  image: {}
+
+  nats:
+    enabled: true
+    host: "nats"
+    port: 4222
+    username: "k8shell-service"
+    password:
+      secretName: "vault-nats"
+      secretKey: "NATS_K8SHELL_PASSWORD"
+
+  gitlab:
+    address: "https://gitlab.com"
+    clientId:
+      secretName: "vault-gitlab"
+      secretKey: "GITLAB_CLIENT_ID"
+    clientSecret: 
+      secretName: "vault-gitlab"
+      secretKey: "GITLAB_CLIENT_SECRET"
+    allowAccess:
+      users: []
+      # teams:
+      #   - org: "my-org"
+      #     team: "my-team"
+      #     serviceToken: "ghp_..."
+    extra: {}
+
+  # gitlabUserTemplate: |
+  #   user:
+  #     username: !cel "user.login"
+  #     ...
+
+#### ssh-shield service
+sshShield:
+  enabled: false
+  replicas: 1
+  image: {}
+
+  nats:
+    user: sshshield
+    password:
+      secretName: "vault-nats"
+      secretKey: "NATS_SSHSHIELD_PASSWORD"
+
+  blocker:
+    window: 5m
+    threshold: 4
+    decreasingThreshold: true
+    idleCleanup: 12h
+    banSchedule: [1m, 5m, 15m, 1h, 6h, 24h, 72h]
+    maxIPState: 100000
+    gcInterval: 10m
+    whitelist: []
+
+  plugins:
+    nfgate:
+      address: "localhost:9090"
+      tls: false
+      dialTimeout: 5s
+      authKey:
+        secretName: "vault-nfgate"
+        secretKey: "NFGATE_AUTH_KEY"

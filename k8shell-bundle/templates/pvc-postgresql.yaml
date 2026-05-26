@@ -1,0 +1,12 @@
+{{- if .Values.postgresql.persistentVolumeClaim.install }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-postgresql
+  {{- if .Values.postgresql.persistentVolumeClaim.annotations }}
+  annotations:
+    {{- toYaml .Values.postgresql.persistentVolumeClaim.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  {{- toYaml .Values.postgresql.persistentVolumeClaim.spec | nindent 2 }}
+{{- end }}

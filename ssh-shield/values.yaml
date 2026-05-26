@@ -1,0 +1,88 @@
+# values.yaml for ssh-shield Helm chart
+#
+# NOTE on passwords/secrets:
+# Sensitive values are provided via a mounted secret file.
+# When a field has a value of {}, there are two options:
+#
+# 1. field.value: the actual value will be used to create a Kubernetes secret.
+#    See templates/sec-ssh-shield.yaml for how the secret is created and
+#    dep-ssh-shield.yaml for how it is mounted as a file.
+#
+# 2. field.secretName and field.secretKey: uses an existing Kubernetes secret.
+
+replicas: 1
+
+image:
+  name: k8shell-base/ssh-shield
+  tag: v0.12.0
+
+imageRegistry:
+  host: registry.k8shell.io
+  existingSecret: ""
+  username: ""
+  password: ""
+
+nats:
+  host: nats
+  port: 4222
+  user: sshshield
+  # NATS password — mounted as a file at ${SECRET_FILES}/sshshield_nats_token.
+  # Set .value or (.secretName + .secretKey).
+  password: {}
+  sshFailures:
+    subject: ssh.failures
+
+blocker:
+  # sliding window for counting hits from the same IP
+  window: 5m
+
+  # number of hits within the sliding window to trigger a ban
+  threshold: 4
+
+  # if true, threshold decreases with each strike
+  decreasingThreshold: true
+
+  # time to remove IP state after no hits
+  idleCleanup: 12h
+
+  # durations for escalating bans based on number of strikes
+  banSchedule: [1m, 5m, 15m, 1h, 6h, 24h, 72h]
+
+  # garbage collection settings
+  maxIPState: 100000
+  gcInterval: 10m
+
+  # IP whitelist — list of CIDR ranges to never ban
+  whitelist: []
+  # whitelist:
+  #   - "46.13.0.0/16"
+
+# State store for per-IP rate-limit state.
+# type: "memory"   — in-process only; not shared across multiple instances (default)
+# type: "nats-kv"  — stored in NATS JetStream KV; shared across all instances
+stateStore:
+  type: nats-kv
+  bucket: ssh-shield-state
+
+# Blocker plugins.
+# Keys are plugin types; each value is that plugin's config.
+# The config is rendered into a dedicated ConfigMap (ssh-shield-plugin-configs),
+# mounted at /app/config/plugins/{type}.yaml, and referenced via configFile in the
+# main config.
+plugins:
+  nfgate:
+    # address of the nfgate gRPC endpoint
+    address: "localhost:9090"
+
+    # set to true to enable TLS on the gRPC connection
+    tls: false
+
+    # certFile: "/etc/nfgate/ca.crt"
+
+    # maximum time to wait when dialing the gRPC endpoint
+    dialTimeout: 5s
+
+    # authKey is the shared secret sent as "Authorization: Bearer <key>" in every
+    # gRPC call. Must match the authKey configured on the nfgate server.
+    # Set .value or (.secretName + .secretKey).
+    authKey: {}

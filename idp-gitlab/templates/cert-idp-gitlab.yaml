@@ -1,0 +1,22 @@
+{{- if .Values.certManager.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: idp-gitlab-cert
+  labels:
+    {{- include "idp-gitlab.labels" . | nindent 4 }}
+spec:
+  secretName: idp-gitlab-tls
+  duration: {{ .Values.certManager.duration }}
+  renewBefore: {{ .Values.certManager.renewBefore }}
+  commonName: idp-gitlab.{{ .Release.Namespace }}.svc.cluster.local
+  dnsNames:
+    - idp-gitlab
+    - idp-gitlab.{{ .Release.Namespace }}.svc
+    - idp-gitlab.{{ .Release.Namespace }}.svc.cluster.local
+  usages:
+    - server auth
+  issuerRef:
+    name: {{ .Values.certManager.issuer.name }}
+    kind: {{ .Values.certManager.issuer.kind }}
+{{- end }}

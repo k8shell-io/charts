@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ssh-shield-config
+  labels:
+    {{- include "ssh-shield.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    nats:
+      host: {{ .Values.nats.host }}
+      port: {{ .Values.nats.port }}
+      user: {{ .Values.nats.user }}
+      password: !file ${SECRET_FILES}/sshshield_nats_token
+
+      sshFailures:
+        subject: {{ .Values.nats.sshFailures.subject }}
+
+    blocker:
+      window: {{ .Values.blocker.window }}
+      threshold: {{ .Values.blocker.threshold }}
+      decreasingThreshold: {{ .Values.blocker.decreasingThreshold }}
+      idleCleanup: {{ .Values.blocker.idleCleanup }}
+      banSchedule: {{ toJson .Values.blocker.banSchedule }}
+      maxIPState: {{ .Values.blocker.maxIPState }}
+      gcInterval: {{ .Values.blocker.gcInterval }}
+      {{- if .Values.blocker.whitelist }}
+      whitelist:
+        {{- range .Values.blocker.whitelist }}
+        - {{ . | quote }}
+        {{- end }}
+      {{- end }}
+
+    stateStore:
+      type: {{ .Values.stateStore.type }}
+      bucket: {{ .Values.stateStore.bucket }}
+
+    plugins:
+      {{- range $type, $config := .Values.plugins }}
+      - type: {{ $type }}
+        configFile: plugins/{{ $type }}.yaml
+      {{- end }}

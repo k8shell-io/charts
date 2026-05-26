@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: idp-github-files
+  labels:
+    app: idp-github
+data:
+  github-user-template.yaml: |
+    {{- .Values.githubUserTemplate | nindent 4 }}
