@@ -2,10 +2,12 @@
 {{- range .Values.provisioner.injectNamespaces }}
 {{- $injectNamespace := . }}
 {{- $provisionerNamespace := $.Release.Namespace }}
+{{- $nameSuffix := printf "%s-%s" $provisionerNamespace $injectNamespace | sha256sum | trunc 8 }}
+{{- $roleName := printf "provisioner-inject-%s-%s" ($provisionerNamespace | trunc 20 | trimSuffix "-") $nameSuffix }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: provisioner-inject-{{ $injectNamespace }}
+  name: {{ $roleName }}
   namespace: {{ $injectNamespace }}
 rules:
 - apiGroups: [""]
@@ -28,17 +30,17 @@ rules:
   verbs: ["get", "create", "update", "delete", "patch"]
 - apiGroups: ["cert-manager.io"]
   resources: ["certificates"]
-  verbs: ["get", "create", "update", "delete"]
+  verbs: ["get", "create", "update", "patch", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: provisioner-inject-{{ $injectNamespace }}
+  name: {{ $roleName }}
   namespace: {{ $injectNamespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: provisioner-inject-{{ $injectNamespace }}
+  name: {{ $roleName }}
 subjects:
 - kind: ServiceAccount
   name: provisioner
