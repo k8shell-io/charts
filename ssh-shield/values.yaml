@@ -14,7 +14,7 @@ replicas: 1
 
 image:
   name: k8shell-base/ssh-shield
-  tag: v0.12.0
+  tag: v0.12.1
 
 imageRegistry:
   host: registry.k8shell.io

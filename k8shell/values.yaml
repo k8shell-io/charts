@@ -18,7 +18,7 @@
 # 2. field1.secretName and field1.secretKey - this will use an existing
 #    Kubernetes secret with the specified name and key
 
-# imageRegistry is the container registry for all k8shell service images. 
+# imageRegistry is the container registry for all k8shell service imaƒges. 
 imageRegistry: 
   host: registry.k8shell.io
 
@@ -96,7 +96,7 @@ identity:
   replicas: 1
   image:
     name: k8shell-base/identity
-    tag: v0.14.2
+    tag: v0.14.3
 
   # jwtIssuer configures JWT token issuance for k8shell services.
   jwtIssuer:
@@ -169,7 +169,7 @@ provisioner:
   replicas: 1
   image:
     name: k8shell-base/provisioner
-    tag: pr-36-624bdce
+    tag: v0.14.9
 
   # if true, the sample blueprints (samples.yaml) will be included alongside
   # the base blueprints (base.yaml). base.yaml is always included.
@@ -244,7 +244,7 @@ frontend:
   replicas: 1
   image:
     name: k8shell-base/frontend
-    tag: v0.14.2
+    tag: pr-60-7ae66ae
   scheme: "http"
   host: "localtest.me"
   sessionCookie:
@@ -260,7 +260,7 @@ apiServer:
   replicas: 1
   image:
     name: k8shell-base/api-server
-    tag: v0.15.0
+    tag: v0.15.1
   logging:
     requestHeaders: false
     responseHeaders: false
@@ -271,7 +271,7 @@ session:
   replicas: 1
   image:
     name: k8shell-base/session
-    tag: v0.13.0
+    tag: v0.13.1
 
   # Janitor ends sessions that stop sending upserts (e.g. client killed).
   # pg_try_advisory_lock ensures only one replica runs the sweep at a time.
