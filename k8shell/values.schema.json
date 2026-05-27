@@ -377,6 +377,9 @@
                 "image": {
                     "$ref": "#/definitions/image"
                 },
+                "defaultK8shelldImage": {
+                    "$ref": "#/definitions/image"
+                },
                 "includeBlueprintSamples": {
                     "type": "boolean"
                 },

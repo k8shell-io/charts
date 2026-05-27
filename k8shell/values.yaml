@@ -171,6 +171,11 @@ provisioner:
     repository: registry.k8shell.io/k8shell-base/provisioner
     tag: v0.14.9
 
+  # defaultK8shelldImage is the default image for k8shelld defined in base blueprint 
+  defaultK8shelldImage:
+    repository: registry.k8shell.io/k8shell-base/k8shelld
+    tag: v0.15.6
+
   # if true, the sample blueprints (samples.yaml) will be included alongside
   # the base blueprints (base.yaml). base.yaml is always included.
   includeBlueprintSamples: true
@@ -227,7 +232,7 @@ provisioner:
   # extra environment variables to inject into the provisioner pod.
   # names must not conflict with reserved variables:
   # DEFAULT_REGISTRY_HOST, DEFAULT_REGISTRY_USERNAME, DEFAULT_REGISTRY_PASSWORD,
-  # NATS_K8SHELL_PASSWORD, JWT_SIGNING_METHOD
+  # NATS_K8SHELL_PASSWORD, JWT_SIGNING_METHOD, DEFAULT_K8SHELLD_IMAGE
   extraEnv: []
   # - name: MY_VAR
   #   value: "my-value"

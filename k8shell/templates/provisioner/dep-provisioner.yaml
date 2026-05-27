@@ -103,8 +103,10 @@ spec:
               name: jwt-issuer
               key: JWT_SIGNING_METHOD
               {{- end }}
+        - name: DEFAULT_K8SHELLD_IMAGE
+          value: {{ printf "%s:%s" .Values.provisioner.defaultK8shelldImage.repository .Values.provisioner.defaultK8shelldImage.tag | quote }}
         {{- if .Values.provisioner.extraEnv }}
-        {{- $reserved := list "DEFAULT_REGISTRY_HOST" "DEFAULT_REGISTRY_USERNAME" "DEFAULT_REGISTRY_PASSWORD" "NATS_K8SHELL_PASSWORD" "JWT_SIGNING_METHOD" }}
+        {{- $reserved := list "DEFAULT_REGISTRY_HOST" "DEFAULT_REGISTRY_USERNAME" "DEFAULT_REGISTRY_PASSWORD" "NATS_K8SHELL_PASSWORD" "JWT_SIGNING_METHOD" "DEFAULT_K8SHELLD_IMAGE" }}
         {{- range .Values.provisioner.extraEnv }}
         {{- if has .name $reserved }}
         {{- fail (printf "provisioner.extraEnv: '%s' conflicts with a reserved environment variable" .name) }}

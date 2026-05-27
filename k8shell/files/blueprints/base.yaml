@@ -14,7 +14,7 @@ blueprints:
     hostname: !cel "user.username + '-' + metadata.name"
 
     k8shelld:
-      image: k8shell-base/k8shelld:v0.15.6
+      image: !cel env("DEFAULT_K8SHELLD_IMAGE")
       imagePullPolicy: IfNotPresent
       ignoreOrphans:
         - .*JetBrains.*
