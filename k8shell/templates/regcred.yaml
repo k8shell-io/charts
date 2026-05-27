@@ -1,4 +1,4 @@
-{{- if and .Values.imageRegistry.username .Values.imageRegistry.password (not .Values.imageRegistry.existingSecret) }}
+{{- if and .Values.imageRegistry.host .Values.imageRegistry.username .Values.imageRegistry.password (not .Values.imageRegistry.existingSecret) }}
 apiVersion: v1
 kind: Secret
 metadata:
