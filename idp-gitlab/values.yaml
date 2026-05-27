@@ -13,11 +13,12 @@
 replicas: 1
 
 image:
-  name: k8shell-idp/idp-gitlab
+  repository: ghcr.io/k8shell-io/idp-gitlab
   tag: v0.1.6
 
+# imageRegistry defines a private container registry used to create an image pull secret (regcred).
 imageRegistry:
-  host: registry.k8shell.io
+  host: ""
   existingSecret: ""
   username: ""
   password: ""
