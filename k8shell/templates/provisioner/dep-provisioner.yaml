@@ -20,7 +20,7 @@ spec:
       serviceAccountName: provisioner
       containers:
       - name: provisioner
-        image: {{ .Values.imageRegistry.host }}/{{ .Values.provisioner.image.name }}:{{ .Values.provisioner.image.tag }}
+        image: {{ .Values.provisioner.image.repository }}:{{ .Values.provisioner.image.tag }}
         workingDir: /app
         command: ["./provisioner", "--config", "config/config.yaml", "--logtext"]
         ports:

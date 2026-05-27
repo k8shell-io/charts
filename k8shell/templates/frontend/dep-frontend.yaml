@@ -24,7 +24,7 @@ spec:
             value: "1"
       containers:
       - name: frontend
-        image: {{ .Values.imageRegistry.host }}/{{ .Values.frontend.image.name }}:{{ .Values.frontend.image.tag }}
+        image: {{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}
         ports:
         - containerPort: 8101
           name: http

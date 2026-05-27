@@ -56,7 +56,7 @@ sshProxy:
   replicas: 1
   
   image:
-    name: k8shell-base/ssh-proxy
+    repository: registry.k8shell.io/k8shell-base/ssh-proxy
     tag: v0.13.4
   
   proxyProtocol: false
@@ -95,7 +95,7 @@ sshProxy:
 identity:
   replicas: 1
   image:
-    name: k8shell-base/identity
+    repository: registry.k8shell.io/k8shell-base/identity
     tag: v0.14.3
 
   # jwtIssuer configures JWT token issuance for k8shell services.
@@ -168,7 +168,7 @@ identity:
 provisioner:
   replicas: 1
   image:
-    name: k8shell-base/provisioner
+    repository: registry.k8shell.io/k8shell-base/provisioner
     tag: v0.14.9
 
   # if true, the sample blueprints (samples.yaml) will be included alongside
@@ -243,7 +243,7 @@ frontend:
   enabled: false
   replicas: 1
   image:
-    name: k8shell-base/frontend
+    repository: registry.k8shell.io/k8shell-base/frontend
     tag: pr-60-7ae66ae
   scheme: "http"
   host: "localtest.me"
@@ -259,7 +259,7 @@ apiServer:
   enabled: false
   replicas: 1
   image:
-    name: k8shell-base/api-server
+    repository: registry.k8shell.io/k8shell-base/api-server
     tag: v0.15.1
   logging:
     requestHeaders: false
@@ -270,7 +270,7 @@ session:
   enabled: false
   replicas: 1
   image:
-    name: k8shell-base/session
+    repository: registry.k8shell.io/k8shell-base/session
     tag: v0.13.1
 
   # Janitor ends sessions that stop sending upserts (e.g. client killed).

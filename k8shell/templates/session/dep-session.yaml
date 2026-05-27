@@ -20,7 +20,7 @@ spec:
       {{- include "k8shell.imagePullSecrets" . | nindent 6 }}      
       containers:
       - name: session
-        image: {{ .Values.imageRegistry.host }}/{{ .Values.session.image.name }}:{{ .Values.session.image.tag }}
+        image: {{ .Values.session.image.repository }}:{{ .Values.session.image.tag }}
         workingDir: /app
         command: ["./session", "--config", "config/config.yaml", "--logtext"]
         ports:
