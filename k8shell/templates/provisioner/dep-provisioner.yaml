@@ -104,7 +104,7 @@ spec:
               key: JWT_SIGNING_METHOD
               {{- end }}
         - name: DEFAULT_K8SHELLD_IMAGE
-          value: {{ printf "%s:%s" .Values.provisioner.defaultK8shelldImage.repository .Values.provisioner.defaultK8shelldImage.tag | quote }}
+          value: {{ printf "%s:%s" .Values.provisioner.k8shelld.image.repository .Values.provisioner.k8shelld.image.tag | quote }}
         {{- if .Values.provisioner.extraEnv }}
         {{- $reserved := list "DEFAULT_REGISTRY_HOST" "DEFAULT_REGISTRY_USERNAME" "DEFAULT_REGISTRY_PASSWORD" "NATS_K8SHELL_PASSWORD" "JWT_SIGNING_METHOD" "DEFAULT_K8SHELLD_IMAGE" }}
         {{- range .Values.provisioner.extraEnv }}

@@ -8,18 +8,18 @@ syncPolicy:
 #### Charts configuration
 charts:
   k8shell:
-    repoURL: registry.k8shell.io
-    chartName: "charts/k8shell"
+    repoURL: ghcr.io/k8shell-io
+    chartName: "k8shell"
     chartVersion: 26.5.12-pr-7-3e648c6
 
   idpGithub:
-    repoURL: registry.k8shell.io
-    chartName: "charts/idp-github"
+    repoURL: ghcr.io/k8shell-io
+    chartName: "idp-github"
     chartVersion: 0.12.3-pr-7-bedfec5
 
   idpGitlab:
-    repoURL: registry.k8shell.io
-    chartName: "charts/idp-gitlab"
+    repoURL: ghcr.io/k8shell-io
+    chartName: "idp-gitlab"
     chartVersion: 0.1.6-pr-7-bedfec5
 
   nats:
@@ -28,13 +28,13 @@ charts:
     chartVersion: "1.3.14"
 
   vaultSecrets:
-    repoURL: registry.k8shell.io
-    chartName: "charts/vault-secrets"
+    repoURL: ghcr.io/k8shell-io
+    chartName: "vault-secrets"
     chartVersion: "1.0.0"
 
   sshShield:
-    repoURL: registry.k8shell.io
-    chartName: "charts/ssh-shield"
+    repoURL: ghcr.io/k8shell-io
+    chartName: "ssh-shield"
     chartVersion: 0.2.0-pr-7-3e648c6
 
   postgresql:
@@ -50,9 +50,7 @@ vault:
 
 #### K8shell app
 k8shell:
-  imageRegistry: 
-    host: registry.k8shell.io
-    existingSecret: regcred
+  imageRegistry: {}
 
   authEnabled: true
   tokenExpiration: 600 

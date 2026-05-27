@@ -15,8 +15,9 @@ identity:
 provisioner:
   image:
     repository: registry.k8shell.io/k8shell-base/provisioner
-  defaultK8shelldImage:
-    repository: registry.k8shell.io/k8shell-base/k8shelld
+  k8shelld:
+    image:
+      repository: registry.k8shell.io/k8shell-base/k8shelld
 
 frontend:
   image:
