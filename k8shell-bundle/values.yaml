@@ -15,12 +15,12 @@ charts:
   idpGithub:
     repoURL: registry.k8shell.io
     chartName: "charts/idp-github"
-    chartVersion: 0.12.3
+    chartVersion: 0.12.3-pr-7-bedfec5
 
   idpGitlab:
     repoURL: registry.k8shell.io
     chartName: "charts/idp-gitlab"
-    chartVersion: 0.1.6
+    chartVersion: 0.1.6-pr-7-bedfec5
 
   nats:
     repoURL: https://nats-io.github.io/k8s/helm/charts/
