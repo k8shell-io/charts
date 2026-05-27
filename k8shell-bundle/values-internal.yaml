@@ -28,6 +28,10 @@ charts:
 
 #### Internal image repositories
 k8shell:
+  imageRegistry:
+    host: registry.k8shell.io
+    existingSecret: regcred
+
   sshProxy:
     image:
       repository: registry.k8shell.io/k8shell-base/ssh-proxy
@@ -57,9 +61,15 @@ k8shell:
 
 #### Internal idp image repositories
 idpGithub:
+  imageRegistry:
+    host: registry.k8shell.io
+    existingSecret: regcred
   image:
     repository: registry.k8shell.io/k8shell-idp/idp-github
 
 idpGitlab:
+  imageRegistry:
+    host: registry.k8shell.io
+    existingSecret: regcred
   image:
     repository: registry.k8shell.io/k8shell-idp/idp-gitlab
