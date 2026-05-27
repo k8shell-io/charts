@@ -14,7 +14,7 @@ replicas: 1
 
 image:
   name: k8shell-idp/idp-github
-  tag: v0.12.3
+  tag: v0.12.4
 
 imageRegistry:
   host: registry.k8shell.io

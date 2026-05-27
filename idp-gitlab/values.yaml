@@ -14,7 +14,7 @@ replicas: 1
 
 image:
   name: k8shell-idp/idp-gitlab
-  tag: pr-3-c529d9d
+  tag: v0.1.6
 
 imageRegistry:
   host: registry.k8shell.io
