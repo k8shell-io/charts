@@ -10,17 +10,17 @@ charts:
   k8shell:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/k8shell"
-    chartVersion: 26.5.12-pr-7-41c1994
+    chartVersion: 26.5.13
 
   idpGithub:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/idp-github"
-    chartVersion: 0.12.3-pr-7-41c1994
+    chartVersion: 0.12.4
 
   idpGitlab:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/idp-gitlab"
-    chartVersion: 0.1.6-pr-7-41c1994
+    chartVersion: 0.1.7
 
   nats:
     repoURL: https://nats-io.github.io/k8s/helm/charts/
@@ -35,7 +35,7 @@ charts:
   sshShield:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/ssh-shield"
-    chartVersion: 0.2.0-pr-7-aec5e95
+    chartVersion: 0.2.1
 
   postgresql:
     repoURL: registry-1.docker.io
