@@ -9,17 +9,17 @@ syncPolicy:
 charts:
   k8shell:
     repoURL: ghcr.io/k8shell-io
-    chartName: "k8shell"
+    chartName: "charts/k8shell"
     chartVersion: 26.5.12-pr-7-41c1994
 
   idpGithub:
     repoURL: ghcr.io/k8shell-io
-    chartName: "idp-github"
+    chartName: "charts/idp-github"
     chartVersion: 0.12.3-pr-7-41c1994
 
   idpGitlab:
     repoURL: ghcr.io/k8shell-io
-    chartName: "idp-gitlab"
+    chartName: "charts/idp-gitlab"
     chartVersion: 0.1.6-pr-7-41c1994
 
   nats:
@@ -29,12 +29,12 @@ charts:
 
   vaultSecrets:
     repoURL: ghcr.io/k8shell-io
-    chartName: "vault-secrets"
+    chartName: "charts/vault-secrets"
     chartVersion: "1.0.0"
 
   sshShield:
     repoURL: ghcr.io/k8shell-io
-    chartName: "ssh-shield"
+    chartName: "charts/ssh-shield"
     chartVersion: 0.2.0-pr-7-aec5e95
 
   postgresql:
