@@ -19,7 +19,7 @@ spec:
       {{- include "ssh-shield.imagePullSecrets" . | nindent 6 }}
       containers:
         - name: ssh-shield
-          image: {{ .Values.imageRegistry.host }}/{{ .Values.image.name }}:{{ .Values.image.tag }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           workingDir: /app
           command: ["./ssh-shield", "shield", "--config", "config/config.yaml"]
           env:

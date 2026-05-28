@@ -79,10 +79,10 @@ nfgate_authkey
 Add imagePullSecrets
 */}}
 {{- define "ssh-shield.imagePullSecrets" -}}
-{{- if .Values.imageRegistry.existingSecret }}
+{{- if and .Values.imageRegistry.host .Values.imageRegistry.existingSecret }}
 imagePullSecrets:
 - name: {{ .Values.imageRegistry.existingSecret }}
-{{- else if and .Values.imageRegistry.username .Values.imageRegistry.password }}
+{{- else if and .Values.imageRegistry.host .Values.imageRegistry.username .Values.imageRegistry.password }}
 imagePullSecrets:
 - name: {{ printf "%s-regcred" .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
