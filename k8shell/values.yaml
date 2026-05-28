@@ -18,9 +18,9 @@
 # 2. field1.secretName and field1.secretKey - this will use an existing
 #    Kubernetes secret with the specified name and key
 
-# imageRegistry is the container registry for all k8shell service images. 
+# imageRegistry defines a private container registry used to create an image pull secret (regcred).
 imageRegistry: 
-  host: registry.k8shell.io
+  host: ""
 
   # only one of username/password or existingSecret should be set
   username: ""
@@ -56,7 +56,7 @@ sshProxy:
   replicas: 1
   
   image:
-    name: k8shell-base/ssh-proxy
+    repository: ghcr.io/k8shell-io/ssh-proxy
     tag: v0.13.4
   
   proxyProtocol: false
@@ -95,8 +95,8 @@ sshProxy:
 identity:
   replicas: 1
   image:
-    name: k8shell-base/identity
-    tag: v0.14.2
+    repository: ghcr.io/k8shell-io/identity
+    tag: v0.14.3
 
   # jwtIssuer configures JWT token issuance for k8shell services.
   jwtIssuer:
@@ -168,8 +168,14 @@ identity:
 provisioner:
   replicas: 1
   image:
-    name: k8shell-base/provisioner
-    tag: pr-36-624bdce
+    repository: ghcr.io/k8shell-io/provisioner
+    tag: v0.14.9
+
+  # k8shelld is the default image for k8shelld defined in base blueprint
+  k8shelld:
+    image:
+      repository: ghcr.io/k8shell-io/k8shelld
+      tag: v0.15.6
 
   # if true, the sample blueprints (samples.yaml) will be included alongside
   # the base blueprints (base.yaml). base.yaml is always included.
@@ -227,7 +233,7 @@ provisioner:
   # extra environment variables to inject into the provisioner pod.
   # names must not conflict with reserved variables:
   # DEFAULT_REGISTRY_HOST, DEFAULT_REGISTRY_USERNAME, DEFAULT_REGISTRY_PASSWORD,
-  # NATS_K8SHELL_PASSWORD, JWT_SIGNING_METHOD
+  # NATS_K8SHELL_PASSWORD, JWT_SIGNING_METHOD, DEFAULT_K8SHELLD_IMAGE
   extraEnv: []
   # - name: MY_VAR
   #   value: "my-value"
@@ -243,8 +249,8 @@ frontend:
   enabled: false
   replicas: 1
   image:
-    name: k8shell-base/frontend
-    tag: v0.14.2
+    repository: ghcr.io/k8shell-io/frontend
+    tag: pr-60-7ae66ae
   scheme: "http"
   host: "localtest.me"
   sessionCookie:
@@ -259,8 +265,8 @@ apiServer:
   enabled: false
   replicas: 1
   image:
-    name: k8shell-base/api-server
-    tag: v0.15.0
+    repository: ghcr.io/k8shell-io/api-server
+    tag: v0.15.1
   logging:
     requestHeaders: false
     responseHeaders: false
@@ -270,8 +276,8 @@ session:
   enabled: false
   replicas: 1
   image:
-    name: k8shell-base/session
-    tag: v0.13.0
+    repository: ghcr.io/k8shell-io/session
+    tag: v0.13.1
 
   # Janitor ends sessions that stop sending upserts (e.g. client killed).
   # pg_try_advisory_lock ensures only one replica runs the sweep at a time.

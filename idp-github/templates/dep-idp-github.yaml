@@ -20,7 +20,7 @@ spec:
       serviceAccountName: idp-github
       containers:
         - name: idp-github
-          image: {{ .Values.imageRegistry.host }}/{{ .Values.image.name }}:{{ .Values.image.tag }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           workingDir: /app
           command: ["./idp-github", "--config", "config/config.yaml", "--logtext"]
           ports:

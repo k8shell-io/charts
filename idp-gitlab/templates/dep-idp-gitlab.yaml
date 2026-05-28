@@ -20,7 +20,7 @@ spec:
       serviceAccountName: idp-gitlab
       containers:
         - name: idp-gitlab
-          image: {{ .Values.imageRegistry.host }}/{{ .Values.image.name }}:{{ .Values.image.tag }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           workingDir: /app
           command: ["./idp-gitlab", "--config", "config/config.yaml", "--logtext"]
           ports:

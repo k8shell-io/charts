@@ -1,0 +1,83 @@
+# values-internal.yaml
+#
+# Overrides chart repository URLs and image repositories to use the internal
+# registry (registry.k8shell.io) instead of the default public registry (ghcr.io).
+# Use with: helm install ... -f values.yaml -f values-internal.yaml
+
+#### Internal chart repositories
+charts:
+  k8shell:
+    repoURL: registry.k8shell.io
+    chartName: "charts/k8shell"
+
+  idpGithub:
+    repoURL: registry.k8shell.io
+    chartName: "charts/idp-github"
+
+  idpGitlab:
+    repoURL: registry.k8shell.io
+    chartName: "charts/idp-gitlab"
+
+  vaultSecrets:
+    repoURL: registry.k8shell.io
+    chartName: "charts/vault-secrets"
+
+  sshShield:
+    repoURL: registry.k8shell.io
+    chartName: "charts/ssh-shield"
+
+#### Internal image repositories
+k8shell:
+  imageRegistry:
+    host: registry.k8shell.io
+    existingSecret: regcred
+
+  sshProxy:
+    image:
+      repository: registry.k8shell.io/k8shell-base/ssh-proxy
+
+  identity:
+    image:
+      repository: registry.k8shell.io/k8shell-base/identity
+
+  provisioner:
+    image:
+      repository: registry.k8shell.io/k8shell-base/provisioner
+    k8shelld:
+      image:
+        repository: registry.k8shell.io/k8shell-base/k8shelld
+
+  frontend:
+    image:
+      repository: registry.k8shell.io/k8shell-base/frontend
+
+  apiServer:
+    image:
+      repository: registry.k8shell.io/k8shell-base/api-server
+
+  session:
+    image:
+      repository: registry.k8shell.io/k8shell-base/session
+
+#### Internal idp image repositories
+idpGithub:
+  imageRegistry:
+    host: registry.k8shell.io
+    existingSecret: regcred
+  image:
+    repository: registry.k8shell.io/k8shell-idp/idp-github
+
+idpGitlab:
+  imageRegistry:
+    host: registry.k8shell.io
+    existingSecret: regcred
+  image:
+    repository: registry.k8shell.io/k8shell-idp/idp-gitlab
+
+#### Internal ssh-shield image repository
+sshShield:
+  imageRegistry:
+    host: registry.k8shell.io
+    existingSecret: regcred
+  image:
+    repository: registry.k8shell.io/k8shell-base/ssh-shield
