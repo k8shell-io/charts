@@ -1,0 +1,40 @@
+{{- if not .Values.postgresql.enabled -}}
+{{- fail "postgresql.enabled must be true: idp-gitlab requires a PostgreSQL database" -}}
+{{- end -}}
+{{- if and (not .Values.gitlab.clientId.value) (not .Values.gitlab.clientId.secretName) -}}
+{{- fail "gitlab.clientId is required (set .value or .secretName/.secretKey)" -}}
+{{- end -}}
+{{- if and (not .Values.gitlab.clientSecret.value) (not .Values.gitlab.clientSecret.secretName) -}}
+{{- fail "gitlab.clientSecret is required (set .value or .secretName/.secretKey)" -}}
+{{- end -}}
+{{- $secrets := dict -}}
+{{- if .Values.nats.enabled -}}
+{{- if .Values.nats.password.value -}}
+{{- $_ := set $secrets "NATS_K8SHELL_PASSWORD" .Values.nats.password.value -}}
+{{- end -}}
+{{- end -}}
+{{- if .Values.postgresql.enabled -}}
+{{- if .Values.postgresql.username.value -}}
+{{- $_ := set $secrets "POSTGRES_USERNAME" .Values.postgresql.username.value -}}
+{{- end -}}
+{{- if .Values.postgresql.password.value -}}
+{{- $_ := set $secrets "POSTGRES_PASSWORD" .Values.postgresql.password.value -}}
+{{- end -}}
+{{- end -}}
+{{- if .Values.gitlab.clientId.value -}}
+{{- $_ := set $secrets "GITLAB_CLIENT_ID" .Values.gitlab.clientId.value -}}
+{{- end -}}
+{{- if .Values.gitlab.clientSecret.value -}}
+{{- $_ := set $secrets "GITLAB_CLIENT_SECRET" .Values.gitlab.clientSecret.value -}}
+{{- end -}}
+{{- if $secrets }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: int-idp-gitlab
+  labels:
+    {{- include "idp-gitlab.labels" . | nindent 4 }}
+type: Opaque
+data:
+{{ include "idp-gitlab.secretData" $secrets | nindent 2 }}
+{{- end }}

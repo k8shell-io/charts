@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: idp-gitlab-config
+  labels:
+    app: idp-gitlab
+data:
+  config.yaml: |
+    grpc:
+      port: 9030
+
+      {{- if .Values.certManager.enabled }}
+      enableTLS: true
+      certFile: /etc/tls/identity/tls.crt
+      keyFile: /etc/tls/identity/tls.key
+      {{- else }}
+      enableTLS: false
+      {{- end }}
+
+      # JWT required claims for authentication
+      authEnabled: {{ .Values.authEnabled }}
+      audience: identity
+      allowed:
+        - serviceAccount: identity
+
+    nats:
+      enabled: {{ .Values.nats.enabled }}
+      url: nats://{{ .Values.nats.host }}:{{ .Values.nats.port }}
+      username: {{ .Values.nats.username }}
+      password: ${NATS_K8SHELL_PASSWORD}
+
+    db:
+      enabled: true
+      database: {{ .Values.postgresql.database }}
+      hostname: {{ .Values.postgresql.host }}
+      port: {{ .Values.postgresql.port }}
+      username: ${POSTGRES_USERNAME}
+      password: ${POSTGRES_PASSWORD}
+
+    gitlab:
+      url: {{ .Values.gitlab.address }}
+      clientId: ${GITLAB_CLIENT_ID}
+      clientSecret: ${GITLAB_CLIENT_SECRET}
+      scopes:
+        - "read_user"
+        - "api"
+        - "read_repository"
+      template: /app/files/gitlab-user-template.yaml
+      {{- if .Values.gitlab.extra }}
+      extra:
+        {{- toYaml .Values.gitlab.extra | nindent 8 }}
+      {{- end }}
+      {{- if or .Values.gitlab.allowAccess.users .Values.gitlab.allowAccess.teams }}
+      allowAccess:
+        {{- if .Values.gitlab.allowAccess.users }}
+        users:
+          {{- range .Values.gitlab.allowAccess.users }}
+          - "{{ . }}"
+          {{- end }}
+        {{- end }}
+        {{- if .Values.gitlab.allowAccess.teams }}
+        teams:
+          {{- range .Values.gitlab.allowAccess.teams }}
+          - org: "{{ .org }}"
+            team: "{{ .team }}"
+            serviceToken: {{ .serviceToken }}
+          {{- end }}
+        {{- end }}
+      {{- end }}

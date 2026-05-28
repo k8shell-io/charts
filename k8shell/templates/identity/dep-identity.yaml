@@ -20,7 +20,7 @@ spec:
       serviceAccountName: identity
       containers:
         - name: identity
-          image: {{ .Values.imageRegistry.host }}/{{ .Values.identity.image.name }}:{{ .Values.identity.image.tag }}
+          image: {{ .Values.identity.image.repository }}:{{ .Values.identity.image.tag }}
           workingDir: /app
           args: ["--config", "config/config.yaml", "--logtext"]
           ports:

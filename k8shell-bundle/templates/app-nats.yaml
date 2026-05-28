@@ -1,0 +1,86 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nats
+  namespace: {{ .Values.targetNamespace }}
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.charts.nats.repoURL }}
+    chart: {{ .Values.charts.nats.chartName }}
+    targetRevision: {{ .Values.charts.nats.chartVersion }}
+    helm:
+      valuesObject:
+        container:
+          repository: nats
+          tag: {{ .Values.nats.imageTag }}
+          env:
+            NATS_K8SHELL_PASSWORD:
+              valueFrom:
+                secretKeyRef:
+                  name: vault-nats
+                  key: NATS_K8SHELL_PASSWORD
+            NATS_SSHSHIELD_PASSWORD:
+              valueFrom:
+                secretKeyRef:
+                  name: vault-nats
+                  key: NATS_SSHSHIELD_PASSWORD
+        config:
+          cluster:
+            enabled: {{ .Values.nats.cluster.enabled }}
+            replicas: {{ .Values.nats.cluster.replicas }}
+          merge:
+            "$include": auth.conf
+
+          jetstream:
+            enabled: true
+            fileStore:
+              enabled: true
+              pvc:
+                {{- $pvc := .Values.nats.persistentVolumeClaim -}}
+                {{- if and (not (empty $pvc.storageClassName)) (not (empty $pvc.size)) }}
+                enabled: true
+                storageClassName: {{ $pvc.storageClassName | quote }}
+                size: {{ $pvc.size | quote }}
+                {{- else }}
+                enabled: false
+                {{- end }}
+
+        configMap:
+          merge:
+            data:
+              auth.conf: |
+                authorization: {
+                  users: [
+                    {
+                      user: "sshshield",
+                      password: $NATS_SSHSHIELD_PASSWORD,
+                      permissions: {
+                        subscribe: { allow: [">"] },
+                        publish: { allow: [">"] }
+                      }
+                    },
+                    {
+                      user: "k8shell-service",
+                      password: $NATS_K8SHELL_PASSWORD,
+                      permissions: {
+                        subscribe: { allow: [">"] },
+                        publish: { allow: [">"] }
+                      }
+                    },
+                  ]
+                }
+        natsBox:
+          enabled: true
+        statefulSet:
+          merge:
+            spec:
+              persistentVolumeClaimRetentionPolicy:
+                whenDeleted: {{ .Values.nats.persistentVolumeClaim.reclaimPolicy }}
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ .Values.targetNamespace }}
+  {{- include "k8shell-bundle.syncPolicy" (dict "root" . "syncOptions" (list "CreateNamespace=true")) | nindent 2 }}

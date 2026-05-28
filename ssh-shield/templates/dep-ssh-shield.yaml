@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ssh-shield
+  labels:
+    {{- include "ssh-shield.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ssh-shield
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      k8shell.io/app: ssh-shield
+  template:
+    metadata:
+      labels:
+        k8shell.io/app: ssh-shield
+        {{- include "ssh-shield.labels" . | nindent 8 }}
+    spec:
+      {{- include "ssh-shield.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: ssh-shield
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          workingDir: /app
+          command: ["./ssh-shield", "shield", "--config", "config/config.yaml"]
+          env:
+            - name: SECRET_FILES
+              value: /app/secrets
+          volumeMounts:
+            - name: ssh-shield-config
+              mountPath: /app/config
+              readOnly: true
+            - name: ssh-shield-secrets
+              mountPath: /app/secrets
+              readOnly: true
+            {{- if .Values.plugins }}
+            - name: ssh-shield-plugin-configs
+              mountPath: /app/config/plugins
+              readOnly: true
+            {{- end }}
+
+      volumes:
+        - name: ssh-shield-config
+          configMap:
+            name: ssh-shield-config
+        - name: ssh-shield-secrets
+          projected:
+            sources:
+              - secret:
+                  name: {{ include "ssh-shield.natsPasswordSecretName" . }}
+                  items:
+                    - key: {{ include "ssh-shield.natsPasswordSecretKey" . }}
+                      path: sshshield_nats_token
+              {{- if hasKey .Values.plugins "nfgate" }}
+              - secret:
+                  name: {{ include "ssh-shield.nfgateAuthKeySecretName" . }}
+                  items:
+                    - key: {{ include "ssh-shield.nfgateAuthKeySecretKey" . }}
+                      path: nfgate_authkey
+              {{- end }}
+        {{- if .Values.plugins }}
+        - name: ssh-shield-plugin-configs
+          configMap:
+            name: ssh-shield-plugin-configs
+        {{- end }}

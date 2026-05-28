@@ -1,0 +1,84 @@
+# values.yaml for idp-gitlab Helm chart
+#
+# NOTE on usernames/passwords:
+# usernames and passwords are provided as env variables in Pods.
+# When a field has a value of {}, there are two options:
+#
+# 1. field.value: the actual value will be used to create a Kubernetes secret with key equal
+#    to the env variable name. See templates/sec-idp-gitlab.yaml for how the secret is created
+#    and dep-idp-gitlab.yaml for how it is consumed via the idp-gitlab.secretEnv helper.
+#
+# 2. field.secretName and field.secretKey: uses an existing Kubernetes secret.
+
+replicas: 1
+
+image:
+  repository: ghcr.io/k8shell-io/idp-gitlab
+  tag: v0.1.6
+
+# imageRegistry defines a private container registry used to create an image pull secret (regcred).
+imageRegistry:
+  host: ""
+  existingSecret: ""
+  username: ""
+  password: ""
+
+authEnabled: true
+
+certManager:
+  enabled: false
+  issuer:
+    name: vault-root-issuer
+    kind: ClusterIssuer
+  duration: 24h
+  renewBefore: 12h
+
+grpc:
+  roundRobin: true
+
+nats:
+  enabled: true
+  host: nats
+  port: 4222
+  username: "k8shell-service"
+  password: {}
+
+postgresql:
+  enabled: true
+  host: "postgresql"
+  port: 5432
+  database: ""
+  username: {}
+  password: {}
+
+gitlab:
+  address: "https://gitlab.com"
+  clientId: {}
+  clientSecret: {}
+  allowAccess:
+    users: []
+    # teams:
+    #   - org: "my-org"
+    #     team: "my-team"
+    #     serviceToken: "ghp_..."
+  extra: {}
+
+# gitlabUserTemplate is used to map the user from gitlab to the k8shell user.
+# Stored as a raw string to preserve !cel tags (Helm's YAML parser strips custom tags).
+gitlabUserTemplate: |
+  # The template that is used to map the user from gitlab to the k8shell user
+  # The evaluation scope is the `user` object from the gitlab user api
+  user:
+    username: !cel "user.username"
+    fullname: !cel "user.name"
+    uid: !cel "100000 + int(user.id)"
+    gid: !cel "100000 + int(user.id)"
+    email: !cel "user.email"
+
+    auths: [publickey]
+    blueprints: ["*"]
+    roles: ["workspace-user"]
+    isValid: true
+    shell: "/bin/bash"
+    sudo: true
+    organization: "gitlab"

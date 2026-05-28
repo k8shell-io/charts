@@ -1,0 +1,18 @@
+{{- if .Values.postgresql.nodePort.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: np-postgresql
+spec:
+  type: NodePort
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: tcp-postgresql
+      protocol: TCP
+      nodePort: {{ required "postgresql.nodePort.port is required when postgresql.nodePort.enabled=true" .Values.postgresql.nodePort.port }}
+  selector:
+    app.kubernetes.io/component: primary
+    app.kubernetes.io/instance: db-postgresql
+    app.kubernetes.io/name: postgresql
+{{- end }}

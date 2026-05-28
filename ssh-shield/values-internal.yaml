@@ -1,0 +1,8 @@
+# values-internal.yaml
+#
+# Overrides image repository to use the internal registry (registry.k8shell.io)
+# instead of the default public registry (ghcr.io).
+# Use with: helm install ... -f values.yaml -f values-internal.yaml
+
+image:
+  repository: registry.k8shell.io/k8shell-base/ssh-shield

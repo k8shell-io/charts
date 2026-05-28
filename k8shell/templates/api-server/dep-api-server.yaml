@@ -21,7 +21,7 @@ spec:
       {{- include "k8shell.imagePullSecrets" . | nindent 6 }}      
       containers:
       - name: api-server
-        image: {{ .Values.imageRegistry.host }}/{{ .Values.apiServer.image.name }}:{{ .Values.apiServer.image.tag }}
+        image: {{ .Values.apiServer.image.repository }}:{{ .Values.apiServer.image.tag }}
         workingDir: /app
         command: ["./api-server", "--config", "config/config.yaml", "--logtext"]
         ports:

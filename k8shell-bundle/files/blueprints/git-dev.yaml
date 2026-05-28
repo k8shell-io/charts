@@ -1,0 +1,31 @@
+blueprints:
+  # Base blueprint for git-based workspaces. 
+  # It clones the repo and sets up env vars for the repo info.
+  - name: git-dev
+    template: base
+    isTemplate: true
+    image: workspaces/dev:1.12
+
+    subdomain: !cel "normalizeDNS(metadata.repoOwner)"
+    hostname: !cel "user.username + '-' + normalizeDNS(metadata.repoName)"
+
+    initScripts:
+      - name: git-config
+        script: |
+          # set the git configuration
+          touch /$HOME/.gitconfig
+          git config --global pull.rebase true
+          git config --global user.name "$(kbox user name)"
+          git config --global user.email "$(kbox user email)"
+          git config --global credential.helper "k8shell"
+
+      - name: clone-repo
+        script: |
+          cd "$HOME"
+          git config --global credential.helper k8shell
+          REPO_URL="${GIT_ADDRESS}/${GIT_REPOOWNER}/${GIT_REPONAME}.git"
+          if [ -n "${GIT_REPOREF:-}" ]; then
+            git clone -b "$GIT_REPOREF" --single-branch "$REPO_URL"
+          else
+            git clone "$REPO_URL"
+          fi

@@ -8,7 +8,7 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "name": {
+                "repository": {
                     "type": "string"
                 },
                 "tag": {
@@ -376,6 +376,15 @@
                 },
                 "image": {
                     "$ref": "#/definitions/image"
+                },
+                "k8shelld": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "image": {
+                            "$ref": "#/definitions/image"
+                        }
+                    }
                 },
                 "includeBlueprintSamples": {
                     "type": "boolean"

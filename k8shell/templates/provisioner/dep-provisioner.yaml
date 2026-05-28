@@ -20,7 +20,7 @@ spec:
       serviceAccountName: provisioner
       containers:
       - name: provisioner
-        image: {{ .Values.imageRegistry.host }}/{{ .Values.provisioner.image.name }}:{{ .Values.provisioner.image.tag }}
+        image: {{ .Values.provisioner.image.repository }}:{{ .Values.provisioner.image.tag }}
         workingDir: /app
         command: ["./provisioner", "--config", "config/config.yaml", "--logtext"]
         ports:
@@ -103,8 +103,10 @@ spec:
               name: jwt-issuer
               key: JWT_SIGNING_METHOD
               {{- end }}
+        - name: DEFAULT_K8SHELLD_IMAGE
+          value: {{ printf "%s:%s" .Values.provisioner.k8shelld.image.repository .Values.provisioner.k8shelld.image.tag | quote }}
         {{- if .Values.provisioner.extraEnv }}
-        {{- $reserved := list "DEFAULT_REGISTRY_HOST" "DEFAULT_REGISTRY_USERNAME" "DEFAULT_REGISTRY_PASSWORD" "NATS_K8SHELL_PASSWORD" "JWT_SIGNING_METHOD" }}
+        {{- $reserved := list "DEFAULT_REGISTRY_HOST" "DEFAULT_REGISTRY_USERNAME" "DEFAULT_REGISTRY_PASSWORD" "NATS_K8SHELL_PASSWORD" "JWT_SIGNING_METHOD" "DEFAULT_K8SHELLD_IMAGE" }}
         {{- range .Values.provisioner.extraEnv }}
         {{- if has .name $reserved }}
         {{- fail (printf "provisioner.extraEnv: '%s' conflicts with a reserved environment variable" .name) }}

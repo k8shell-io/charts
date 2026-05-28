@@ -21,7 +21,7 @@ spec:
       {{- include "k8shell.imagePullSecrets" . | nindent 6 }}      
       containers:
       - name: ssh-proxy
-        image: {{ .Values.imageRegistry.host }}/{{ .Values.sshProxy.image.name }}:{{ .Values.sshProxy.image.tag }}
+        image: {{ .Values.sshProxy.image.repository }}:{{ .Values.sshProxy.image.tag }}
         # command: ["sleep", "infinity" ]
         workingDir: /app
         command: ["./ssh-proxy", "--config", "config/config.yaml", "--logtext"]

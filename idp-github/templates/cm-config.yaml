@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: idp-github-config
+  labels:
+    app: idp-github
+data:
+  config.yaml: |
+    grpc:
+      port: 9030
+
+      {{- if .Values.certManager.enabled }}
+      enableTLS: true
+      certFile: /etc/tls/identity/tls.crt
+      keyFile: /etc/tls/identity/tls.key
+      {{- else }}
+      enableTLS: false
+      {{- end }}
+
+      # JWT required claims for authentication
+      authEnabled: {{ .Values.authEnabled }}
+      audience: identity
+      allowed:
+        - serviceAccount: identity
+
+    nats:
+      enabled: {{ .Values.nats.enabled }}
+      url: nats://{{ .Values.nats.host }}:{{ .Values.nats.port }}
+      username: {{ .Values.nats.username }}
+      password: ${NATS_K8SHELL_PASSWORD}
+
+    db:
+      enabled: true
+      database: {{ .Values.postgresql.database }}
+      hostname: {{ .Values.postgresql.host }}
+      port: {{ .Values.postgresql.port }}
+      username: ${POSTGRES_USERNAME}
+      password: ${POSTGRES_PASSWORD}
+
+    github:
+      clientId: ${GITHUB_CLIENT_ID}
+      clientSecret: ${GITHUB_CLIENT_SECRET}
+      scopes:
+        - "read:user"
+        - "user:email"
+        - "read:public_key"
+        - "repo"
+      template: /app/files/github-user-template.yaml
+      {{- if .Values.github.extra }}
+      extra:
+        {{- toYaml .Values.github.extra | nindent 8 }}
+      {{- end }}
+      
+      {{- if or .Values.github.allowAccess.users .Values.github.allowAccess.teams }}
+      allowAccess:
+        {{- if .Values.github.allowAccess.users }}
+        users:
+          {{- range .Values.github.allowAccess.users }}
+          - "{{ . }}"
+          {{- end }}
+        {{- end }}
+        {{- if .Values.github.allowAccess.teams }}
+        teams:
+          {{- range .Values.github.allowAccess.teams }}
+          - org: "{{ .org }}"
+            team: "{{ .team }}"
+            serviceToken: {{ .serviceToken }}
+          {{- end }}
+        {{- end }}
+      {{- end }}

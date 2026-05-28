@@ -10,6 +10,7 @@ on:
       - "*"
     paths:
       - "k8shell/**"
+      - "!k8shell-bundle/**"
       - ".github/workflows/chart-k8shell.yaml"
 
   workflow_dispatch:

@@ -1,0 +1,58 @@
+name: Build k8shell bundle chart
+
+on:
+  push:
+    tags:
+      - "v*-k8shell-bundle"
+
+  pull_request:
+    branches:
+      - "*"
+    paths:
+      - "k8shell-bundle/**"
+      - ".github/workflows/chart-k8shell-bundle.yaml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  k8shell-bundle-chart:
+    runs-on: k8shell-runner
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Compute chart version
+        id: ver
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE_VERSION="$(awk '/^version:/ {print $2; exit}' k8shell-bundle/Chart.yaml)"
+          CHART_VERSION="${BASE_VERSION}"
+          COMMIT_ID=$(git rev-parse --short HEAD)
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            COMMIT_ID=$(echo "${{ github.event.pull_request.head.sha }}" | cut -c1-7)
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+            CHART_VERSION="${BASE_VERSION}-pr-${PR_NUMBER}-${COMMIT_ID}"
+          fi
+
+          echo "chart_version=${CHART_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Using chart version: ${CHART_VERSION}"
+
+      - name: Package helm chart
+        run: |
+          mkdir -p dist
+          helm package k8shell-bundle -d dist/ --version "${{ steps.ver.outputs.chart_version }}"
+
+      - name: Push helm chart
+        run: |
+          helm registry login "${{ secrets.REGISTRY_EXT }}" --username "${{ secrets.HARBOR_USER }}" \
+            --password "${{ secrets.HARBOR_PASSWORD }}"
+          helm push dist/*.tgz "oci://${{ secrets.REGISTRY_EXT }}/charts"

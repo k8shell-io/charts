@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: db-postgresql
+  namespace: {{ .Values.targetNamespace }}
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.charts.postgresql.repoURL }}
+    chart: {{ .Values.charts.postgresql.chartName }}
+    targetRevision: {{ .Values.charts.postgresql.chartVersion }}
+    helm:
+      valuesObject:
+        {{- if .Values.postgresql.persistentVolumeClaim.install }}
+        primary:
+          persistence:
+            existingClaim: pvc-postgresql
+        {{- end }}
+        global:
+          postgresql:
+            auth:
+              existingSecret: vault-db 
+              adminPasswordKey: POSTGRES_PASSWORD
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ .Values.targetNamespace }}
+  {{- include "k8shell-bundle.syncPolicy" (dict "root" .) | nindent 2 }}

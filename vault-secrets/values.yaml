@@ -1,0 +1,17 @@
+
+vaultAddress: http://vault.vault.svc.cluster.local:8200
+roleName: apps-secrets-dev
+serviceAccount: vault-sa
+
+# list of secrets and their vault counterparts 
+# example secrets below
+#secrets:
+#  - name: zfs-secret
+#    path: secrets/apps/zfs
+#  - name: regcred2
+#    path: secrets/apps/harbor
+#    type: dockerconfigjson
+#    dockerConfigMapping:
+#      hostnameKey: "REGISTRY"
+#      usernameKey: "HARBOR_USER"
+#      passwordKey: "HARBOR_PASSWORD"
