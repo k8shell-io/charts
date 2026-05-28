@@ -73,3 +73,11 @@ idpGitlab:
     existingSecret: regcred
   image:
     repository: registry.k8shell.io/k8shell-idp/idp-gitlab
+
+#### Internal ssh-shield image repository
+sshShield:
+  imageRegistry:
+    host: registry.k8shell.io
+    existingSecret: regcred
+  image:
+    repository: registry.k8shell.io/k8shell-base/ssh-shield
