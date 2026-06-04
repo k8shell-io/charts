@@ -109,15 +109,6 @@ identity:
 
   # kubernetes configures identity's integration with the Kubernetes API.
   kubernetes:
-    # lease configures distributed leader election for the JWT token refresh loop.
-    lease:
-      # name is the name of the Kubernetes Lease object used for leader election
-      name: identity-token-refresh
-      # refreshInterval is how often the token refresh loop runs
-      refreshInterval: 1m
-      # refreshLookahead is how far ahead of expiry tokens are refreshed
-      refreshLookahead: 2m
-
     # saToken configures on-demand service-account token issuance via the Kubernetes TokenRequest API.
     saToken:
       # enabled controls whether GetUserCredential issues Kubernetes service account tokens

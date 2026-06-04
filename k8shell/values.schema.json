@@ -250,21 +250,6 @@
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
-                        "lease": {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "properties": {
-                                "name": {
-                                    "type": "string"
-                                },
-                                "refreshInterval": {
-                                    "type": "string"
-                                },
-                                "refreshLookahead": {
-                                    "type": "string"
-                                }
-                            }
-                        },
                         "saToken": {
                             "type": "object",
                             "additionalProperties": false,

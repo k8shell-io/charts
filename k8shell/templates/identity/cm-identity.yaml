@@ -82,10 +82,6 @@ data:
 
     kubernetes:
       namespace: {{ .Values.provisioner.targetNamespace }}
-      lease:
-        name: {{ .Values.identity.kubernetes.lease.name }}
-        refreshInterval: {{ .Values.identity.kubernetes.lease.refreshInterval }}
-        refreshLookahead: {{ .Values.identity.kubernetes.lease.refreshLookahead }}
       saToken:
         enabled: {{ .Values.identity.kubernetes.saToken.enabled }}
         ttl: {{ .Values.identity.kubernetes.saToken.ttl }}
