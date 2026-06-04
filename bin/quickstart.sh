@@ -244,7 +244,7 @@ fi
 
 info "Running helm $helmAction for k8shell ${CHART_VERSION:-latest}..."
 
-helm $helmAction k8shell oci://registry.k8shell.io/charts/k8shell \
+helm $helmAction k8shell oci://ghcr.io/k8shell-io/charts/k8shell \
   ${CHART_VERSION:+--version "$CHART_VERSION"} \
   --namespace "$NAMESPACE" \
   --create-namespace \
