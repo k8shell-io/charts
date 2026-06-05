@@ -55,14 +55,6 @@ spec:
                 authorization: {
                   users: [
                     {
-                      user: "sshshield",
-                      password: $NATS_SSHSHIELD_PASSWORD,
-                      permissions: {
-                        subscribe: { allow: [">"] },
-                        publish: { allow: [">"] }
-                      }
-                    },
-                    {
                       user: "k8shell-service",
                       password: $NATS_K8SHELL_PASSWORD,
                       permissions: {

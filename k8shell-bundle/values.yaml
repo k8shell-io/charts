@@ -130,7 +130,7 @@ k8shell:
         secretKey: "USERNAME"
       password:
         secretName: "vault-registry-k8shell-io"
-        secretKey: "PASSWORD"      
+        secretKey: "PASSWORD"
 
     # shell configuration for workspaces created by provisioner
     shells:
@@ -289,10 +289,10 @@ sshShield:
   image: {}
 
   nats:
-    user: sshshield
+    user: k8shell-service
     password:
       secretName: "vault-nats"
-      secretKey: "NATS_SSHSHIELD_PASSWORD"
+      secretKey: "NATS_K8SHELL_PASSWORD"
 
   blocker:
     window: 5m
