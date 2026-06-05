@@ -13,11 +13,11 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
-                "name",
+                "repository",
                 "tag"
             ],
             "properties": {
-                "name": {
+                "repository": {
                     "type": "string"
                 },
                 "tag": {
