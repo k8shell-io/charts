@@ -212,13 +212,6 @@ nats:
     size: 10Gi
     reclaimPolicy: Delete
 
-  # loadbalancer is required to access NATS from outside the cluster
-  # when ssh-shield is not running, it can be disabled 
-  loadBalancer:
-    enabled: false
-    annotations: {}
-    port: 4222
-
 #### idp-github app
 idpGithub:
   enabled: true
