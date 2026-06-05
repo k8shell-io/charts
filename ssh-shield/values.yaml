@@ -26,7 +26,7 @@ imageRegistry:
 nats:
   host: nats
   port: 4222
-  user: sshshield
+  user: k8shell-service
   # NATS password — mounted as a file at ${SECRET_FILES}/sshshield_nats_token.
   # Set .value or (.secretName + .secretKey).
   password: {}
