@@ -41,10 +41,6 @@ spec:
         githubTemplate: |
           {{- .githubTemplate | nindent 10 }}
         {{- end }}
-        {{- if .defaultK8shellFile }}
-        defaultK8shellFile: |
-          {{- .defaultK8shellFile | nindent 10 }}
-        {{- end }}
         {{- end }}
 
   destination:
