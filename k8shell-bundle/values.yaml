@@ -122,13 +122,13 @@ k8shell:
     defaultRegistry:
       enabled: true
       host:
-        secretName: "vault-registry-k8shell-io"
+        secretName: "vault-default-registry"
         secretKey: "ADDRESS"      
       username:
-        secretName: "vault-registry-k8shell-io"
+        secretName: "vault-default-registry"
         secretKey: "USERNAME"
       password:
-        secretName: "vault-registry-k8shell-io"
+        secretName: "vault-default-registry"
         secretKey: "PASSWORD"
 
     # shell configuration for workspaces created by provisioner
