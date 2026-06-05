@@ -22,11 +22,6 @@ spec:
                 secretKeyRef:
                   name: vault-nats
                   key: NATS_K8SHELL_PASSWORD
-            NATS_SSHSHIELD_PASSWORD:
-              valueFrom:
-                secretKeyRef:
-                  name: vault-nats
-                  key: NATS_SSHSHIELD_PASSWORD
         config:
           cluster:
             enabled: {{ .Values.nats.cluster.enabled }}
