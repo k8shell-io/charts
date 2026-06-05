@@ -22,7 +22,6 @@ blueprints:
       - name: clone-repo
         script: |
           cd "$HOME"
-          git config --global credential.helper k8shell
           REPO_URL="${GIT_ADDRESS}/${GIT_REPOOWNER}/${GIT_REPONAME}.git"
           if [ -n "${GIT_REPOREF:-}" ]; then
             git clone -b "$GIT_REPOREF" --single-branch "$REPO_URL"
