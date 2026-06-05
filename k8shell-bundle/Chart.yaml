@@ -2,4 +2,4 @@ apiVersion: v2
 name: k8shell-bundle
 description: k8shell app with postgres, NATS and secrets from vault
 appVersion: 26.5.13
-version: 0.4.32
+version: 0.4.33
