@@ -1,6 +1,5 @@
 
 targetNamespace: ""
-vaultAddress: ""
 
 syncPolicy:
   automated: true
