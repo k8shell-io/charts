@@ -34,7 +34,7 @@ charts:
   sshShield:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/ssh-shield"
-    chartVersion: 0.2.3
+    chartVersion: 0.2.3-pr-8-8f5939f
 
   postgresql:
     repoURL: registry-1.docker.io
