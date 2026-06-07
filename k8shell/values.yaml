@@ -160,13 +160,13 @@ provisioner:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/provisioner
-    tag: v0.14.9
+    tag: pr-40-bde095b
 
   # k8shelld is the default image for k8shelld defined in base blueprint
   k8shelld:
     image:
       repository: ghcr.io/k8shell-io/k8shelld
-      tag: v0.15.6
+      tag: pr-63-a2556da
 
   # if true, the sample blueprints (samples.yaml) will be included alongside
   # the base blueprints (base.yaml). base.yaml is always included.
