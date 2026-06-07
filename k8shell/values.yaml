@@ -191,11 +191,15 @@ provisioner:
   # injectNamespaces:
   #   - default
 
-  # Default registry is used for pulling images for k8shell workspaces when
-  # no registry is specified in a workspace blueprint. If not set, it will
-  # default to the imageRegistry defined above.
+  # defaultRegistry is the default registry host for workspace images when no
+  # registry is specified in a blueprint.
   defaultRegistry:
-    enabled: true
+    host: ""
+
+  # privateRegistry is a private registry with credentials for workspace images.
+  # When enabled, the image pull secret will be created from the provided credentials
+  privateRegistry:
+    enabled: false
     host: {}
     username: {}
     password: {}
@@ -223,8 +227,8 @@ provisioner:
 
   # extra environment variables to inject into the provisioner pod.
   # names must not conflict with reserved variables:
-  # DEFAULT_REGISTRY_HOST, DEFAULT_REGISTRY_USERNAME, DEFAULT_REGISTRY_PASSWORD,
-  # NATS_K8SHELL_PASSWORD, JWT_SIGNING_METHOD, DEFAULT_K8SHELLD_IMAGE
+  # DEFAULT_REGISTRY_HOST, PRIVATE_REGISTRY_HOST, PRIVATE_REGISTRY_USERNAME,
+  # PRIVATE_REGISTRY_PASSWORD, NATS_K8SHELL_PASSWORD, JWT_SIGNING_METHOD, DEFAULT_K8SHELLD_IMAGE
   extraEnv: []
   # - name: MY_VAR
   #   value: "my-value"
