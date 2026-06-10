@@ -27,65 +27,32 @@ spec:
         - containerPort: 9030
           name: grpc
         env:
-        {{- if .Values.provisioner.defaultRegistry.enabled }}
         {{- if .Values.provisioner.defaultRegistry.host }}
+        - name: DEFAULT_REGISTRY_HOST
+          value: {{ .Values.provisioner.defaultRegistry.host | quote }}
+        {{- end }}
+        {{- if .Values.provisioner.privateRegistry.enabled }}
         {{- include "k8shell.secretEnv" (dict 
           "enabled" true 
-          "name" "DEFAULT_REGISTRY_HOST" 
-          "secretDef" .Values.provisioner.defaultRegistry.host
+          "name" "PRIVATE_REGISTRY_HOST" 
+          "secretDef" .Values.provisioner.privateRegistry.host
           "defaultSecret" "provisioner" 
           "context" .) | nindent 8 
         }}
-        {{- else }}
-        - name: DEFAULT_REGISTRY_HOST
-          value: {{ .Values.imageRegistry.host | quote }}
-        {{- end }}
-        {{- if .Values.provisioner.defaultRegistry.username }}
         {{- include "k8shell.secretEnv" (dict 
           "enabled" true
-          "name" "DEFAULT_REGISTRY_USERNAME" 
-          "secretDef" .Values.provisioner.defaultRegistry.username
+          "name" "PRIVATE_REGISTRY_USERNAME" 
+          "secretDef" .Values.provisioner.privateRegistry.username
           "defaultSecret" "provisioner" 
           "context" .) | nindent 8 
         }}
-        {{- else }}
-        {{- if .Values.imageRegistry.existingSecret }}
-        - name: DEFAULT_REGISTRY_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.imageRegistry.existingSecret }}
-              key: username
-        {{- else if .Values.imageRegistry.username }}
-        - name: DEFAULT_REGISTRY_USERNAME
-          value: {{ .Values.imageRegistry.username | quote }}
-        {{- else }}
-        - name: DEFAULT_REGISTRY_USERNAME
-          value: ""
-        {{- end }}
-        {{- end }}
-        {{- if .Values.provisioner.defaultRegistry.password }}
         {{- include "k8shell.secretEnv" (dict 
           "enabled" true
-          "name" "DEFAULT_REGISTRY_PASSWORD" 
-          "secretDef" .Values.provisioner.defaultRegistry.password
+          "name" "PRIVATE_REGISTRY_PASSWORD" 
+          "secretDef" .Values.provisioner.privateRegistry.password
           "defaultSecret" "provisioner" 
           "context" .) | nindent 8 
         }}
-        {{- else }}
-        {{- if .Values.imageRegistry.existingSecret }}
-        - name: DEFAULT_REGISTRY_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.imageRegistry.existingSecret }}
-              key: password
-        {{- else if .Values.imageRegistry.password }}
-        - name: DEFAULT_REGISTRY_PASSWORD
-          value: {{ .Values.imageRegistry.password | quote }}
-        {{- else }}
-        - name: DEFAULT_REGISTRY_PASSWORD
-          value: ""
-        {{- end }}
-        {{- end }}
         {{- end }}
         {{- include "k8shell.secretEnv" (dict
           "enabled" .Values.nats.enabled
@@ -106,7 +73,7 @@ spec:
         - name: DEFAULT_K8SHELLD_IMAGE
           value: {{ printf "%s:%s" .Values.provisioner.k8shelld.image.repository .Values.provisioner.k8shelld.image.tag | quote }}
         {{- if .Values.provisioner.extraEnv }}
-        {{- $reserved := list "DEFAULT_REGISTRY_HOST" "DEFAULT_REGISTRY_USERNAME" "DEFAULT_REGISTRY_PASSWORD" "NATS_K8SHELL_PASSWORD" "JWT_SIGNING_METHOD" "DEFAULT_K8SHELLD_IMAGE" }}
+        {{- $reserved := list "DEFAULT_REGISTRY_HOST" "PRIVATE_REGISTRY_HOST" "PRIVATE_REGISTRY_USERNAME" "PRIVATE_REGISTRY_PASSWORD" "NATS_K8SHELL_PASSWORD" "JWT_SIGNING_METHOD" "DEFAULT_K8SHELLD_IMAGE" }}
         {{- range .Values.provisioner.extraEnv }}
         {{- if has .name $reserved }}
         {{- fail (printf "provisioner.extraEnv: '%s' conflicts with a reserved environment variable" .name) }}
@@ -122,7 +89,7 @@ spec:
         - name: blueprint-files
           mountPath: /app/blueprints
           readOnly: true
-        {{ if .Values.provisioner.defaultRegistry.cert }}
+        {{ if .Values.provisioner.privateRegistry.cert }}
         - name: regcert
           mountPath: /app/secrets
           readOnly: true
@@ -156,16 +123,16 @@ spec:
               name: {{ . }}
           {{- end }}
           {{- end }}
-      {{ if .Values.provisioner.defaultRegistry.cert }}
+      {{ if .Values.provisioner.privateRegistry.cert }}
       - name: regcert
         secret:
-          {{- if .Values.provisioner.defaultRegistry.cert.secretName }}
-          secretName: {{ .Values.provisioner.defaultRegistry.cert.secretName }}
+          {{- if .Values.provisioner.privateRegistry.cert.secretName }}
+          secretName: {{ .Values.provisioner.privateRegistry.cert.secretName }}
           {{- else }}
           secretName: int-provisioner
           {{- end }}
           items:
-          {{- $key := .Values.provisioner.defaultRegistry.cert }}
+          {{- $key := .Values.provisioner.privateRegistry.cert }}
           - key: {{ if $key.secretKey }}{{ $key.secretKey }}{{ else }}regcert.pem{{ end }}
             path: regcert.pem
             mode: 0600

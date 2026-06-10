@@ -19,14 +19,19 @@ data:
     {{- end }}
     {{- end }}
 
-    {{- if .Values.provisioner.defaultRegistry.enabled }}
+    {{- if .Values.provisioner.defaultRegistry.host }}
     defaultRegistry:
       host: ${DEFAULT_REGISTRY_HOST}
-      {{- if .Values.provisioner.defaultRegistry.cert }}
+    {{- end }}
+
+    {{- if .Values.provisioner.privateRegistry.enabled }}
+    privateRegistry:
+      host: ${PRIVATE_REGISTRY_HOST}
+      {{- if .Values.provisioner.privateRegistry.cert }}
       certCA: !file /app/secrets/regcert.pem
       {{- end }}
-      username: ${DEFAULT_REGISTRY_USERNAME}
-      password: ${DEFAULT_REGISTRY_PASSWORD}
+      username: ${PRIVATE_REGISTRY_USERNAME}
+      password: ${PRIVATE_REGISTRY_PASSWORD}
     {{- end }}
 
     k8shellCapabilities:

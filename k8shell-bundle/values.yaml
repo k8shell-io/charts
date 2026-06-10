@@ -9,7 +9,7 @@ charts:
   k8shell:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/k8shell"
-    chartVersion: 26.5.13
+    chartVersion: 26.5.13-pr-8-8f5939f
 
   idpGithub:
     repoURL: ghcr.io/k8shell-io
@@ -34,7 +34,7 @@ charts:
   sshShield:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/ssh-shield"
-    chartVersion: 0.2.3
+    chartVersion: 0.2.3-pr-8-8f5939f
 
   postgresql:
     repoURL: registry-1.docker.io
@@ -117,18 +117,21 @@ k8shell:
     # TODO: if not set, provisioner will use the default storage class of the cluster.
     workspaceStorageClass: ""
 
-    # Default registry is used for pulling images for k8shell workspaces when no registry is specified
-    # in a workspace blueprint. If not set, it will default to the imageRegistrty defined above. 
+    # defaultRegistry is the public default registry host for workspace images.
     defaultRegistry:
+      host: ""
+
+    # privateRegistry is a private registry with credentials for workspace images.
+    privateRegistry:
       enabled: true
       host:
-        secretName: "vault-default-registry"
+        secretName: "vault-private-registry"
         secretKey: "ADDRESS"      
       username:
-        secretName: "vault-default-registry"
+        secretName: "vault-private-registry"
         secretKey: "USERNAME"
       password:
-        secretName: "vault-default-registry"
+        secretName: "vault-private-registry"
         secretKey: "PASSWORD"
 
     # shell configuration for workspaces created by provisioner

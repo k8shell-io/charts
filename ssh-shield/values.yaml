@@ -14,7 +14,7 @@ replicas: 1
 
 image:
   repository: ghcr.io/k8shell-io/ssh-shield
-  tag: v0.12.1
+  tag: pr-4-504c6d5
 
 # imageRegistry defines a private container registry used to create an image pull secret (regcred).
 imageRegistry:
