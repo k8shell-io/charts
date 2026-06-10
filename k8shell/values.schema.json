@@ -349,6 +349,24 @@
                 }
             }
         },
+        "authz": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "replicas": {
+                    "$ref": "#/definitions/replicas"
+                },
+                "image": {
+                    "$ref": "#/definitions/image"
+                },
+                "policiesConfigMap": {
+                    "type": "string"
+                },
+                "defaultPolicy": {
+                    "type": "string"
+                }
+            }
+        },
         "provisioner": {
             "type": "object",
             "additionalProperties": false,

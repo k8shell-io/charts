@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authz-config
+  labels:
+    app: authz
+data:
+  config.yaml: |
+    # grpc server
+    grpc:
+      port: 9011
+
+      {{- if .Values.certManager.enabled }}
+      enableTLS: true
+      certFile: /etc/tls/authz/tls.crt
+      keyFile: /etc/tls/authz/tls.key
+      {{- else }}
+      enableTLS: false
+      {{- end }}
+
+      # JWT required claims for authentication
+      authEnabled: {{ .Values.authEnabled }}
+      audience: authz
+
+      allowed:
+        - serviceAccount: ssh-proxy
+        - serviceAccount: provisioner
+        - serviceAccount: api-server
+
+    # JWT verifier configuration for token validation
+    jwtVerifier:
+      signingMethod: ${JWT_SIGNING_METHOD}
+      privateKeyFile: /run/secrets/jwt-issuer/private-key.pem
+
+    policy:
+      directory: /app/policies
+      default: |
+        {{- .Values.authz.defaultPolicy | nindent 8 }}
+

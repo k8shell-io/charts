@@ -155,6 +155,23 @@ identity:
   #   - address: idp-github:9030
   #     serverName: idp-github.<namespace>.svc
 
+# authz is the authorization service that evaluates OPA policies.
+authz:
+  replicas: 1
+  image:
+    repository: ghcr.io/k8shell-io/authz
+    tag: pr-1-9738ee7
+
+  # policiesConfigMap is the name of an existing ConfigMap whose keys are
+  # mounted as policy files into /app/policies. Leave empty to omit the mount.
+  policiesConfigMap: ""
+
+  # defaultPolicy is the inline OPA Rego policy used when no policy file matches.
+  defaultPolicy: |
+    package authz
+    import rego.v1
+    default allow = false
+
 # provisioner manages the lifecycle of k8shell workspace pods.
 provisioner:
   replicas: 1
@@ -261,7 +278,7 @@ apiServer:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/api-server
-    tag: v0.15.1
+    tag: v0.15.2
   logging:
     requestHeaders: false
     responseHeaders: false

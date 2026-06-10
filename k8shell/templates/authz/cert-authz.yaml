@@ -1,0 +1,20 @@
+{{- if .Values.certManager.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: identity-cert
+spec:
+  secretName: authz-tls
+  duration: {{ .Values.certManager.duration }}
+  renewBefore: {{ .Values.certManager.renewBefore }}
+  commonName: authz.{{ .Release.Namespace }}.svc.cluster.local
+  dnsNames:
+    - authz
+    - authz.{{ .Release.Namespace }}.svc
+    - authz.{{ .Release.Namespace }}.svc.cluster.local
+  usages:
+    - server authz
+  issuerRef:
+    name: {{ .Values.certManager.issuer.name }}
+    kind: {{ .Values.certManager.issuer.kind }}
+{{- end }}
