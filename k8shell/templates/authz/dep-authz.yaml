@@ -40,9 +40,6 @@ spec:
         - name: authz-config
           mountPath: /app/config
           readOnly: true
-        - name: authz-files
-          mountPath: /app/files
-          readOnly: true
         - name: jwt-issuer
           mountPath: /run/secrets/jwt-issuer
           readOnly: true
@@ -57,46 +54,45 @@ spec:
           mountPath: /etc/k8shell/ca
           readOnly: true
       {{- end }}
-    volumes:
-    - name: authz-config
-      configMap:
-        name: authz-config
-    - name: authz-files
-    - name: authz-policies
-    {{- if .Values.authz.policiesConfigMap }}
-      configMap:
-        name: {{ .Values.authz.policiesConfigMap }}
-    {{- else }}
-      emptyDir: {}
-    {{- end }}
-    {{- if .Values.certManager.enabled }}
-    - name: authz-cert
-      secret:
-        secretName: authz-tls
-    - name: ca-cert
-      secret:
-        secretName: k8shell-cluster-ca
-    {{- end }}
-    - name: jwt-issuer
-      projected:
-        sources:
-          {{- if .Values.identity.jwtIssuer.privateKey.secretName }}
-          - secret:
-              name: {{ .Values.identity.jwtIssuer.privateKey.secretName }}
-              items:
-                - key: {{ .Values.identity.jwtIssuer.privateKey.secretKey }}
-                  path: private-key.pem
-          {{- else }}
-          - secret:
-              name: jwt-issuer
-              items:
-                - key: private-key.pem
-                  path: private-key.pem
-          {{- end }}
-          {{- if not .Values.identity.jwtIssuer.signingMethod.secretName }}
-          - secret:
-              name: jwt-issuer
-              items:
-                - key: JWT_SIGNING_METHOD
-                  path: JWT_SIGNING_METHOD
-          {{- end }}
+      volumes:
+      - name: authz-config
+        configMap:
+          name: authz-config
+      - name: authz-policies
+      {{- if .Values.authz.policiesConfigMap }}
+        configMap:
+          name: {{ .Values.authz.policiesConfigMap }}
+      {{- else }}
+        emptyDir: {}
+      {{- end }}
+      {{- if .Values.certManager.enabled }}
+      - name: authz-cert
+        secret:
+          secretName: authz-tls
+      - name: ca-cert
+        secret:
+          secretName: k8shell-cluster-ca
+      {{- end }}
+      - name: jwt-issuer
+        projected:
+          sources:
+            {{- if .Values.identity.jwtIssuer.privateKey.secretName }}
+            - secret:
+                name: {{ .Values.identity.jwtIssuer.privateKey.secretName }}
+                items:
+                  - key: {{ .Values.identity.jwtIssuer.privateKey.secretKey }}
+                    path: private-key.pem
+            {{- else }}
+            - secret:
+                name: jwt-issuer
+                items:
+                  - key: private-key.pem
+                    path: private-key.pem
+            {{- end }}
+            {{- if not .Values.identity.jwtIssuer.signingMethod.secretName }}
+            - secret:
+                name: jwt-issuer
+                items:
+                  - key: JWT_SIGNING_METHOD
+                    path: JWT_SIGNING_METHOD
+            {{- end }}
