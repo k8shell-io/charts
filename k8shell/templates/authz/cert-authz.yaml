@@ -2,7 +2,7 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: identity-cert
+  name: authz-cert
 spec:
   secretName: authz-tls
   duration: {{ .Values.certManager.duration }}
