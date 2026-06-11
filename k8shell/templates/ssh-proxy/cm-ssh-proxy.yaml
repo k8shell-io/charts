@@ -47,6 +47,17 @@ data:
       serverName: identity.{{ .Release.Namespace }}.svc
       {{- end }}
 
+    {{- if .Values.authz.enabled }}
+    # authz service configuration
+    authz:
+      address: authz:9011
+      tokenFilePath: /var/run/secrets/k8shell.io/authz
+      {{- if .Values.certManager.enabled }}
+      caCertPath: /etc/k8shell/ca/ca.crt
+      serverName: authz.{{ .Release.Namespace }}.svc
+      {{- end }}
+    {{- end }}
+
     {{- if .Values.session.enabled }}
     # Session service configuration
     session:
