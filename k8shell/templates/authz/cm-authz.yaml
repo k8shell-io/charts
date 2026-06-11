@@ -27,6 +27,7 @@ data:
         - serviceAccount: ssh-proxy
         - serviceAccount: provisioner
         - serviceAccount: api-server
+        - serviceAccount: identity
 
     # JWT verifier configuration for token validation
     jwtVerifier:
