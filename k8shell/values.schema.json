@@ -353,6 +353,9 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
                 "replicas": {
                     "$ref": "#/definitions/replicas"
                 },

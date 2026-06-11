@@ -1,3 +1,4 @@
+{{- if .Values.authz.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -96,3 +97,5 @@ spec:
                   - key: JWT_SIGNING_METHOD
                     path: JWT_SIGNING_METHOD
             {{- end }}
+
+{{- end }}
