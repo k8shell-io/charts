@@ -95,6 +95,20 @@ k8shell:
     # Static remote providers. idp-github is injected automatically when idpGithub.enabled=true.
     remoteProviders: []
 
+  # authz is the authorization service that evaluates OPA policies.
+  authz:
+    enabled: true
+    replicas: 2
+
+    # config map with policy files
+    policiesConfigMap: ""
+
+    # defaultPolicy is the default OPA policy that authz will use when no policy files are provided
+    # defaultPolicy: |
+    #   package authz
+    #   import rego.v1
+    #   default allow = false
+
   provisioner:
     replicas: 2
 
