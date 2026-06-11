@@ -13,7 +13,7 @@ spec:
     - authz.{{ .Release.Namespace }}.svc
     - authz.{{ .Release.Namespace }}.svc.cluster.local
   usages:
-    - server authz
+    - server auth
   issuerRef:
     name: {{ .Values.certManager.issuer.name }}
     kind: {{ .Values.certManager.issuer.kind }}
