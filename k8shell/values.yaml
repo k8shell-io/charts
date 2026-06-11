@@ -96,7 +96,7 @@ identity:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/identity
-    tag: v0.14.3
+    tag: pr-22-d738409
 
   # jwtIssuer configures JWT token issuance for k8shell services.
   jwtIssuer:
