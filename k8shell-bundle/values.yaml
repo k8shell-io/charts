@@ -3,7 +3,7 @@ targetNamespace: ""
 
 syncPolicy:
   automated: true
-
+ 
 #### Charts configuration
 charts:
   k8shell:
