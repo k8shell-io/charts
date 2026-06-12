@@ -527,6 +527,15 @@
                 "host": {
                     "type": "string"
                 },
+                "features": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "navigation": {
+                            "type": "boolean"
+                        }
+                    }
+                },
                 "sessionCookie": {
                     "type": "object",
                     "additionalProperties": false,

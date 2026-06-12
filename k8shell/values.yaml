@@ -272,6 +272,8 @@ frontend:
     sameSite: Strict
     maxAgeSeconds: 86400
     path: /api/v1
+  features:
+    navigation: true
 
 # apiServer provides the k8shell REST API.
 apiServer:
