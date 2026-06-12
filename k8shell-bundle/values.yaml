@@ -9,7 +9,7 @@ charts:
   k8shell:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/k8shell"
-    chartVersion: 26.5.13-pr-9-b4dc51f
+    chartVersion: 26.5.13-pr-9-95ff607
 
   idpGithub:
     repoURL: ghcr.io/k8shell-io
@@ -172,6 +172,8 @@ k8shell:
       sameSite: Strict
       maxAgeSeconds: 86400
       path: /api/v1
+    features:
+      navigation: true
 
   apiServer:
     enabled: true
