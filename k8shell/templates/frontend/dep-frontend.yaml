@@ -30,7 +30,7 @@ spec:
           name: http
         env:
         - name: EXT_VAR_VITE_FEATURE_NAVIGATION
-          value: "{{ .Values.frontend.features.navigation | quote }}"
+          value: "{{ .Values.frontend.features.navigation }}"
         - name: EXT_VAR_VITE_HOST
           value: "{{ .Values.frontend.host }}"
         - name: EXT_VAR_VITE_SCHEME
