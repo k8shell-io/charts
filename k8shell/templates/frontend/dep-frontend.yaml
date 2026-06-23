@@ -29,7 +29,7 @@ spec:
         - containerPort: 8101
           name: http
         env:
-        - name: EXT_VAR_VITE_FEATURE_NAVIGATION
+        - name: EXT_VAR_VITE_FEATURE_NAV
           value: "{{ .Values.frontend.features.navigation }}"
         - name: EXT_VAR_VITE_HOST
           value: "{{ .Values.frontend.host }}"
