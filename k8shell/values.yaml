@@ -90,7 +90,7 @@ sshProxy:
   nodePort:
     enabled: false
     port: 30022
-  
+
 # identity is the authentication and user management service.
 identity:
   replicas: 1

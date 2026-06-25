@@ -68,7 +68,7 @@ spec:
           items:
           - key: {{ if $serverKey.secretKey }}{{ $serverKey.secretKey }}{{ else }}server_key{{ end }}
             path: server_key
-            mode: 0600
+            mode: 0444
       - name: jwt
         projected:
           sources:
