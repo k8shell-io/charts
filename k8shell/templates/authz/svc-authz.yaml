@@ -1,0 +1,21 @@
+{{- if .Values.authz.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: authz
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: authz
+spec:
+  type: ClusterIP
+  {{- if and .Values.grpc .Values.grpc.roundRobin }}
+  clusterIP: None
+  {{- end }}
+  ports:
+    - port: 9020
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
+  selector:
+    k8shell.io/app: authz
+{{- end }}

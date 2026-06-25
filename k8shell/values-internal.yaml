@@ -12,6 +12,10 @@ identity:
   image:
     repository: registry.k8shell.io/k8shell-base/identity
 
+authz:
+  image:
+    repository: registry.k8shell.io/k8shell-base/authz
+
 provisioner:
   image:
     repository: registry.k8shell.io/k8shell-base/provisioner

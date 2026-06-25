@@ -1,0 +1,101 @@
+{{- if .Values.authz.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authz
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: authz
+spec:
+  replicas: {{ .Values.authz.replicas }}
+  selector:
+    matchLabels:
+      k8shell.io/app: authz
+  template:
+    metadata:
+      labels:
+        k8shell.io/app: authz
+        {{- include "k8shell.labels" . | nindent 8 }}
+    spec:
+      {{- include "k8shell.imagePullSecrets" . | nindent 6 }}
+      containers:
+      - name: authz
+        image: {{ .Values.authz.image.repository }}:{{ .Values.authz.image.tag }}
+        workingDir: /app
+        args: ["--config", "config/config.yaml", "--logtext"]
+        ports:
+        - containerPort: 9011
+          name: grpc
+        env:
+        - name: JWT_SIGNING_METHOD
+          valueFrom:
+            secretKeyRef:
+              {{- if .Values.identity.jwtIssuer.signingMethod.secretName }}
+              name: {{ .Values.identity.jwtIssuer.signingMethod.secretName }}
+              key: {{ .Values.identity.jwtIssuer.signingMethod.secretKey }}
+              {{- else }}
+              name: jwt-issuer
+              key: JWT_SIGNING_METHOD
+              {{- end }}
+        volumeMounts:
+        - name: authz-config
+          mountPath: /app/config
+          readOnly: true
+        - name: jwt-issuer
+          mountPath: /run/secrets/jwt-issuer
+          readOnly: true
+        - name: authz-policies
+          mountPath: /app/policies
+          readOnly: true
+      {{- if .Values.certManager.enabled }}
+        - name: authz-cert
+          mountPath: /etc/tls/authz
+          readOnly: true
+        - name: ca-cert
+          mountPath: /etc/k8shell/ca
+          readOnly: true
+      {{- end }}
+      volumes:
+      - name: authz-config
+        configMap:
+          name: authz-config
+      - name: authz-policies
+      {{- if .Values.authz.policiesConfigMap }}
+        configMap:
+          name: {{ .Values.authz.policiesConfigMap }}
+      {{- else }}
+        emptyDir: {}
+      {{- end }}
+      {{- if .Values.certManager.enabled }}
+      - name: authz-cert
+        secret:
+          secretName: authz-tls
+      - name: ca-cert
+        secret:
+          secretName: k8shell-cluster-ca
+      {{- end }}
+      - name: jwt-issuer
+        projected:
+          sources:
+            {{- if .Values.identity.jwtIssuer.privateKey.secretName }}
+            - secret:
+                name: {{ .Values.identity.jwtIssuer.privateKey.secretName }}
+                items:
+                  - key: {{ .Values.identity.jwtIssuer.privateKey.secretKey }}
+                    path: private-key.pem
+            {{- else }}
+            - secret:
+                name: jwt-issuer
+                items:
+                  - key: private-key.pem
+                    path: private-key.pem
+            {{- end }}
+            {{- if not .Values.identity.jwtIssuer.signingMethod.secretName }}
+            - secret:
+                name: jwt-issuer
+                items:
+                  - key: JWT_SIGNING_METHOD
+                    path: JWT_SIGNING_METHOD
+            {{- end }}
+
+{{- end }}

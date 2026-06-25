@@ -147,4 +147,8 @@ spec:
                   path: identity
                   audience: identity
                   expirationSeconds: {{ .Values.tokenExpiration }}
+              - serviceAccountToken:
+                  path: authz
+                  audience: authz
+                  expirationSeconds: {{ .Values.tokenExpiration }}
 

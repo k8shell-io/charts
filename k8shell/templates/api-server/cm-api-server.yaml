@@ -50,6 +50,16 @@ data:
       serverName: identity.{{ .Release.Namespace }}.svc
       {{- end }}
 
+    # authz service configuration
+    authz:
+      address: authz:9011
+      tokenFilePath: /var/run/secrets/k8shell.io/authz
+      {{- if .Values.certManager.enabled }}
+      caCertPath: /etc/k8shell/ca/ca.crt
+      serverName: authz.{{ .Release.Namespace }}.svc
+      {{- end }}
+
+
     # Session service configuration
     session:
       address: session:9010
@@ -59,7 +69,7 @@ data:
       serverName: session.{{ .Release.Namespace }}.svc
       {{- end }}
 
-    # Session service configuration
+    # Provisioner service configuration
     provisioner:
       address: provisioner:9030
       tokenFilePath: /var/run/secrets/k8shell.io/provisioner

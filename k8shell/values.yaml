@@ -96,7 +96,7 @@ identity:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/identity
-    tag: v0.14.3
+    tag: pr-22-d738409
 
   # jwtIssuer configures JWT token issuance for k8shell services.
   jwtIssuer:
@@ -154,6 +154,24 @@ identity:
   # remoteProviders:
   #   - address: idp-github:9030
   #     serverName: idp-github.<namespace>.svc
+
+# authz is the authorization service that evaluates OPA policies.
+authz:
+  enabled: false
+  replicas: 1
+  image:
+    repository: ghcr.io/k8shell-io/authz
+    tag: pr-1-9738ee7
+
+  # policiesConfigMap is the name of an existing ConfigMap whose keys are
+  # mounted as policy files into /app/policies. Leave empty to omit the mount.
+  policiesConfigMap: ""
+
+  # defaultPolicy is the inline OPA Rego policy used when no policy file matches.
+  defaultPolicy: |
+    package authz
+    import rego.v1
+    default allow = false
 
 # provisioner manages the lifecycle of k8shell workspace pods.
 provisioner:
@@ -254,6 +272,8 @@ frontend:
     sameSite: Strict
     maxAgeSeconds: 86400
     path: /api/v1
+  features:
+    navigation: ""
 
 # apiServer provides the k8shell REST API.
 apiServer:
@@ -261,7 +281,7 @@ apiServer:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/api-server
-    tag: v0.15.1
+    tag: v0.15.2
   logging:
     requestHeaders: false
     responseHeaders: false

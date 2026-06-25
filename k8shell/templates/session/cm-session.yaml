@@ -72,4 +72,5 @@ data:
         shell: asciinema
         exec: asciinema
         tcpip: pcap
+        sftp: pcap
 {{- end }}

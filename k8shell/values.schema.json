@@ -349,6 +349,27 @@
                 }
             }
         },
+        "authz": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "replicas": {
+                    "$ref": "#/definitions/replicas"
+                },
+                "image": {
+                    "$ref": "#/definitions/image"
+                },
+                "policiesConfigMap": {
+                    "type": "string"
+                },
+                "defaultPolicy": {
+                    "type": "string"
+                }
+            }
+        },
         "provisioner": {
             "type": "object",
             "additionalProperties": false,
@@ -505,6 +526,15 @@
                 },
                 "host": {
                     "type": "string"
+                },
+                "features": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "navigation": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "sessionCookie": {
                     "type": "object",
