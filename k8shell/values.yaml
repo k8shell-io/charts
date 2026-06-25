@@ -57,7 +57,7 @@ sshProxy:
   
   image:
     repository: ghcr.io/k8shell-io/ssh-proxy
-    tag: v0.13.4
+    tag: v0.14.1
   
   proxyProtocol: false
   
@@ -96,7 +96,7 @@ identity:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/identity
-    tag: pr-22-d738409
+    tag: v0.15.0
 
   # jwtIssuer configures JWT token issuance for k8shell services.
   jwtIssuer:
@@ -161,7 +161,7 @@ authz:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/authz
-    tag: pr-1-9738ee7
+    tag: v0.1.1
 
   # policiesConfigMap is the name of an existing ConfigMap whose keys are
   # mounted as policy files into /app/policies. Leave empty to omit the mount.
@@ -178,13 +178,13 @@ provisioner:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/provisioner
-    tag: pr-40-bde095b
+    tag: v0.15.1
 
   # k8shelld is the default image for k8shelld defined in base blueprint
   k8shelld:
     image:
       repository: ghcr.io/k8shell-io/k8shelld
-      tag: pr-63-a2556da
+      tag: v0.15.7
 
   # if true, the sample blueprints (samples.yaml) will be included alongside
   # the base blueprints (base.yaml). base.yaml is always included.
@@ -263,7 +263,7 @@ frontend:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/frontend
-    tag: pr-60-7ae66ae
+    tag: v0.14.6
   scheme: "http"
   host: "localtest.me"
   sessionCookie:
@@ -281,7 +281,7 @@ apiServer:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/api-server
-    tag: v0.15.2
+    tag: v0.16.2
   logging:
     requestHeaders: false
     responseHeaders: false
@@ -292,7 +292,7 @@ session:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/session
-    tag: v0.13.1
+    tag: v0.13.4
 
   # Janitor ends sessions that stop sending upserts (e.g. client killed).
   # pg_try_advisory_lock ensures only one replica runs the sweep at a time.
