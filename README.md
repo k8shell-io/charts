@@ -14,13 +14,13 @@ Helm charts for [k8shell](https://k8shell.io) — Cloud-native Development Envir
 | Chart | Description |
 |-------|-------------|
 | [k8shell](./k8shell) | Core k8shell platform — open-source components (ssh-proxy, identity, provisioner) plus extended services (api-server, authz, session, frontend). |
-| [k8shell-bundle](./k8shell-bundle) | Umbrella chart deploying k8shell together with PostgreSQL, NATS, and Vault-backed secrets. ⚠️ Early Access |
-| [idp-github](./idp-github) | GitHub Identity Provider — authenticates users via GitHub OAuth. ⚠️ Early Access |
-| [idp-gitlab](./idp-gitlab) | GitLab Identity Provider — authenticates users via GitLab OAuth. ⚠️ Early Access |
-| [ssh-shield](./ssh-shield) | SSH Shield service — policy enforcement proxy for SSH sessions. ⚠️ Early Access |
+| [k8shell-bundle](./k8shell-bundle) | Umbrella chart deploying k8shell together with PostgreSQL, NATS, and Vault-backed secrets. |
+| [idp-github](./idp-github) | GitHub Identity Provider — authenticates users via GitHub OAuth. |
+| [idp-gitlab](./idp-gitlab) | GitLab Identity Provider — authenticates users via GitLab OAuth. |
+| [ssh-shield](./ssh-shield) | SSH Shield service — policy enforcement proxy for SSH sessions. |
 | [vault-secrets](./vault-secrets) | Maps HashiCorp Vault secrets to Kubernetes secrets. |
 
-> ⚠️ **Early Access:** `k8shell-bundle`, `idp-github`, `idp-gitlab`, and `ssh-shield` require joining the Early Access Program. See [licensing docs](https://docs.k8shell.io/licensing#early-access) to request access.
+`k8shell-bundle`, `idp-github`, `idp-gitlab`, and `ssh-shield` are available under the [Early Access Program](https://docs.k8shell.io/licensing#early-access).
 
 ## Requirements
 
