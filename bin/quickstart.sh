@@ -161,10 +161,10 @@ resolve_private_key_path() {
 }
 
 generate_admin_public_key() {
-    # Returns existing key content, or generates a new pair and returns the public key
-    for candidate in "$HOME/.ssh/id_rsa.pub" "$HOME/.ssh/id_ed25519.pub" "$HOME/.ssh/id_ecdsa.pub"; do
+    # generate public key from existing private key if available
+    for candidate in "$HOME/.ssh/id_rsa" "$HOME/.ssh/id_ed25519" "$HOME/.ssh/id_ecdsa"; do
         if [ -f "$candidate" ]; then
-            cat "$candidate"
+            ssh-keygen -y -f "$candidate"
             return
         fi
     done
