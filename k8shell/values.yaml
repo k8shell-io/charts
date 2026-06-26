@@ -178,7 +178,7 @@ provisioner:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/provisioner
-    tag: v0.15.1
+    tag: v0.15.2
 
   # k8shelld is the default image for k8shelld defined in base blueprint
   k8shelld:
