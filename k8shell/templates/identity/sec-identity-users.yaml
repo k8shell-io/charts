@@ -16,7 +16,7 @@ stringData:
 {{- end }}
 {{- if ne $pub "" }}
   publickey: |
-    {{ $pub | trim }}
+    {{- $pub | trim | nindent 4 }}
 {{- end }}
 {{- end }}
 {{- end }}
