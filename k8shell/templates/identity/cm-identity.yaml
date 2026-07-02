@@ -26,6 +26,7 @@ data:
         - serviceAccount: provisioner
         - serviceAccount: ssh-proxy
         - serviceAccount: api-server
+        - serviceAccount: authz
 
     # Provisioner service configuration
     provisioner:

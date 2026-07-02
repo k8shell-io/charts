@@ -17,6 +17,7 @@ spec:
         k8shell.io/app: authz
         {{- include "k8shell.labels" . | nindent 8 }}
     spec:
+      serviceAccountName: authz
       {{- include "k8shell.imagePullSecrets" . | nindent 6 }}
       containers:
       - name: authz
@@ -27,6 +28,13 @@ spec:
         - containerPort: 9011
           name: grpc
         env:
+        {{- include "k8shell.secretEnv" (dict 
+          "enabled" .Values.nats.enabled
+          "name" "NATS_K8SHELL_PASSWORD" 
+          "secretDef" .Values.nats.password 
+          "defaultSecret" "nats" 
+          "context" .) | nindent 8 
+        }}
         - name: JWT_SIGNING_METHOD
           valueFrom:
             secretKeyRef:
@@ -40,6 +48,9 @@ spec:
         volumeMounts:
         - name: authz-config
           mountPath: /app/config
+          readOnly: true
+        - name: jwt
+          mountPath: /var/run/secrets/k8shell.io
           readOnly: true
         - name: jwt-issuer
           mountPath: /run/secrets/jwt-issuer
@@ -56,6 +67,13 @@ spec:
           readOnly: true
       {{- end }}
       volumes:
+      - name: jwt
+        projected:
+          sources:
+            - serviceAccountToken:
+                path: identity
+                audience: identity
+                expirationSeconds: {{ .Values.tokenExpiration }}
       - name: authz-config
         configMap:
           name: authz-config

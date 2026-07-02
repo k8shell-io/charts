@@ -173,6 +173,11 @@ authz:
     import rego.v1
     default allow = false
 
+  enrichment:
+    user:
+      timeout: 2s
+      cacheTTL: 30s
+
 # provisioner manages the lifecycle of k8shell workspace pods.
 provisioner:
   replicas: 1

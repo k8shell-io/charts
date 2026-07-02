@@ -39,4 +39,24 @@ data:
       default: |
         {{- .Values.authz.defaultPolicy | nindent 8 }}
 
+    nats:
+      enabled: {{ .Values.nats.enabled }}
+      url: nats://{{ .Values.nats.host }}:{{ .Values.nats.port }}
+      username: {{ .Values.nats.username }}
+      password: ${NATS_K8SHELL_PASSWORD}
+
+    # Identity service configuration
+    identity:
+      address: identity:9020
+      tokenFilePath: /var/run/secrets/k8shell.io/identity
+      {{- if .Values.certManager.enabled }}
+      caCertPath: /etc/k8shell/ca/ca.crt
+      serverName: identity.{{ .Release.Namespace }}.svc
+      {{- end }}
+
+    enrichment:
+      user:
+        timeout: {{ .Values.enrichment.user.timeout }}
+        cacheTTL: {{ .Values.enrichment.user.cacheTTL }}
+
 {{- end }}
