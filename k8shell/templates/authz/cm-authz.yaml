@@ -56,7 +56,7 @@ data:
 
     enrichment:
       user:
-        timeout: {{ .Values.enrichment.user.timeout }}
-        cacheTTL: {{ .Values.enrichment.user.cacheTTL }}
+        timeout: {{ .Values.authz.enrichment.user.timeout }}
+        cacheTTL: {{ .Values.authz.enrichment.user.cacheTTL }}
 
 {{- end }}
