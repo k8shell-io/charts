@@ -367,6 +367,24 @@
                 },
                 "defaultPolicy": {
                     "type": "string"
+                },
+                "enrichment": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "user": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "timeout": {
+                                    "type": "string"
+                                },
+                                "cacheTTL": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
                 }
             }
         },
