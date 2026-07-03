@@ -22,7 +22,7 @@ spec:
         - name: idp-gitlab
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           workingDir: /app
-          command: ["./idp-gitlab", "--config", "config/config.yaml", "--logtext"]
+          # command: ["./idp-gitlab", "--config", "config/config.yaml", "--logtext"]
           ports:
             - containerPort: 9030
               name: grpc

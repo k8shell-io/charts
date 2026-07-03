@@ -21,7 +21,7 @@ spec:
         - name: ssh-shield
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           workingDir: /app
-          command: ["./ssh-shield", "shield", "--config", "config/config.yaml"]
+          # command: ["./ssh-shield", "shield", "--config", "config/config.yaml"]
           env:
             - name: SECRET_FILES
               value: /app/secrets

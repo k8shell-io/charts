@@ -22,7 +22,7 @@ spec:
       - name: session
         image: {{ .Values.session.image.repository }}:{{ .Values.session.image.tag }}
         workingDir: /app
-        command: ["./session", "--config", "config/config.yaml", "--logtext"]
+        # command: ["./session", "--config", "config/config.yaml", "--logtext"]
         ports:
         - containerPort: 9010
           name: grpc

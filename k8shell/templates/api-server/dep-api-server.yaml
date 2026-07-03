@@ -23,7 +23,7 @@ spec:
       - name: api-server
         image: {{ .Values.apiServer.image.repository }}:{{ .Values.apiServer.image.tag }}
         workingDir: /app
-        command: ["./api-server", "--config", "config/config.yaml", "--logtext"]
+        # command: ["./api-server", "--config", "config/config.yaml", "--logtext"]
         ports:
         - containerPort: 9101
           name: http

@@ -22,7 +22,7 @@ spec:
       - name: provisioner
         image: {{ .Values.provisioner.image.repository }}:{{ .Values.provisioner.image.tag }}
         workingDir: /app
-        command: ["./provisioner", "--config", "config/config.yaml", "--logtext"]
+        # command: ["./provisioner", "--config", "config/config.yaml", "--logtext"]
         ports:
         - containerPort: 9030
           name: grpc
