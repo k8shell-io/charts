@@ -24,7 +24,7 @@ spec:
         image: {{ .Values.sshProxy.image.repository }}:{{ .Values.sshProxy.image.tag }}
         # command: ["sleep", "infinity" ]
         workingDir: /app
-        command: ["./ssh-proxy", "--config", "config/config.yaml", "--logtext"]
+        # command: ["./ssh-proxy", "--config", "config/config.yaml", "--logtext"]
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         workingDir: /app
         env:
