@@ -1,0 +1,36 @@
+{{- if .Values.identity.kubernetes.saToken.enabled }}
+{{- if .Values.provisioner.injectNamespaces }}
+{{- range .Values.provisioner.injectNamespaces }}
+{{- $injectNamespace := . }}
+{{- if ne $injectNamespace $.Values.provisioner.targetNamespace }}
+{{- $identityNamespace := $.Release.Namespace }}
+{{- $nameSuffix := printf "%s-%s" $identityNamespace $injectNamespace | sha256sum | trunc 8 }}
+{{- $roleName := printf "identity-inject-%s-%s" ($identityNamespace | trunc 20 | trimSuffix "-") $nameSuffix }}
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ $roleName }}
+  namespace: {{ $injectNamespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["serviceaccounts/token"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $roleName }}
+  namespace: {{ $injectNamespace }}
+subjects:
+  - kind: ServiceAccount
+    name: identity
+    namespace: {{ $identityNamespace }}
+roleRef:
+  kind: Role
+  name: {{ $roleName }}
+  apiGroup: rbac.authorization.k8s.io
+---
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

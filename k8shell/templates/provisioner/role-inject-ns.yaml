@@ -1,5 +1,6 @@
 {{- if .Values.provisioner.injectNamespaces }}
 {{- range .Values.provisioner.injectNamespaces }}
+---
 {{- $injectNamespace := . }}
 {{- $provisionerNamespace := $.Release.Namespace }}
 {{- $nameSuffix := printf "%s-%s" $provisionerNamespace $injectNamespace | sha256sum | trunc 8 }}
