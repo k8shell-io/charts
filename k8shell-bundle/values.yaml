@@ -14,12 +14,12 @@ charts:
   idpGithub:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/idp-github"
-    chartVersion: 0.12.4
+    chartVersion: 0.12.4-pr-10-5273229
 
   idpGitlab:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/idp-gitlab"
-    chartVersion: 0.1.8
+    chartVersion: 0.1.8-pr-10-5273229
 
   nats:
     repoURL: https://nats-io.github.io/k8s/helm/charts/
