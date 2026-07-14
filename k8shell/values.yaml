@@ -290,6 +290,8 @@ apiServer:
   logging:
     requestHeaders: false
     responseHeaders: false
+  localProvider:
+    enabled: false
 
 # session manages terminal session state and recording.
 session:

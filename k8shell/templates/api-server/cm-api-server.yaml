@@ -36,6 +36,10 @@ data:
       username: {{ .Values.nats.username }}
       password: ${NATS_K8SHELL_PASSWORD}
 
+    # local provider allowing to login with username/password
+    localProvider:
+      enabled: {{ .Values.apiServer.localProvider.enabled }}
+
     # JWT verifier configuration for validating tokens from remote identity providers
     jwtVerifier:
       signingMethod: ${JWT_SIGNING_METHOD}

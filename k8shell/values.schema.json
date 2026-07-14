@@ -610,6 +610,15 @@
                             "type": "boolean"
                         }
                     }
+                },
+                "localProvider": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
                 }
             }
         },
