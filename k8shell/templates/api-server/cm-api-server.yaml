@@ -39,6 +39,16 @@ data:
     # local provider allowing to login with username/password
     localProvider:
       enabled: {{ .Values.apiServer.localProvider.enabled }}
+      {{- if .Values.frontend.enabled }}
+      passwordResetConfirmUrl: {{ .Values.frontend.scheme }}://{{ .Values.frontend.host }}/reset-password/confirm
+      {{- end }}
+
+    smtp:
+      host: {{ .Values.apiServer.smtp.host }}
+      port: !!int {{ .Values.apiServer.smtp.port }}
+      username: {{ .Values.apiServer.smtp.username }}
+      password: {{ .Values.apiServer.smtp.password }}
+      from: {{ .Values.apiServer.smtp.from }}
 
     # JWT verifier configuration for validating tokens from remote identity providers
     jwtVerifier:

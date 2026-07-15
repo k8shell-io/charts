@@ -619,6 +619,29 @@
                             "type": "boolean"
                         }
                     }
+                },
+                "smtp": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "host": {
+                            "type": "string"
+                        },
+                        "port": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 65535
+                        },
+                        "username": {
+                            "type": "string"
+                        },
+                        "password": {
+                            "type": "string"
+                        },
+                        "from": {
+                            "type": "string"
+                        }
+                    }
                 }
             }
         },
