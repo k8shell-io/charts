@@ -44,11 +44,11 @@ data:
       {{- end }}
 
     smtp:
-      host: {{ .Values.apiServer.smtp.host }}
-      port: !!int {{ .Values.apiServer.smtp.port }}
-      username: {{ .Values.apiServer.smtp.username }}
-      password: {{ .Values.apiServer.smtp.password }}
-      from: {{ .Values.apiServer.smtp.from }}
+      host: ${SMTP_HOST}
+      port: ${SMTP_PORT}
+      username: ${SMTP_USERNAME}
+      password: ${SMTP_PASSWORD}
+      from: ${SMTP_FROM}
 
     # JWT verifier configuration for validating tokens from remote identity providers
     jwtVerifier:
