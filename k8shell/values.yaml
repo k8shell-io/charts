@@ -294,11 +294,12 @@ apiServer:
     enabled: false
 
   smtp:
-    host: ""
-    port: 587
-    username: ""
-    password: ""
-    from: ""
+    enabled: false
+    host: {}
+    port: {}
+    username: {}
+    password: {}
+    from: {}
 
 # session manages terminal session state and recording.
 session:

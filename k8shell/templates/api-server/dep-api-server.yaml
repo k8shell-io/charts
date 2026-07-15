@@ -35,6 +35,41 @@ spec:
           "defaultSecret" "nats" 
           "context" .) | nindent 8 
         }}
+        {{- include "k8shell.secretEnv" (dict 
+          "enabled" .Values.apiServer.smtp.enabled
+          "name" "SMTP_HOST" 
+          "secretDef" .Values.apiServer.smtp.host 
+          "defaultSecret" "api-server" 
+          "context" .) | nindent 8 
+        }}
+        {{- include "k8shell.secretEnv" (dict 
+          "enabled" .Values.apiServer.smtp.enabled
+          "name" "SMTP_PORT" 
+          "secretDef" .Values.apiServer.smtp.port 
+          "defaultSecret" "api-server" 
+          "context" .) | nindent 8 
+        }}
+        {{- include "k8shell.secretEnv" (dict 
+          "enabled" .Values.apiServer.smtp.enabled
+          "name" "SMTP_USERNAME" 
+          "secretDef" .Values.apiServer.smtp.username 
+          "defaultSecret" "api-server" 
+          "context" .) | nindent 8 
+        }}
+        {{- include "k8shell.secretEnv" (dict 
+          "enabled" .Values.apiServer.smtp.enabled
+          "name" "SMTP_PASSWORD" 
+          "secretDef" .Values.apiServer.smtp.password 
+          "defaultSecret" "api-server" 
+          "context" .) | nindent 8 
+        }}
+        {{- include "k8shell.secretEnv" (dict 
+          "enabled" .Values.apiServer.smtp.enabled
+          "name" "SMTP_FROM" 
+          "secretDef" .Values.apiServer.smtp.from 
+          "defaultSecret" "api-server" 
+          "context" .) | nindent 8 
+        }}
         - name: JWT_SIGNING_METHOD
           valueFrom:
             secretKeyRef:
