@@ -43,12 +43,15 @@ data:
       passwordResetConfirmUrl: {{ .Values.frontend.scheme }}://{{ .Values.frontend.host }}/reset-password/confirm
       {{- end }}
 
+    {{- if .Values.apiServer.localProvider.enabled }}
     smtp:
+      enabled: {{ .Values.apiServer.smtp.enabled }}
       host: ${SMTP_HOST}
       port: ${SMTP_PORT}
       username: ${SMTP_USERNAME}
       password: ${SMTP_PASSWORD}
       from: ${SMTP_FROM}
+    {{- end }}
 
     # JWT verifier configuration for validating tokens from remote identity providers
     jwtVerifier:
