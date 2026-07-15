@@ -9,7 +9,7 @@ charts:
   k8shell:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/k8shell"
-    chartVersion: 26.6.4-pr-10-5742270
+    chartVersion: 26.6.4-pr-10-9a46f0f
 
   idpGithub:
     repoURL: ghcr.io/k8shell-io
@@ -181,6 +181,23 @@ k8shell:
     logging:
       requestHeaders: false
       responseHeaders: false
+    smtp:
+      enabled: true
+      host:
+        secretName: "vault-smtp"
+        secretKey: "SMTP_HOST"
+      port:
+        secretName: "vault-smtp"
+        secretKey: "SMTP_PORT"
+      username:
+        secretName: "vault-smtp"
+        secretKey: "SMTP_USERNAME"
+      password:
+        secretName: "vault-smtp"
+        secretKey: "SMTP_PASSWORD"
+      from:
+        secretName: "vault-smtp"
+        secretKey: "SMTP_FROM"
 
   session:
     enabled: true
