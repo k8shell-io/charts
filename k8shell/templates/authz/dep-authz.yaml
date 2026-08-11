@@ -35,6 +35,18 @@ spec:
           "defaultSecret" "nats" 
           "context" .) | nindent 8 
         }}
+        {{- include "k8shell.secretEnv" (dict
+          "enabled" .Values.postgresql.enabled
+          "name" "POSTGRES_USERNAME"
+          "secretDef" .Values.postgresql.username
+          "defaultSecret" "identity"
+          "context" .) | nindent 12 }}
+        {{- include "k8shell.secretEnv" (dict
+          "enabled" .Values.postgresql.enabled 
+          "name" "POSTGRES_PASSWORD"
+          "secretDef" .Values.postgresql.password
+          "defaultSecret" "identity"
+          "context" .) | nindent 12 }}
         - name: JWT_SIGNING_METHOD
           valueFrom:
             secretKeyRef:

@@ -385,6 +385,22 @@
                             }
                         }
                     }
+                },
+                "audit": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "retention": {
+                            "type": "string"
+                        },
+                        "bufferSize": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "flushInterval": {
+                            "type": "string"
+                        }
+                    }
                 }
             }
         },

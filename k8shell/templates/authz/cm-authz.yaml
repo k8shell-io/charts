@@ -59,4 +59,17 @@ data:
         timeout: {{ .Values.authz.enrichment.user.timeout }}
         cacheTTL: {{ .Values.authz.enrichment.user.cacheTTL }}
 
+    db:
+      enabled: {{ .Values.postgresql.enabled }}
+      database: {{ .Values.postgresql.database }}
+      hostname: {{ .Values.postgresql.host }}
+      port: {{ .Values.postgresql.port }}
+      username: ${POSTGRES_USERNAME}
+      password: ${POSTGRES_PASSWORD}
+
+    audit:
+      retention: {{ .Values.authz.audit.retention }}
+      bufferSize: {{ .Values.authz.audit.bufferSize }}
+      flushInterval: {{ .Values.authz.audit.flushInterval }}
+
 {{- end }}
