@@ -184,6 +184,7 @@ authz:
     retention: 720h   
     bufferSize: 2000
     flushInterval: 200ms
+    dedupWindow: 30s
 
 # provisioner manages the lifecycle of k8shell workspace pods.
 provisioner:

@@ -71,5 +71,6 @@ data:
       retention: {{ .Values.authz.audit.retention }}
       bufferSize: {{ .Values.authz.audit.bufferSize }}
       flushInterval: {{ .Values.authz.audit.flushInterval }}
+      dedupWindow: {{ .Values.authz.audit.dedupWindow }}
 
 {{- end }}

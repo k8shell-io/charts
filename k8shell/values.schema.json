@@ -399,6 +399,9 @@
                         },
                         "flushInterval": {
                             "type": "string"
+                        },
+                        "dedupWindow": {
+                            "type": "string"
                         }
                     }
                 }
