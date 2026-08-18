@@ -69,6 +69,8 @@ github:
   onboardRuleTemplate: |
     username: !cel "user.login"
     fullname: !cel "has(user.name) && user.name != null ? user.name : ''"
+    uid: !cel "uint(user.id)"
+    gid: !cel "uint(user.id)"
     email: !cel |
        emails.exists(e, e.primary == true)
         ? emails.filter(e, e.primary == true)[0].email
