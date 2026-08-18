@@ -144,8 +144,18 @@ identity:
     #   shell: /bin/bash
     #   roles: [workspace-user]
     #   organization: "default"
-    #   password: ""  
+    #   password: ""
     #   publicKey: ""
+
+  # onboardRules is a list of explicit allow/deny/waitlist rules matched against
+  # incoming users from remote identity providers during onboarding.
+  onboardRules: []
+    # - idp: "idp.k8shell.io/github"
+    #   usernamePattern: "bobmarley"
+    #   org: default
+    #   action: allow
+    #   sudo: true
+    #   roles: ["admin"]
 
   # list of remote identity providers running in the cluster that the identity
   # service can delegate authentication to. Provide the list in the following
