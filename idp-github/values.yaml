@@ -68,12 +68,11 @@ github:
   # Stored as a raw string to preserve !cel tags (Helm's YAML parser strips custom tags).
   onboardRuleTemplate: |
     username: !cel "user.login"
-    fullname: !cel "user.name"
+    fullname: !cel "has(user.name) && user.name != null ? user.name : ''"
     email: !cel |
-      emails.exists(e, e.primary == true)
+       emails.exists(e, e.primary == true)
         ? emails.filter(e, e.primary == true)[0].email
         : "unknown@nowhere.com"
-    action: "waitlist"
 
 # githubUserTemplate is used to map the user from github to the k8shell user.
 # Stored as a raw string to preserve !cel tags (Helm's YAML parser strips custom tags).
