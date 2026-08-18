@@ -14,7 +14,7 @@ charts:
   idpGithub:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/idp-github"
-    chartVersion: 0.12.4-pr-10-5273229
+    chartVersion: 0.12.4-pr-11-2eb5be8
 
   idpGitlab:
     repoURL: ghcr.io/k8shell-io
