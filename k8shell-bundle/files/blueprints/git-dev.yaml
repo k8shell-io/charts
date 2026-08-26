@@ -3,6 +3,7 @@ blueprints:
   # It clones the repo and sets up env vars for the repo info.
   - name: git-dev
     template: base
+    description: Blueprint template for git-based repositories.
     isTemplate: true
     image: workspaces/dev:1.12
 
