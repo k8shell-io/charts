@@ -54,13 +54,27 @@ postgresql:
 github:
   clientId: {}
   clientSecret: {}
-  allowAccess:
-    users: []
-    # teams:
-    #   - org: "my-org"
-    #     team: "my-team"
-    #     serviceToken: "ghp_..."
-  extra: {}
+  appSlug: "k8shell-io"
+
+  # onboardRules is a list of explicit allow/deny/waitlist rules matched against
+  # incoming GitHub users before onboardRuleTemplate is applied.
+  onboardRules: []
+    # - username: "bobmarley"
+    #   sudo: true
+    #   roles: ["admin"]
+    #   action: "allow"
+
+  # onboardRuleTemplate is the fallback rule applied to users not matched by onboardRules.
+  # Stored as a raw string to preserve !cel tags (Helm's YAML parser strips custom tags).
+  onboardRuleTemplate: |
+    username: !cel "user.login"
+    fullname: !cel "has(user.name) && user.name != null ? user.name : ''"
+    uid: !cel "uint(user.id)"
+    gid: !cel "uint(user.id)"
+    email: !cel |
+       emails.exists(e, e.primary == true)
+        ? emails.filter(e, e.primary == true)[0].email
+        : "unknown@nowhere.com"
 
 # githubUserTemplate is used to map the user from github to the k8shell user.
 # Stored as a raw string to preserve !cel tags (Helm's YAML parser strips custom tags).

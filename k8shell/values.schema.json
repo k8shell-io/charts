@@ -346,6 +346,41 @@
                             }
                         }
                     }
+                },
+                "onboardRules": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                            "idp",
+                            "usernamePattern",
+                            "action"
+                        ],
+                        "properties": {
+                            "idp": {
+                                "type": "string"
+                            },
+                            "usernamePattern": {
+                                "type": "string"
+                            },
+                            "org": {
+                                "type": "string"
+                            },
+                            "action": {
+                                "type": "string"
+                            },
+                            "sudo": {
+                                "type": "boolean"
+                            },
+                            "roles": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
                 }
             }
         },

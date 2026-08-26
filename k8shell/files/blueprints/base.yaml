@@ -1,5 +1,6 @@
 blueprints:
   - name: base
+    description: Base template for all workspaces. 
     isTemplate: true
 
     splash: |

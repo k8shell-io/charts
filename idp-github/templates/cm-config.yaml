@@ -40,31 +40,10 @@ data:
     github:
       clientId: ${GITHUB_CLIENT_ID}
       clientSecret: ${GITHUB_CLIENT_SECRET}
-      scopes:
-        - "read:user"
-        - "user:email"
-        - "read:public_key"
-        - "repo"
-      template: /app/files/github-user-template.yaml
-      {{- if .Values.github.extra }}
-      extra:
-        {{- toYaml .Values.github.extra | nindent 8 }}
-      {{- end }}
-      
-      {{- if or .Values.github.allowAccess.users .Values.github.allowAccess.teams }}
-      allowAccess:
-        {{- if .Values.github.allowAccess.users }}
-        users:
-          {{- range .Values.github.allowAccess.users }}
-          - "{{ . }}"
-          {{- end }}
-        {{- end }}
-        {{- if .Values.github.allowAccess.teams }}
-        teams:
-          {{- range .Values.github.allowAccess.teams }}
-          - org: "{{ .org }}"
-            team: "{{ .team }}"
-            serviceToken: {{ .serviceToken }}
-          {{- end }}
-        {{- end }}
-      {{- end }}
+      appSlug: {{ .Values.github.appSlug }}
+
+      onboardRules:
+        {{- toYaml .Values.github.onboardRules | nindent 8 }}
+
+      onboardRuleTemplate: |
+        {{- .Values.github.onboardRuleTemplate | nindent 8 }}
