@@ -32,17 +32,17 @@ spec:
           value: {{ .Values.provisioner.defaultRegistry.host | quote }}
         {{- end }}
         {{- include "k8shell.secretEnv" (dict
-          "enabled" .Values.nats.enabled
-          "name" "NATS_K8SHELL_PASSWORD"
-          "secretDef" .Values.nats.password
-          "defaultSecret" "nats"
-          "context" .) | nindent 8 }}
-        {{- include "k8shell.secretEnv" (dict
           "enabled" .Values.postgresql.enabled
           "name" "POSTGRES_USERNAME"
           "secretDef" .Values.postgresql.username
           "defaultSecret" "identity"
           "context" .) | nindent 8 }}
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" .Values.postgresql.enabled 
+            "name" "POSTGRES_PASSWORD"
+            "secretDef" .Values.postgresql.password
+            "defaultSecret" "identity"
+            "context" .) | nindent 8 }}
         {{- if .Values.provisioner.privateRegistry.enabled }}
         {{- include "k8shell.secretEnv" (dict 
           "enabled" true 
