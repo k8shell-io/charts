@@ -9,7 +9,7 @@ charts:
   k8shell:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/k8shell"
-    chartVersion: 26.6.4-pr-11-8ac1e11
+    chartVersion: 26.6.4-pr-11-dcc4660
 
   idpGithub:
     repoURL: ghcr.io/k8shell-io
@@ -30,11 +30,6 @@ charts:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/vault-secrets"
     chartVersion: "1.0.0"
-
-  sshShield:
-    repoURL: ghcr.io/k8shell-io
-    chartName: "charts/ssh-shield"
-    chartVersion: 0.2.4
 
   postgresql:
     repoURL: registry-1.docker.io
@@ -203,6 +198,32 @@ k8shell:
     enabled: true
     replicas: 2
 
+  # sshShield provides SSH brute-force protection, consuming SSH failure
+  # events over the shared NATS above (k8shell.nats).
+  sshShield:
+    enabled: false
+    replicas: 1
+    image: {}
+
+    blocker:
+      window: 5m
+      threshold: 4
+      decreasingThreshold: true
+      idleCleanup: 12h
+      banSchedule: [1m, 5m, 15m, 1h, 6h, 24h, 72h]
+      maxIPState: 100000
+      gcInterval: 10m
+      whitelist: []
+
+    plugins:
+      nfgate:
+        address: "localhost:9090"
+        tls: false
+        dialTimeout: 5s
+        authKey:
+          secretName: "vault-nfgate"
+          secretKey: "NFGATE_AUTH_KEY"
+
   postgresql:
     enabled: true
     host: "db-postgresql"
@@ -316,34 +337,3 @@ idpGitlab:
   #   user:
   #     username: !cel "user.login"
   #     ...
-
-#### ssh-shield service
-sshShield:
-  enabled: false
-  replicas: 1
-  image: {}
-
-  nats:
-    user: k8shell-service
-    password:
-      secretName: "vault-nats"
-      secretKey: "NATS_K8SHELL_PASSWORD"
-
-  blocker:
-    window: 5m
-    threshold: 4
-    decreasingThreshold: true
-    idleCleanup: 12h
-    banSchedule: [1m, 5m, 15m, 1h, 6h, 24h, 72h]
-    maxIPState: 100000
-    gcInterval: 10m
-    whitelist: []
-
-  plugins:
-    nfgate:
-      address: "localhost:9090"
-      tls: false
-      dialTimeout: 5s
-      authKey:
-        secretName: "vault-nfgate"
-        secretKey: "NFGATE_AUTH_KEY"
