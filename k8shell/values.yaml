@@ -319,6 +319,11 @@ apiServer:
     password: {}
     from: {}
 
+  # workspaces configures the domain used to build ssh / VS Code Remote connection strings for workspaces.
+  workspaces:
+    sshDomain: app.k8shell.dev
+    frontendHost: https://app.k8shell.dev
+
 # session manages terminal session state and recording.
 session:
   enabled: false

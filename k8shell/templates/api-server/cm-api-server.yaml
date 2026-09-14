@@ -119,4 +119,9 @@ data:
       {{- if .Values.certManager.enabled }}
       caCertPath: /etc/k8shell/ca/ca.crt
       {{- end }}
+
+    # domain used to build ssh / VS Code Remote connection strings for workspaces
+    workspaces:
+      sshDomain: {{ .Values.apiServer.workspaces.sshDomain }}
+      frontendHost: {{ .Values.apiServer.workspaces.frontendHost }}
 {{- end }}

@@ -697,6 +697,18 @@
                             "$ref": "#/definitions/secretRef"
                         }
                     }
+                },
+                "workspaces": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "sshDomain": {
+                            "type": "string"
+                        },
+                        "frontendHost": {
+                            "type": "string"
+                        }
+                    }
                 }
             }
         },
