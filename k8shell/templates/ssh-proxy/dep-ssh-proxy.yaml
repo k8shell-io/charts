@@ -38,6 +38,8 @@ spec:
         ports:
           - containerPort: 2022
             name: ssh
+          - containerPort: 9000
+            name: grpc
         volumeMounts:
         - name: config-volume
           mountPath: /app/config
@@ -51,6 +53,9 @@ spec:
         {{- if .Values.certManager.enabled }}
         - name: ca-cert
           mountPath: /etc/k8shell/ca
+          readOnly: true
+        - name: ssh-proxy-cert
+          mountPath: /etc/tls/ssh-proxy
           readOnly: true
         {{- end }}
 
@@ -96,4 +101,7 @@ spec:
       - name: ca-cert
         secret:
           secretName: k8shell-cluster-ca
+      - name: ssh-proxy-cert
+        secret:
+          secretName: ssh-proxy-tls
       {{- end }}

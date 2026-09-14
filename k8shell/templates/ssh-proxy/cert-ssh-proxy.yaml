@@ -1,0 +1,22 @@
+{{- if .Values.session.enabled }}
+{{- if .Values.certManager.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ssh-proxy-cert
+spec:
+  secretName: ssh-proxy-tls
+  duration: {{ .Values.certManager.duration }}
+  renewBefore: {{ .Values.certManager.renewBefore }}
+  commonName: ssh-proxy.{{ .Release.Namespace }}.svc.cluster.local
+  dnsNames:
+    - ssh-proxy
+    - ssh-proxy.{{ .Release.Namespace }}.svc
+    - ssh-proxy.{{ .Release.Namespace }}.svc.cluster.local
+  usages:
+    - server auth
+  issuerRef:
+    name: {{ .Values.certManager.issuer.name }}
+    kind: {{ .Values.certManager.issuer.kind }}
+{{- end }}
+{{- end }}

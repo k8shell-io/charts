@@ -6,6 +6,23 @@ metadata:
     app: ssh-proxy
 data:
   config.yaml: |
+    grpc:
+      port: 9000
+
+      {{- if .Values.certManager.enabled }}
+      enableTLS: true
+      certFile: /etc/tls/ssh-proxy/tls.crt
+      keyFile: /etc/tls/ssh-proxy/tls.key
+      {{- else }}
+      enableTLS: false
+      {{- end }}
+
+      # JWT required claims for authentication
+      authEnabled: {{ .Values.authEnabled }}
+      audience: ssh-proxy
+      allowed:
+        - serviceAccount: api-server
+
     server:
       port: 2022
       serverKey: /app/secrets/server_key

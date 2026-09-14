@@ -344,6 +344,57 @@ session:
       size: 10Gi
       annotations: {}
 
+# sshShield provides SSH brute-force protection by consuming SSH failure
+# events over NATS (published by sshProxy.publishSshFailures) and banning
+# offending IPs. Requires nats.enabled: true.
+sshShield:
+  enabled: false
+  replicas: 1
+  image:
+    repository: ghcr.io/k8shell-io/ssh-shield
+    tag: v0.12.2
+
+  # NATS subject to subscribe to for SSH failure events.
+  # Must match sshProxy.publishSshFailures.subject.
+  sshFailures:
+    subject: ssh.failures
+
+  blocker:
+    # sliding window for counting hits from the same IP
+    window: 5m
+    # number of hits within the sliding window to trigger a ban
+    threshold: 4
+    # if true, threshold decreases with each strike
+    decreasingThreshold: true
+    # time to remove IP state after no hits
+    idleCleanup: 12h
+    # durations for escalating bans based on number of strikes
+    banSchedule: [1m, 5m, 15m, 1h, 6h, 24h, 72h]
+    # garbage collection settings
+    maxIPState: 100000
+    gcInterval: 10m
+    # IP whitelist — list of CIDR ranges to never ban
+    whitelist: []
+
+  # state store for per-IP rate-limit state, backed by NATS JetStream KV so
+  # state is shared across replicas
+  stateStore:
+    type: nats-kv
+    bucket: ssh-shield-state
+
+  # blocker plugins — keys are plugin types, values are that plugin's config
+  plugins:
+    nfgate:
+      # address of the nfgate gRPC endpoint
+      address: "localhost:9090"
+      # set to true to enable TLS on the gRPC connection
+      tls: false
+      # maximum time to wait when dialing the gRPC endpoint
+      dialTimeout: 5s
+      # authKey is the shared secret sent as "Authorization: Bearer <key>" in
+      # every gRPC call. Must match the authKey configured on the nfgate server.
+      authKey: {}
+
 # postgresql is the database backend for identity, session, and provisioner services.
 postgresql:
   enabled: false
