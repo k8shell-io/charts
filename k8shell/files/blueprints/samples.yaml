@@ -1,5 +1,6 @@
 blueprints:
   - name: docker
+    description: Docker tools for workspaces with Podman.
     template: base
     image: docker.io/docker:24-cli
 
@@ -11,9 +12,11 @@ blueprints:
       createDockerSockSymlink: false
 
   - name: ubuntu
+    description: Ubuntu workspace sample.
     template: base
     image: docker.io/ubuntu:latest
 
   - name: alpine
+    description: Alpine workspace sample.
     template: base
     image: docker.io/alpine:latest

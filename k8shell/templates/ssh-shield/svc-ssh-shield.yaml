@@ -1,0 +1,21 @@
+{{- if .Values.sshShield.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: ssh-shield
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ssh-shield
+spec:
+  type: ClusterIP
+  {{- if and .Values.grpc .Values.grpc.roundRobin }}
+  clusterIP: None
+  {{- end }}
+  ports:
+    - port: 9040
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
+  selector:
+    k8shell.io/app: ssh-shield
+{{- end }}

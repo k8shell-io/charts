@@ -46,13 +46,6 @@ data:
       username: ${POSTGRES_USERNAME}
       password: ${POSTGRES_PASSWORD}
 
-    # Organization management
-    organizations:
-      # autoCreate lists organizations that are created automatically when a user
-      # with that organization is first seen. Use ["*"] to allow all organizations.
-      autoCreate:
-        - "*"
-
     {{- if .Values.identity.users }}
     localProviders:
       enabled: true
@@ -91,6 +84,11 @@ data:
       expiry: {{ .Values.identity.jwtIssuer.expiry }}
       signingMethod: ${JWT_SIGNING_METHOD}
       privateKeyFile: /run/secrets/jwt-issuer/private-key.pem
+
+    {{- with .Values.identity.onboardRules }}
+    onboardRules:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
 
     kubernetes:
       namespace: {{ .Values.provisioner.targetNamespace }}

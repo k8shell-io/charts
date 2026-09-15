@@ -22,10 +22,6 @@ charts:
     repoURL: registry.k8shell.io
     chartName: "charts/vault-secrets"
 
-  sshShield:
-    repoURL: registry.k8shell.io
-    chartName: "charts/ssh-shield"
-
 #### Internal image repositories
 k8shell:
   imageRegistry:
@@ -63,6 +59,10 @@ k8shell:
     image:
       repository: registry.k8shell.io/k8shell-base/session
 
+  sshShield:
+    image:
+      repository: registry.k8shell.io/k8shell-base/ssh-shield
+
 #### Internal idp image repositories
 idpGithub:
   imageRegistry:
@@ -77,11 +77,3 @@ idpGitlab:
     existingSecret: regcred
   image:
     repository: registry.k8shell.io/k8shell-idp/idp-gitlab
-
-#### Internal ssh-shield image repository
-sshShield:
-  imageRegistry:
-    host: registry.k8shell.io
-    existingSecret: regcred
-  image:
-    repository: registry.k8shell.io/k8shell-base/ssh-shield

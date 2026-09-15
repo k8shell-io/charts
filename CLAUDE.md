@@ -33,7 +33,6 @@ Each top-level directory is an independent Helm chart published to `oci://ghcr.i
 | `k8shell` | Core platform — the primary chart users install |
 | `k8shell-bundle` | Umbrella chart; wraps all charts as ArgoCD `Application` objects |
 | `idp-github` / `idp-gitlab` | External identity providers; plugged into k8shell via `identity.remoteProviders` |
-| `ssh-shield` | Standalone SSH brute-force protection service |
 | `vault-secrets` | Maps HashiCorp Vault secrets to Kubernetes Secrets |
 
 ## k8shell Chart Architecture
@@ -44,6 +43,8 @@ The k8shell chart deploys two tiers of services:
 
 **Extended (disabled by default, enabled in k8shell-bundle):** `api-server`, `session`, `frontend`
 
+**Optional (disabled by default, opt-in even in k8shell-bundle):** `sshShield`
+
 **External dependencies (disabled by default):** `postgresql`, `nats` — toggled via `postgresql.enabled` / `nats.enabled`.
 
 Service-to-service communication is gRPC. When `certManager.enabled: true`, every service gets a cert-manager-issued TLS certificate and the chart wires mTLS automatically. Without cert-manager, services fall back to plaintext.
@@ -53,6 +54,10 @@ JWT auth (`authEnabled: true`) is enforced across all gRPC endpoints. The `ident
 ### authz service
 
 `authz` (disabled by default, `authz.enabled: false`) is an OPA-based authorization sidecar on gRPC port 9011. It accepts requests from `ssh-proxy`, `provisioner`, `api-server`, and `identity`. Policies are either mounted from a ConfigMap (`authz.policiesConfigMap`) or fall back to the inline `authz.defaultPolicy` Rego rule. It shares the JWT private key with `identity`.
+
+### sshShield service
+
+`sshShield` (disabled by default, `sshShield.enabled: false`) provides SSH brute-force protection. It consumes SSH failure events over the shared `nats` (published by `ssh-proxy` when `sshProxy.publishSshFailures.enabled: true`, subject must match `sshShield.sshFailures.subject`) and bans offending IPs via a pluggable blocker backend (e.g. the `nfgate` plugin). It requires `nats.enabled: true`. It also exposes a gRPC server on port 9040, gated the same way as other services by `certManager.enabled` (TLS) and `authEnabled` (JWT, restricted to the `api-server` service account).
 
 ### Blueprints
 

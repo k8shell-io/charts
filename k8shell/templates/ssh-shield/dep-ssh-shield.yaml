@@ -1,0 +1,79 @@
+{{- if .Values.sshShield.enabled }}
+{{- $nfgate := get .Values.sshShield.plugins "nfgate" | default dict }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ssh-shield
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ssh-shield
+spec:
+  replicas: {{ .Values.sshShield.replicas }}
+  selector:
+    matchLabels:
+      k8shell.io/app: ssh-shield
+  template:
+    metadata:
+      labels:
+        k8shell.io/app: ssh-shield
+        {{- include "k8shell.labels" . | nindent 8 }}
+    spec:
+      {{- include "k8shell.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: ssh-shield
+          image: {{ .Values.sshShield.image.repository }}:{{ .Values.sshShield.image.tag }}
+          workingDir: /app
+          env:
+            - name: SECRET_FILES
+              value: /app/secrets
+          ports:
+            - containerPort: 9040
+              name: grpc
+          volumeMounts:
+            - name: ssh-shield-config
+              mountPath: /app/config
+              readOnly: true
+            - name: ssh-shield-secrets
+              mountPath: /app/secrets
+              readOnly: true
+            {{- if .Values.sshShield.plugins }}
+            - name: ssh-shield-plugin-configs
+              mountPath: /app/config/plugins
+              readOnly: true
+            {{- end }}
+            {{- if .Values.certManager.enabled }}
+            - name: ssh-shield-cert
+              mountPath: /etc/tls/ssh-shield
+              readOnly: true
+            {{- end }}
+
+      volumes:
+        - name: ssh-shield-config
+          configMap:
+            name: ssh-shield-config
+        - name: ssh-shield-secrets
+          projected:
+            sources:
+              - secret:
+                  name: {{ if .Values.nats.password.secretName }}{{ .Values.nats.password.secretName }}{{ else }}int-ssh-shield{{ end }}
+                  items:
+                    - key: {{ if .Values.nats.password.secretKey }}{{ .Values.nats.password.secretKey }}{{ else }}sshshield_nats_token{{ end }}
+                      path: sshshield_nats_token
+              {{- if hasKey .Values.sshShield.plugins "nfgate" }}
+              - secret:
+                  name: {{ if $nfgate.authKey.secretName }}{{ $nfgate.authKey.secretName }}{{ else }}int-ssh-shield{{ end }}
+                  items:
+                    - key: {{ if $nfgate.authKey.secretKey }}{{ $nfgate.authKey.secretKey }}{{ else }}nfgate_authkey{{ end }}
+                      path: nfgate_authkey
+              {{- end }}
+        {{- if .Values.sshShield.plugins }}
+        - name: ssh-shield-plugin-configs
+          configMap:
+            name: ssh-shield-plugin-configs
+        {{- end }}
+        {{- if .Values.certManager.enabled }}
+        - name: ssh-shield-cert
+          secret:
+            secretName: ssh-shield-tls
+        {{- end }}
+{{- end }}

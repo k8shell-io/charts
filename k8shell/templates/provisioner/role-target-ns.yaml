@@ -40,11 +40,13 @@ rules:
     verbs: ["create", "get", "list", "delete", "watch", "update", "patch"]
   - apiGroups: ["networking.k8s.io"]
     resources: ["networkpolicies"]
-    verbs: ["create", "delete", "get", "list", "watch", "update", "patch"]
+    verbs:
+      ["create", "delete", "deletecollection", "get", "list", "watch", "update", "patch"]
 {{- if .Capabilities.APIVersions.Has "cilium.io/v2/CiliumNetworkPolicy" }}
   - apiGroups: ["cilium.io"]
     resources: ["ciliumnetworkpolicies"]
-    verbs: ["create", "delete", "get", "list", "watch", "update", "patch"]
+    verbs:
+      ["create", "delete", "deletecollection", "get", "list", "watch", "update", "patch"]
 {{- end }}
 {{- if .Values.certManager.enabled }}
   - apiGroups: ["cert-manager.io"]
