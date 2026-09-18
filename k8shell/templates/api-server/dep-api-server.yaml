@@ -84,6 +84,9 @@ spec:
         - name: api-server-config
           mountPath: /app/config
           readOnly: true
+        - name: versions
+          mountPath: /app/versions
+          readOnly: true
         - name: jwt
           mountPath: /var/run/secrets/k8shell.io
           readOnly: true
@@ -99,6 +102,9 @@ spec:
       - name: api-server-config
         configMap:
           name: api-server-config
+      - name: versions
+        configMap:
+          name: k8shell-versions
       - name: jwt
         projected:
           sources:

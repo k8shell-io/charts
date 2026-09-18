@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8shell-versions
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+data:
+  versions.json: |
+    {{- $versions := dict
+        "platformVersion" .Chart.AppVersion
+        "services" (dict
+          "sshProxy" .Values.sshProxy.image.tag
+          "identity" .Values.identity.image.tag
+          "authz" .Values.authz.image.tag
+          "provisioner" .Values.provisioner.image.tag
+          "k8shelld" .Values.provisioner.k8shelld.image.tag
+          "frontend" .Values.frontend.image.tag
+          "apiServer" .Values.apiServer.image.tag
+          "session" .Values.session.image.tag
+          "sshShield" .Values.sshShield.image.tag
+        )
+    }}
+    {{ $versions | toJson }}
