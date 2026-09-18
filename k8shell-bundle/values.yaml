@@ -9,17 +9,17 @@ charts:
   k8shell:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/k8shell"
-    chartVersion: 26.6.4-pr-11-8718123
+    chartVersion: 26.9.0
 
   idpGithub:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/idp-github"
-    chartVersion: 0.12.4-pr-11-b6598e5
+    chartVersion: 0.13.0
 
   idpGitlab:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/idp-gitlab"
-    chartVersion: 0.1.8-pr-10-5273229
+    chartVersion: 0.1.8 # not updated in this release, should be disabled (will not work) 
 
   nats:
     repoURL: https://nats-io.github.io/k8s/helm/charts/
