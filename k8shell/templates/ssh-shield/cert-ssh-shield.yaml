@@ -1,0 +1,20 @@
+{{- if and .Values.sshShield.enabled .Values.certManager.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ssh-shield-cert
+spec:
+  secretName: ssh-shield-tls
+  duration: {{ .Values.certManager.duration }}
+  renewBefore: {{ .Values.certManager.renewBefore }}
+  commonName: ssh-shield.{{ .Release.Namespace }}.svc.cluster.local
+  dnsNames:
+    - ssh-shield
+    - ssh-shield.{{ .Release.Namespace }}.svc
+    - ssh-shield.{{ .Release.Namespace }}.svc.cluster.local
+  usages:
+    - server auth
+  issuerRef:
+    name: {{ .Values.certManager.issuer.name }}
+    kind: {{ .Values.certManager.issuer.kind }}
+{{- end }}

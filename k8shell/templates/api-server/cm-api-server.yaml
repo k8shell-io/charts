@@ -95,10 +95,33 @@ data:
       serverName: provisioner.{{ .Release.Namespace }}.svc
       {{- end }}
 
+    # SSH proxy service configuration
+    sshProxy:
+      address: ssh-proxy:9000
+      tokenFilePath: /var/run/secrets/k8shell.io/ssh-proxy
+      {{- if .Values.certManager.enabled }}
+      caCertPath: /etc/k8shell/ca/ca.crt
+      serverName: ssh-proxy.{{ .Release.Namespace }}.svc
+      {{- end }}
+
+    # ssh-shield service configuration
+    sshShield:
+      address: ssh-shield:9040
+      tokenFilePath: /var/run/secrets/k8shell.io/ssh-shield
+      {{- if .Values.certManager.enabled }}
+      caCertPath: /etc/k8shell/ca/ca.crt
+      serverName: ssh-shield.{{ .Release.Namespace }}.svc
+      {{- end }}
+
     # worksspace client configuration
     k8shelld:
       tokenFilePath: /var/run/secrets/k8shell.io/k8shelld
       {{- if .Values.certManager.enabled }}
       caCertPath: /etc/k8shell/ca/ca.crt
       {{- end }}
+
+    # domain used to build ssh / VS Code Remote connection strings for workspaces
+    workspaces:
+      sshDomain: {{ .Values.apiServer.workspaces.sshDomain }}
+      frontendHost: {{ .Values.apiServer.workspaces.frontendHost }}
 {{- end }}

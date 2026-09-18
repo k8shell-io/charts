@@ -71,6 +71,14 @@ data:
         - serviceAccount: ssh-proxy
         - serviceAccount: api-server
 
+    db:
+      enabled: {{ .Values.postgresql.enabled }}
+      database: {{ .Values.postgresql.database }}
+      hostname: {{ .Values.postgresql.host }}
+      port: {{ .Values.postgresql.port }}
+      username: ${POSTGRES_USERNAME}
+      password: ${POSTGRES_PASSWORD}
+
     nats:
       enabled: {{ .Values.nats.enabled }}
       url: nats://{{ .Values.nats.host }}:{{ .Values.nats.port }}

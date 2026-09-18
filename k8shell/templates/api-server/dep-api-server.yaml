@@ -119,6 +119,14 @@ spec:
                 audience: provisioner
                 expirationSeconds: {{ .Values.tokenExpiration }}
             - serviceAccountToken:
+                path: ssh-proxy
+                audience: ssh-proxy
+                expirationSeconds: {{ .Values.tokenExpiration }}
+            - serviceAccountToken:
+                path: ssh-shield
+                audience: ssh-shield
+                expirationSeconds: {{ .Values.tokenExpiration }}
+            - serviceAccountToken:
                 path: k8shelld
                 audience: k8shelld
                 expirationSeconds: {{ .Values.tokenExpiration }}

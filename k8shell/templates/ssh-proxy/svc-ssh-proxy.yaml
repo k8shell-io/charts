@@ -56,3 +56,23 @@ spec:
       name: ssh
   selector:
     k8shell.io/app: ssh-proxy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ssh-proxy
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ssh-proxy
+spec:
+  type: ClusterIP
+  {{- if and .Values.grpc .Values.grpc.roundRobin }}
+  clusterIP: None
+  {{- end }}
+  ports:
+    - port: 9000
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
+  selector:
+    k8shell.io/app: ssh-proxy

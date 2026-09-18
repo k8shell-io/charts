@@ -346,6 +346,41 @@
                             }
                         }
                     }
+                },
+                "onboardRules": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                            "idp",
+                            "usernamePattern",
+                            "action"
+                        ],
+                        "properties": {
+                            "idp": {
+                                "type": "string"
+                            },
+                            "usernamePattern": {
+                                "type": "string"
+                            },
+                            "org": {
+                                "type": "string"
+                            },
+                            "action": {
+                                "type": "string"
+                            },
+                            "sudo": {
+                                "type": "boolean"
+                            },
+                            "roles": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -662,6 +697,18 @@
                             "$ref": "#/definitions/secretRef"
                         }
                     }
+                },
+                "workspaces": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "sshDomain": {
+                            "type": "string"
+                        },
+                        "frontendHost": {
+                            "type": "string"
+                        }
+                    }
                 }
             }
         },
@@ -722,6 +769,89 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "sshShield": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "replicas": {
+                    "$ref": "#/definitions/replicas"
+                },
+                "image": {
+                    "$ref": "#/definitions/image"
+                },
+                "sshFailures": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "subject": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "blocker": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "window": {
+                            "type": "string"
+                        },
+                        "threshold": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "decreasingThreshold": {
+                            "type": "boolean"
+                        },
+                        "idleCleanup": {
+                            "type": "string"
+                        },
+                        "banSchedule": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "maxIPState": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "gcInterval": {
+                            "type": "string"
+                        },
+                        "whitelist": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "stateStore": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": ["memory", "nats-kv"]
+                        },
+                        "bucket": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "plugins": {
+                    "type": "object",
+                    "description": "Map of plugin type to config. Keys are plugin types (e.g. nfgate).",
+                    "additionalProperties": {
+                        "type": "object",
+                        "description": "Plugin-specific configuration"
                     }
                 }
             }

@@ -1,5 +1,0 @@
-apiVersion: v2
-name: ssh-shield
-description: A Helm chart for SSH Shield service
-appVersion: 0.12.2
-version: 0.2.4
