@@ -3,7 +3,19 @@ vaultAddress: http://vault.vault.svc.cluster.local:8200
 roleName: apps-secrets-dev
 serviceAccount: vault-sa
 
-# list of secrets and their vault counterparts 
+# VaultAuth/VaultConnection are per-namespace singletons from the vault-secrets
+# operator. If another release in the same namespace already creates one (e.g.
+# a second Application using this chart in the same namespace), set create:
+# false here and point name at the existing one instead of creating a
+# colliding duplicate.
+vaultAuth:
+  create: true
+  name: vault-auth
+vaultConnection:
+  create: true
+  name: vault-connection
+
+# list of secrets and their vault counterparts
 # example secrets below
 #secrets:
 #  - name: zfs-secret

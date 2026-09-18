@@ -1,7 +1,9 @@
+{{- if .Values.vaultConnection.create }}
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultConnection
 metadata:
-  name: vault-connection
+  name: {{ .Values.vaultConnection.name }}
 spec:
   address: {{ .Values.vaultAddress }}
   skipTLSVerify: true
+{{- end }}

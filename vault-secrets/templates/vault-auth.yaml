@@ -1,11 +1,13 @@
+{{- if .Values.vaultAuth.create }}
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultAuth
 metadata:
-  name: vault-auth
+  name: {{ .Values.vaultAuth.name }}
 spec:
-  vaultConnectionRef: vault-connection
+  vaultConnectionRef: {{ .Values.vaultConnection.name }}
   method: kubernetes
   mount: kubernetes
   kubernetes:
     role: {{ .Values.roleName }}
     serviceAccount: {{ .Values.serviceAccount }}
+{{- end }}
