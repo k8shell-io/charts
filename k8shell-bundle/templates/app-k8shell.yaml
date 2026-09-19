@@ -37,6 +37,7 @@ spec:
         {{- $cmaps = append $cmaps "git-blueprints" }}
         {{- end }}
         {{- $_ := set $k8shell.provisioner "blueprintFilesConfigMaps" $cmaps }}
+        {{- $_ := set $k8shell.apiServer "infraVersionsConfigMap" "k8shell-infra-versions" }}
         {{- toYaml $k8shell | nindent 8 }}
 
   destination:

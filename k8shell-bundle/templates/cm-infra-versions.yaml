@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8shell-infra-versions
+data:
+  versions.json: |
+    {{- $versions := dict
+        "postgresql" (dict "chartVersion" .Values.charts.postgresql.chartVersion)
+        "nats" (dict "chartVersion" .Values.charts.nats.chartVersion "imageTag" .Values.nats.imageTag)
+    }}
+    {{ $versions | toJson }}
