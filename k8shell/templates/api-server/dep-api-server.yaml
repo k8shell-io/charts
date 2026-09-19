@@ -87,6 +87,11 @@ spec:
         - name: versions
           mountPath: /app/versions
           readOnly: true
+        {{- if .Values.apiServer.infraVersionsConfigMap }}
+        - name: infra-versions
+          mountPath: /app/infra-versions
+          readOnly: true
+        {{- end }}
         - name: jwt
           mountPath: /var/run/secrets/k8shell.io
           readOnly: true
@@ -105,6 +110,11 @@ spec:
       - name: versions
         configMap:
           name: k8shell-versions
+      {{- if .Values.apiServer.infraVersionsConfigMap }}
+      - name: infra-versions
+        configMap:
+          name: {{ .Values.apiServer.infraVersionsConfigMap }}
+      {{- end }}
       - name: jwt
         projected:
           sources:

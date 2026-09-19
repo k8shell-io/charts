@@ -674,6 +674,9 @@
                         }
                     }
                 },
+                "infraVersionsConfigMap": {
+                    "type": "string"
+                },
                 "smtp": {
                     "type": "object",
                     "additionalProperties": false,

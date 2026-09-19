@@ -311,6 +311,12 @@ apiServer:
   localProvider:
     enabled: false
 
+  # infraVersionsConfigMap is the name of an existing ConfigMap holding version
+  # info for external infra services (e.g. postgresql, nats). When set, it is
+  # mounted into api-server at /app/infra-versions. When empty, nothing is
+  # mounted. k8shell-bundle populates this automatically.
+  infraVersionsConfigMap: ""
+
   smtp:
     enabled: false
     host: {}
