@@ -57,7 +57,7 @@ sshProxy:
   
   image:
     repository: ghcr.io/k8shell-io/ssh-proxy
-    tag: v0.15.0
+    tag: v0.15.1
   
   proxyProtocol: false
   
@@ -96,7 +96,7 @@ identity:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/identity
-    tag: v0.16.0
+    tag: v0.16.2
 
   # jwtIssuer configures JWT token issuance for k8shell services.
   jwtIssuer:
@@ -171,7 +171,7 @@ authz:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/authz
-    tag: v0.2.0
+    tag: v0.2.1
 
   # policiesConfigMap is the name of an existing ConfigMap whose keys are
   # mounted as policy files into /app/policies. Leave empty to omit the mount.
@@ -286,7 +286,7 @@ frontend:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/frontend
-    tag: v0.16.0
+    tag: v0.16.4
   scheme: "http"
   host: "localtest.me"
   sessionCookie:
@@ -304,7 +304,7 @@ apiServer:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/api-server
-    tag: v0.17.2
+    tag: v0.17.3
   logging:
     requestHeaders: false
     responseHeaders: false
@@ -363,7 +363,7 @@ sshShield:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/ssh-shield
-    tag: v0.13.0
+    tag: v0.13.1
 
   # NATS subject to subscribe to for SSH failure events.
   # Must match sshProxy.publishSshFailures.subject.
