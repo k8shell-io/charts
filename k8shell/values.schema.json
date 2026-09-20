@@ -290,19 +290,19 @@
                             "type": "boolean"
                         },
                         "host": {
-                            "type": "string"
+                            "$ref": "#/definitions/secretRef"
                         },
                         "port": {
-                            "type": "integer"
+                            "$ref": "#/definitions/secretRef"
                         },
                         "username": {
-                            "type": "string"
+                            "$ref": "#/definitions/secretRef"
                         },
                         "password": {
                             "$ref": "#/definitions/secretRef"
                         },
                         "from": {
-                            "type": "string"
+                            "$ref": "#/definitions/secretRef"
                         }
                     }
                 },

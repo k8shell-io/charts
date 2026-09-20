@@ -11,9 +11,18 @@
 {{- end }}
 {{- end }}
 
-{{- if .Values.identity.smtp.enabled }}
-{{- if .Values.identity.smtp.password.value }}
-  {{- $_ := set $secrets "SMTP_PASSWORD" .Values.identity.smtp.password.value }}
+{{- if .Values.identity.smtp.enabled -}}
+{{- $smtpSecrets := dict
+  "SMTP_HOST" .Values.identity.smtp.host.value
+  "SMTP_PORT" .Values.identity.smtp.port.value
+  "SMTP_USERNAME" .Values.identity.smtp.username.value
+  "SMTP_PASSWORD" .Values.identity.smtp.password.value
+  "SMTP_FROM" .Values.identity.smtp.from.value
+-}}
+{{- range $key, $value := $smtpSecrets }}
+{{- if $value }}
+  {{- $_ := set $secrets $key $value }}
+{{- end }}
 {{- end }}
 {{- end }}
 

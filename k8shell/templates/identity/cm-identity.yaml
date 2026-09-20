@@ -98,15 +98,15 @@ data:
     # SMTP relay for password-reset and announcement email
     smtp:
       enabled: {{ .Values.identity.smtp.enabled }}
-      host: {{ .Values.identity.smtp.host | quote }}
-      port: {{ .Values.identity.smtp.port }}
-      username: {{ .Values.identity.smtp.username | quote }}
+      host: ${SMTP_HOST}
+      port: ${SMTP_PORT}
+      username: ${SMTP_USERNAME}
       {{- if .Values.identity.smtp.enabled }}
       password: !file ${SECRET_FILES}/smtp_password
       {{- else }}
       password: ""
       {{- end }}
-      from: {{ .Values.identity.smtp.from | quote }}
+      from: ${SMTP_FROM}
 
     # Password-reset token lifecycle
     passwordReset:

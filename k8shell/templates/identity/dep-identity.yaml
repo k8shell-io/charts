@@ -40,9 +40,33 @@ spec:
             "defaultSecret" "identity"
             "context" .) | nindent 12 }}
           {{- include "k8shell.secretEnv" (dict
-            "enabled" .Values.postgresql.enabled 
+            "enabled" .Values.postgresql.enabled
             "name" "POSTGRES_PASSWORD"
             "secretDef" .Values.postgresql.password
+            "defaultSecret" "identity"
+            "context" .) | nindent 12 }}
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" .Values.identity.smtp.enabled
+            "name" "SMTP_HOST"
+            "secretDef" .Values.identity.smtp.host
+            "defaultSecret" "identity"
+            "context" .) | nindent 12 }}
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" .Values.identity.smtp.enabled
+            "name" "SMTP_PORT"
+            "secretDef" .Values.identity.smtp.port
+            "defaultSecret" "identity"
+            "context" .) | nindent 12 }}
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" .Values.identity.smtp.enabled
+            "name" "SMTP_USERNAME"
+            "secretDef" .Values.identity.smtp.username
+            "defaultSecret" "identity"
+            "context" .) | nindent 12 }}
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" .Values.identity.smtp.enabled
+            "name" "SMTP_FROM"
+            "secretDef" .Values.identity.smtp.from
             "defaultSecret" "identity"
             "context" .) | nindent 12 }}
             - name: JWT_SIGNING_METHOD
