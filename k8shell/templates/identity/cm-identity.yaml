@@ -99,7 +99,7 @@ data:
     smtp:
       enabled: {{ .Values.identity.smtp.enabled }}
       host: ${SMTP_HOST}
-      port: ${SMTP_PORT}
+      port: !!int ${SMTP_PORT}
       username: ${SMTP_USERNAME}
       {{- if .Values.identity.smtp.enabled }}
       password: !file ${SECRET_FILES}/smtp_password
