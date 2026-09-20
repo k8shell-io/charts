@@ -55,6 +55,10 @@ spec:
                   name: jwt-issuer
                   key: JWT_SIGNING_METHOD
                   {{- end }}
+          {{- if .Values.identity.smtp.enabled }}
+            - name: SECRET_FILES
+              value: /app/secrets/smtp
+          {{- end }}
           volumeMounts:
             - name: identity-config
               mountPath: /app/config
@@ -62,6 +66,11 @@ spec:
             - name: identity-files
               mountPath: /app/files
               readOnly: true
+          {{- if .Values.identity.smtp.enabled }}
+            - name: identity-smtp-secret
+              mountPath: /app/secrets/smtp
+              readOnly: true
+          {{- end }}
             - name: jwt
               mountPath: /var/run/secrets/k8shell.io
               readOnly: true
@@ -90,6 +99,16 @@ spec:
         - name: identity-config
           configMap:
             name: identity-config
+        {{- if .Values.identity.smtp.enabled }}
+        - name: identity-smtp-secret
+          projected:
+            sources:
+              - secret:
+                  name: {{ if .Values.identity.smtp.password.secretName }}{{ .Values.identity.smtp.password.secretName }}{{ else }}int-identity{{ end }}
+                  items:
+                    - key: {{ if .Values.identity.smtp.password.secretKey }}{{ .Values.identity.smtp.password.secretKey }}{{ else }}SMTP_PASSWORD{{ end }}
+                      path: smtp_password
+        {{- end }}
         - name: identity-files
           {{- if gt (len .Values.identity.users) 0 }}
           configMap:

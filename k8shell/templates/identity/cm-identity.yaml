@@ -90,6 +90,41 @@ data:
       {{- toYaml . | nindent 6 }}
     {{- end }}
 
+    # Password brute-force lockout for AuthUserPassword
+    passwordLockout:
+      maxAttempts: {{ .Values.identity.passwordLockout.maxAttempts }}
+      lockDuration: {{ .Values.identity.passwordLockout.lockDuration }}
+
+    # SMTP relay for password-reset and announcement email
+    smtp:
+      enabled: {{ .Values.identity.smtp.enabled }}
+      host: {{ .Values.identity.smtp.host | quote }}
+      port: {{ .Values.identity.smtp.port }}
+      username: {{ .Values.identity.smtp.username | quote }}
+      {{- if .Values.identity.smtp.enabled }}
+      password: !file ${SECRET_FILES}/smtp_password
+      {{- else }}
+      password: ""
+      {{- end }}
+      from: {{ .Values.identity.smtp.from | quote }}
+
+    # Password-reset token lifecycle
+    passwordReset:
+      tokenTTL: {{ .Values.identity.passwordReset.tokenTTL }}
+      cooldownDuration: {{ .Values.identity.passwordReset.cooldownDuration }}
+
+    # Periodic sender for active, email_enabled announcements
+    announcementEmail:
+      interval: {{ .Values.identity.announcementEmail.interval }}
+      sendHour: {{ .Values.identity.announcementEmail.sendHour }}
+      timezone: {{ .Values.identity.announcementEmail.timezone }}
+      subjects:
+        {{- toYaml .Values.identity.announcementEmail.subjects | nindent 8 }}
+
+    # Outbound email volume cap across password-reset and announcement email
+    mailRateLimit:
+      dailyRecipientCap: {{ .Values.identity.mailRateLimit.dailyRecipientCap }}
+
     kubernetes:
       namespace: {{ .Values.provisioner.targetNamespace }}
       saToken:

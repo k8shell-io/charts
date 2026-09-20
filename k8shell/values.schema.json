@@ -270,6 +270,87 @@
                         }
                     }
                 },
+                "passwordLockout": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "maxAttempts": {
+                            "type": "integer"
+                        },
+                        "lockDuration": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "smtp": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "host": {
+                            "type": "string"
+                        },
+                        "port": {
+                            "type": "integer"
+                        },
+                        "username": {
+                            "type": "string"
+                        },
+                        "password": {
+                            "$ref": "#/definitions/secretRef"
+                        },
+                        "from": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "passwordReset": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "tokenTTL": {
+                            "type": "string"
+                        },
+                        "cooldownDuration": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "announcementEmail": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "interval": {
+                            "type": "string"
+                        },
+                        "sendHour": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 23
+                        },
+                        "timezone": {
+                            "type": "string"
+                        },
+                        "subjects": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "mailRateLimit": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "dailyRecipientCap": {
+                            "type": "integer",
+                            "minimum": 0
+                        }
+                    }
+                },
                 "users": {
                     "type": "array",
                     "items": {
@@ -676,30 +757,6 @@
                 },
                 "infraVersionsConfigMap": {
                     "type": "string"
-                },
-                "smtp": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "enabled": {
-                            "type": "boolean"
-                        },
-                        "host": {
-                            "$ref": "#/definitions/secretRef"
-                        },
-                        "port": {
-                            "$ref": "#/definitions/secretRef"
-                        },
-                        "username": {
-                            "$ref": "#/definitions/secretRef"
-                        },
-                        "password": {
-                            "$ref": "#/definitions/secretRef"
-                        },
-                        "from": {
-                            "$ref": "#/definitions/secretRef"
-                        }
-                    }
                 },
                 "workspaces": {
                     "type": "object",

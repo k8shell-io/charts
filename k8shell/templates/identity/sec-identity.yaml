@@ -11,6 +11,12 @@
 {{- end }}
 {{- end }}
 
+{{- if .Values.identity.smtp.enabled }}
+{{- if .Values.identity.smtp.password.value }}
+  {{- $_ := set $secrets "SMTP_PASSWORD" .Values.identity.smtp.password.value }}
+{{- end }}
+{{- end }}
+
 {{- if $secrets }}
 apiVersion: v1
 kind: Secret

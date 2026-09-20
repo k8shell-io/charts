@@ -96,7 +96,7 @@ identity:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/identity
-    tag: v0.16.2
+    tag: v0.17.0
 
   # jwtIssuer configures JWT token issuance for k8shell services.
   jwtIssuer:
@@ -118,6 +118,70 @@ identity:
       # audiences are embedded in issued tokens
       audiences:
         - https://kubernetes.default.svc.cluster.local
+
+  # passwordLockout configures brute-force lockout for local username/password
+  # login. Keyed by username in identity's own NATS KV storage; has no effect
+  # when nats.enabled is false.
+  passwordLockout:
+    # maxAttempts is the number of consecutive failed password attempts
+    # before an account is locked.
+    maxAttempts: 5
+    # lockDuration is how long an account stays locked once maxAttempts is
+    # reached.
+    lockDuration: 15m
+
+  # smtp configures the SMTP relay used for password-reset email and
+  # announcement email. Disabled by default; when disabled (or unreachable),
+  # RequestPasswordReset logs and swallows the failure and still reports
+  # success to callers.
+  smtp:
+    enabled: false
+    host: ""
+    port: 587
+    username: ""
+    password: {}
+    from: ""
+
+  # passwordReset configures the password-reset token lifecycle, stored in
+  # identity's own NATS KV storage. Has no effect when nats.enabled is false.
+  passwordReset:
+    # tokenTTL bounds how long an issued reset link stays valid.
+    tokenTTL: 1h
+    # cooldownDuration is how long a username must wait between
+    # RequestPasswordReset calls before a new one actually sends email.
+    cooldownDuration: 60s
+
+  # announcementEmail configures the periodic sender that emails active,
+  # email_enabled announcements to users who both match the announcement's
+  # org/role targeting and have opted in (announcementsByEmail, in their own
+  # user_settings). Reuses the smtp relay above.
+  announcementEmail:
+    # interval is how often the sender checks for eligible announcements and
+    # candidates.
+    interval: 1m
+    # sendHour is the hour of day (0-23, in timezone) at or after which sends
+    # are allowed to start on an announcement's activation day (its
+    # starts_at, or created_at when starts_at is unset).
+    sendHour: 9
+    # timezone sendHour and each announcement's activation day are evaluated
+    # in (IANA name).
+    timezone: UTC
+    # subjects maps a language (resolved from a candidate's own
+    # user_settings "language" key) to the email subject line used for that
+    # language. A language with no entry falls back to subjects.en, then to
+    # a fixed generic subject.
+    subjects:
+      en: New k8shell announcement
+      cs: Nové oznámení k8shell
+
+  # mailRateLimit caps total outbound email volume (summed across
+  # password-reset and announcement email) in a trailing 24h window. 0
+  # disables the cap. Set this when smtp above points at a rate-limited
+  # relay.
+  mailRateLimit:
+    # dailyRecipientCap is the max number of email recipients allowed in a
+    # trailing 24h window. 0 disables the cap.
+    dailyRecipientCap: 0
 
   users:
     - username: "admin"
@@ -286,7 +350,7 @@ frontend:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/frontend
-    tag: v0.16.4
+    tag: v0.17.1
   scheme: "http"
   host: "localtest.me"
   sessionCookie:
@@ -304,7 +368,7 @@ apiServer:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/api-server
-    tag: v0.17.3
+    tag: v0.18.0
   logging:
     requestHeaders: false
     responseHeaders: false
@@ -316,14 +380,6 @@ apiServer:
   # mounted into api-server at /app/infra-versions. When empty, nothing is
   # mounted. k8shell-bundle populates this automatically.
   infraVersionsConfigMap: ""
-
-  smtp:
-    enabled: false
-    host: {}
-    port: {}
-    username: {}
-    password: {}
-    from: {}
 
   # workspaces configures the domain used to build ssh / VS Code Remote connection strings for workspaces.
   workspaces:
