@@ -50,7 +50,7 @@ data:
 
     # Identity service configuration
     identity:
-      address: identity:9020
+      address: {{ if and .Values.grpc .Values.grpc.roundRobin }}dns:///identity:9020{{ else }}identity:9020{{ end }}
       tokenFilePath: /var/run/secrets/k8shell.io/identity
       {{- if .Values.certManager.enabled }}
       caCertPath: /etc/k8shell/ca/ca.crt
@@ -59,7 +59,7 @@ data:
 
     # authz service configuration
     authz:
-      address: authz:9011
+      address: {{ if and .Values.grpc .Values.grpc.roundRobin }}dns:///authz:9011{{ else }}authz:9011{{ end }}
       tokenFilePath: /var/run/secrets/k8shell.io/authz
       {{- if .Values.certManager.enabled }}
       caCertPath: /etc/k8shell/ca/ca.crt
@@ -69,7 +69,7 @@ data:
 
     # Session service configuration
     session:
-      address: session:9010
+      address: {{ if and .Values.grpc .Values.grpc.roundRobin }}dns:///session:9010{{ else }}session:9010{{ end }}
       tokenFilePath: /var/run/secrets/k8shell.io/session
       {{- if .Values.certManager.enabled }}
       caCertPath: /etc/k8shell/ca/ca.crt
@@ -78,7 +78,7 @@ data:
 
     # Provisioner service configuration
     provisioner:
-      address: provisioner:9030
+      address: {{ if and .Values.grpc .Values.grpc.roundRobin }}dns:///provisioner:9030{{ else }}provisioner:9030{{ end }}
       tokenFilePath: /var/run/secrets/k8shell.io/provisioner
       {{- if .Values.certManager.enabled }}
       caCertPath: /etc/k8shell/ca/ca.crt
@@ -87,7 +87,7 @@ data:
 
     # SSH proxy service configuration
     sshProxy:
-      address: ssh-proxy:9000
+      address: {{ if and .Values.grpc .Values.grpc.roundRobin }}dns:///ssh-proxy:9000{{ else }}ssh-proxy:9000{{ end }}
       tokenFilePath: /var/run/secrets/k8shell.io/ssh-proxy
       {{- if .Values.certManager.enabled }}
       caCertPath: /etc/k8shell/ca/ca.crt
@@ -96,7 +96,7 @@ data:
 
     # ssh-shield service configuration
     sshShield:
-      address: ssh-shield:9040
+      address: {{ if and .Values.grpc .Values.grpc.roundRobin }}dns:///ssh-shield:9040{{ else }}ssh-shield:9040{{ end }}
       tokenFilePath: /var/run/secrets/k8shell.io/ssh-shield
       {{- if .Values.certManager.enabled }}
       caCertPath: /etc/k8shell/ca/ca.crt

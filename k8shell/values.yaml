@@ -57,7 +57,7 @@ sshProxy:
   
   image:
     repository: ghcr.io/k8shell-io/ssh-proxy
-    tag: v0.15.2
+    tag: v0.16.0
   
   proxyProtocol: false
   
@@ -235,7 +235,7 @@ authz:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/authz
-    tag: v0.2.2
+    tag: v0.2.3
 
   # policiesConfigMap is the name of an existing ConfigMap whose keys are
   # mounted as policy files into /app/policies. Leave empty to omit the mount.
@@ -265,7 +265,7 @@ provisioner:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/provisioner
-    tag: v0.16.1
+    tag: v0.16.6
 
   # k8shelld is the default image for k8shelld defined in base blueprint
   k8shelld:
@@ -350,7 +350,7 @@ frontend:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/frontend
-    tag: v0.17.1
+    tag: v0.17.4
   scheme: "http"
   host: "localtest.me"
   sessionCookie:
@@ -368,7 +368,7 @@ apiServer:
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/api-server
-    tag: v0.18.0
+    tag: v0.18.3
   logging:
     requestHeaders: false
     responseHeaders: false
