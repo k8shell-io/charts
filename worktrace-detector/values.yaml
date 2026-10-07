@@ -1,0 +1,104 @@
+# values.yaml for worktrace-detector Helm chart
+#
+# worktrace-detector runs the k8shell threat detection engine as a DaemonSet,
+# one instance per node. It consumes Tetragon events over gRPC (the pod uses
+# hostNetwork to reach Tetragon on the node loopback) and evaluates them
+# against the detection rules. Tetragon must be installed in the cluster (the
+# TracingPolicy CRD is required by the controller).
+
+image:
+  repository: ghcr.io/k8shell-io/worktrace
+  tag: v0.1.0
+  pullPolicy: IfNotPresent
+
+# imageRegistry defines a private container registry used to create an image pull secret (regcred).
+imageRegistry:
+  host: ""
+
+  # only one of username/password or existingSecret should be set
+  username: ""
+  password: ""
+  existingSecret: ""
+
+# Log level of the detection engine (debug, info, warn, error)
+logLevel: info
+
+# hostNetwork is required to reach Tetragon's gRPC server on the node loopback
+hostNetwork: true
+
+resources:
+  requests:
+    memory: 128Mi
+    cpu: 100m
+  limits:
+    memory: 512Mi
+    cpu: "10"
+
+nodeSelector: {}
+
+tolerations:
+  - key: CriticalAddonsOnly
+    operator: Equal
+    value: "true"
+    effect: NoExecute
+
+# config is rendered as-is into the engine's config.yaml.
+config:
+  tetragon:
+    # "grpc" for live Tetragon connection, "file" for reading events from a file
+    source_mode: grpc
+    address: "127.0.0.1:54321"
+    connect_timeout: 30s
+    max_retries: 5
+    retry_delay: 5s
+
+  detection:
+    # Must match the mount path of the rules ConfigMap (see rules below)
+    rules_dir: /etc/worktrace/rules
+    enabled_pipelines:
+      - direct
+      - correlation
+    behavioral:
+      learning_duration: 24h
+      anomaly_threshold: 0.8
+      track_syscalls: true
+      track_file_paths: true
+      track_processes: true
+      # When both are set, baseline_file's directory is persisted on the node (hostPath)
+      # persist_baseline: true
+      # baseline_file: /var/lib/worktrace/baseline.json
+
+  aggregator:
+    # "logs" for structured stderr output (collected by Loki), "file" for JSON file output
+    output_mode: logs
+    batch_size: 100
+    batch_timeout: 5s
+
+  # Workspace namespace to monitor (exact match)
+  namespace: k8shell-workspaces
+
+rules:
+  # Include the bundled detection rules from files/rules/
+  includeDefaults: true
+
+  # Additional rules; map of file name to rule YAML content, e.g.
+  # extra:
+  #   my_rule.yaml: |
+  #     ...
+  extra: {}
+
+# controller generates the Tetragon TracingPolicy (cilium.io/v1alpha1) from the rules
+# ConfigMap and keeps it in sync whenever the rules change. It runs as a separate
+# Deployment (same image, `controller` command) with leader election, so only one
+# replica writes and the per-node detectors need no access to cluster-scoped policies.
+# Disable it only if you manage the TracingPolicy yourself.
+controller:
+  enabled: true
+  replicas: 2
+  resources:
+    requests:
+      memory: 32Mi
+      cpu: 10m
+    limits:
+      memory: 128Mi
+      cpu: 200m

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: worktrace-detector
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "worktrace-detector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worktrace-detector

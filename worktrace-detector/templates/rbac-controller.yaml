@@ -1,0 +1,73 @@
+{{- if .Values.controller.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: worktrace-detector-controller
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "worktrace-detector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["worktrace-detector-rules"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["create"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    resourceNames: ["worktrace-detector-controller"]
+    verbs: ["get", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: worktrace-detector-controller
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "worktrace-detector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: worktrace-detector-controller
+subjects:
+  - kind: ServiceAccount
+    name: worktrace-detector-controller
+    namespace: {{ .Release.Namespace }}
+---
+# The generated TracingPolicy is cluster-scoped, so it is owned by this ClusterRole:
+# uninstalling the chart deletes the ClusterRole and Kubernetes garbage-collects the policy.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: worktrace-detector-controller
+  labels:
+    {{- include "worktrace-detector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+rules:
+  - apiGroups: ["cilium.io"]
+    resources: ["tracingpolicies"]
+    verbs: ["get", "list", "create", "update", "patch"]
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["clusterroles"]
+    resourceNames: ["worktrace-detector-controller"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: worktrace-detector-controller
+  labels:
+    {{- include "worktrace-detector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: worktrace-detector-controller
+subjects:
+  - kind: ServiceAccount
+    name: worktrace-detector-controller
+    namespace: {{ .Release.Namespace }}
+{{- end }}
