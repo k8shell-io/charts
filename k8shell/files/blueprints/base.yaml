@@ -46,6 +46,53 @@ blueprints:
 
       createDockerSockSymlink: true
 
+    # Podman with mount point working setup
+    # it is possible to mount a volume in a workspace into the podman container and read/write the data in the folder
+    # podman:
+    #   enabled: true
+    #   extFiles:
+    #     /etc/containers/containers.conf: |
+    #       [containers]
+    #       netns="host"
+    #       userns="host"
+    #       ipcns="host"
+    #       utsns="host"
+    #       cgroupns="host"
+    #       cgroups="disabled"
+    #       log_driver = "k8s-file"
+    #       volumes = ["/proc:/proc"]
+    #       default_sysctls = []
+    #       [engine]
+    #       cgroup_manager = "cgroupfs"
+    #       events_logger="file"
+    #       runtime="crun"
+    #     /etc/containers/storage.conf: |
+    #       [storage]
+    #       driver = "overlay"
+    #       rootless_storage_path = "/home/podman/storage"
+    #     /etc/group: !cel "'root:x:0:\\n' + user.username + ':x:' + string(user.gid) + ':\\n'"
+    #     /etc/passwd: !cel "'root:x:0:0:root:/root:/bin/sh\\n' + user.username + ':x:' + string(user.uid) + ':' + string(user.gid) + '::/home/podman:/bin/sh\\n'"
+    #     /etc/subgid: !cel user.username + ':2000000000:65536'
+    #     /etc/subuid: !cel user.username + ':2000000000:65536'
+    #   securityContext:
+    #     appArmorProfile:
+    #       type: Unconfined
+    #     runAsGroup: !cel user.gid
+    #     runAsUser: !cel user.uid
+    #   storages:
+    #     graphdb:
+    #       claimSpec:
+    #         accessModes:
+    #           - ReadWriteOnce
+    #         resources:
+    #           requests:
+    #             storage: 10Gi
+    #         storageClassName: openebs-zfspv
+    #       enabled: true
+    #       path: /home/podman
+    #       readonly: false
+
+
     # list of storages in the workspace
     # storages:
     #   home:
