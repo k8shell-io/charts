@@ -1,0 +1,80 @@
+{{- $behavioral := dict }}
+{{- if .Values.config.detection }}
+{{- $behavioral = .Values.config.detection.behavioral | default dict }}
+{{- end }}
+{{- $baselineDir := "" }}
+{{- if and $behavioral.persist_baseline $behavioral.baseline_file }}
+{{- $baselineDir = dir $behavioral.baseline_file }}
+{{- end }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: worktrace-detector
+  labels:
+    {{- include "worktrace-detector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worktrace-detector
+spec:
+  selector:
+    matchLabels:
+      k8shell.io/app: worktrace-detector
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/cm-config.yaml") . | sha256sum }}
+        checksum/rules: {{ include (print $.Template.BasePath "/cm-rules.yaml") . | sha256sum }}
+      labels:
+        k8shell.io/app: worktrace-detector
+        {{- include "worktrace-detector.labels" . | nindent 8 }}
+    spec:
+      hostNetwork: {{ .Values.hostNetwork }}
+      {{- include "worktrace-detector.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: worktrace-detector
+      containers:
+        - name: worktrace-detector
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --config=/etc/worktrace/config.yaml
+            - --log-level={{ .Values.logLevel }}
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          env:
+            - name: WORKTRACE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: worktrace-detector-config
+              mountPath: /etc/worktrace
+              readOnly: true
+            - name: worktrace-detector-rules
+              mountPath: {{ .Values.config.detection.rules_dir | default "/etc/worktrace/rules" }}
+              readOnly: true
+            {{- if $baselineDir }}
+            - name: baseline-persistence
+              mountPath: {{ $baselineDir }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: worktrace-detector-config
+          configMap:
+            name: worktrace-detector-config
+        - name: worktrace-detector-rules
+          configMap:
+            name: worktrace-detector-rules
+        {{- if $baselineDir }}
+        - name: baseline-persistence
+          hostPath:
+            path: {{ $baselineDir }}
+            type: DirectoryOrCreate
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

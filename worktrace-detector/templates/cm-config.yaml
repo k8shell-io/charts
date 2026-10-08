@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: worktrace-detector-config
+  labels:
+    app: worktrace-detector
+data:
+  config.yaml: |
+    {{- toYaml .Values.config | nindent 4 }}

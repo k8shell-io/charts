@@ -1,0 +1,48 @@
+{{- if .Values.controller.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worktrace-detector-controller
+  labels:
+    {{- include "worktrace-detector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+spec:
+  replicas: {{ .Values.controller.replicas }}
+  selector:
+    matchLabels:
+      k8shell.io/app: worktrace-detector-controller
+  template:
+    metadata:
+      labels:
+        k8shell.io/app: worktrace-detector-controller
+        {{- include "worktrace-detector.labels" . | nindent 8 }}
+    spec:
+      {{- include "worktrace-detector.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: worktrace-detector-controller
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+      containers:
+        - name: controller
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - controller
+            - --rules-configmap=worktrace-detector-rules
+            - --lease-name=worktrace-detector-controller
+            - --owner-clusterrole=worktrace-detector-controller
+            - --log-level={{ .Values.logLevel }}
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            {{- toYaml .Values.controller.resources | nindent 12 }}
+{{- end }}

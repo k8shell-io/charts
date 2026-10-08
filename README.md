@@ -2,6 +2,7 @@
 [![k8shell-bundle chart](https://github.com/k8shell-io/charts/actions/workflows/chart-k8shell-bundle.yaml/badge.svg)](https://github.com/k8shell-io/charts/actions/workflows/chart-k8shell-bundle.yaml)
 [![idp-github chart](https://github.com/k8shell-io/charts/actions/workflows/chart-idp-github.yaml/badge.svg)](https://github.com/k8shell-io/charts/actions/workflows/chart-idp-github.yaml)
 [![idp-gitlab chart](https://github.com/k8shell-io/charts/actions/workflows/chart-idp-gitlab.yaml/badge.svg)](https://github.com/k8shell-io/charts/actions/workflows/chart-idp-gitlab.yaml)
+[![worktrace-detector chart](https://github.com/k8shell-io/charts/actions/workflows/chart-worktrace-detector.yaml/badge.svg)](https://github.com/k8shell-io/charts/actions/workflows/chart-worktrace-detector.yaml)
 [![vault-secrets chart](https://github.com/k8shell-io/charts/actions/workflows/chart-vault-secrets.yaml/badge.svg)](https://github.com/k8shell-io/charts/actions/workflows/chart-vault-secrets.yaml)
 
 # charts
@@ -17,6 +18,7 @@ Helm charts for [k8shell](https://k8shell.io) — Cloud-native Development Envir
 | [idp-github](./idp-github) | GitHub Identity Provider — authenticates users via GitHub OAuth. |
 | [idp-gitlab](./idp-gitlab) | GitLab Identity Provider — authenticates users via GitLab OAuth. |
 | [vault-secrets](./vault-secrets) | Maps HashiCorp Vault secrets to Kubernetes secrets. |
+| [worktrace-detector](./worktrace-detector) | Worktrace threat detection engine — runs as a DaemonSet and evaluates Tetragon events against detection rules. |
 
 `k8shell-bundle`, `idp-github`, and `idp-gitlab` are available under the [Early Access Program](https://docs.k8shell.io/licensing#early-access).
 

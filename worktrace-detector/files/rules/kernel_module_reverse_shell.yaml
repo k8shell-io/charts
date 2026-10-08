@@ -1,0 +1,32 @@
+rules:
+  - id: "kmod-load-module-workspace"
+    name: "Kernel module load from workspace"
+    description: "Detects insmod or modprobe being used to load a kernel module from within a workspace container"
+    report: true
+    confidence: 0.70
+    process: ["insmod", "modprobe"]
+
+  - id: "kmod-finit-module-workspace"
+    name: "finit_module syscall from workspace"
+    description: "Detects finit_module syscall being used from within a workspace container"
+    report: true
+    confidence: 0.90
+    syscall:
+      name: "sys_finit_module"
+
+attack_paths:
+  - id: "kernel_module_reverse_shell"
+    name: "Kernel module reverse shell"
+    description: "Kernel module load followed by netcat reverse shell"
+    time_window: "2m"
+    rules:
+      - "kmod-load-module-workspace"
+      - "nc-reverse-shell-listener"
+
+  - id: "kernel_module_reverse_shell_finit"
+    name: "Kernel module reverse shell with finit_module"
+    description: "finit_module syscall followed by netcat reverse shell"
+    time_window: "2m"
+    rules:
+      - "kmod-finit-module-workspace"
+      - "nc-reverse-shell-listener"

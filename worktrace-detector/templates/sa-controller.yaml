@@ -1,0 +1,10 @@
+{{- if .Values.controller.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: worktrace-detector-controller
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "worktrace-detector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+{{- end }}

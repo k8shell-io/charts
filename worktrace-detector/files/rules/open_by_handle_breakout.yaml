@@ -1,0 +1,24 @@
+rules:
+  - id: "openhandle-sys-open-by-handle-at"
+    name: "open_by_handle_at syscall usage"
+    description: "Detects use of open_by_handle_at syscall from a workspace process"
+    report: true
+    confidence: 0.80
+    syscall:
+      name: "sys_open_by_handle_at"
+
+  - id: "read-etc-shadow"
+    name: "Access to /etc/shadow"
+    description: "Detects access to /etc/shadow from workspace"
+    report: false
+    confidence: 0.40
+    file: "/etc/shadow"
+
+attack_paths:
+  - id: "openhandle_container_escape_shadow"
+    name: "Container escape via open_by_handle_at to read /etc/shadow"
+    description: "name_to_handle_at and open_by_handle_at syscalls followed by read access to /etc/shadow"
+    time_window: "5m"
+    rules:
+      - "openhandle-sys-open-by-handle-at"
+      - "read-etc-shadow"
