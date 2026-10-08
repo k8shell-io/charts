@@ -91,18 +91,16 @@ config:
       # persist_baseline: true
       # baseline_file: /var/lib/worktrace/baseline.json
 
-  # Detectors print no threats: they publish them to NATS (see nats below) for the
-  # controller. Threats with the same rule and workspace inside one batch window are
-  # collapsed into one with an "occurrences" count.
-  aggregator:
-    batch_size: 100
-    batch_timeout: 5s
-
   # Workspace namespace to monitor (exact match)
   namespace: k8shell-workspaces
 
-# nats (JetStream) carries the threats detectors report to the controller. Same server
-# and credentials as the k8shell services (the NATS in this namespace).
+# nats (JetStream) carries the threats detectors report to the controller. Detectors
+# publish every detected threat immediately as it is found, with no batching or
+# deduplication on their side: the controller sees every detector's output and decides
+# what counts as a duplicate (see controller.threats below). Same server and credentials
+# as the k8shell services (the NATS in this namespace).
+# the below configuration corresponds to services using NATS in k8shell-bundle and it is
+# expected that worktrace detector will be deployed along with services from k8shell-bundle
 nats:
   host: nats
   port: 4222
@@ -140,12 +138,21 @@ controller:
   requestTimeout: 10s
   # The controller creates the WORKTRACE_THREATS stream the detectors publish to and
   # consumes it (every replica shares one durable consumer, so each threat is handled
-  # once). For now it prints each threat as a JSON line on stdout.
+  # once). Repeated threats for the same rule+workspace within dedupWindow are
+  # suppressed after the first (which is always reported immediately) and folded into
+  # a summary once the window elapses; set dedupWindow to 0s to report every
+  # occurrence individually instead. Each threat is printed as a JSON line on stdout,
+  # leveled by confidence: below warnConfidence is info, at/above errorConfidence is
+  # error, otherwise warn.
   threats:
-    # replicas of the stream; must not exceed the NATS cluster size
+    # replicas of the stream and of the shared dedup state; must not exceed the NATS
+    # cluster size
     streamReplicas: 3
     # how long the stream retains threats
     maxAge: 24h
+    dedupWindow: 60s
+    warnConfidence: 0.5
+    errorConfidence: 0.85
   resources:
     requests:
       memory: 32Mi

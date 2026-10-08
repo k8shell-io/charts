@@ -43,6 +43,9 @@ spec:
             - --nats-password-file=/var/run/secrets/k8shell.io/nats-password
             - --threats-replicas={{ .Values.controller.threats.streamReplicas }}
             - --threats-max-age={{ .Values.controller.threats.maxAge }}
+            - --threats-dedup-window={{ .Values.controller.threats.dedupWindow }}
+            - --threats-warn-confidence={{ .Values.controller.threats.warnConfidence }}
+            - --threats-error-confidence={{ .Values.controller.threats.errorConfidence }}
             {{- if .Values.certManager.enabled }}
             - --grpc-tls
             - --grpc-tls-cert=/etc/tls/worktrace-controller/tls.crt
