@@ -12,6 +12,12 @@ data:
   config.yaml: |
     targetNamespace: {{ .Values.provisioner.targetNamespace }}
 
+    {{- if .Values.provisioner.kubeClient }}
+    kubeClient:
+      qps: {{ .Values.provisioner.kubeClient.qps }}
+      burst: {{ .Values.provisioner.kubeClient.burst }}
+    {{- end }}
+
     {{- if .Values.provisioner.injectNamespaces }}
     injectNamespaces:
     {{- range .Values.provisioner.injectNamespaces }}

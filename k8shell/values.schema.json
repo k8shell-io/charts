@@ -560,6 +560,22 @@
                 "targetNamespace": {
                     "type": "string"
                 },
+                "kubeClient": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "qps": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 150
+                        },
+                        "burst": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 300
+                        }
+                    }
+                },
                 "injectNamespaces": {
                     "type": "array",
                     "items": {

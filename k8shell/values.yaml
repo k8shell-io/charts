@@ -289,6 +289,14 @@ provisioner:
   # if not set, helm chart installation will fail.
   targetNamespace: ""
 
+  # Rate limit for the in-cluster Kubernetes client used for all workspace
+  # pod/release lookups and mutations. Defaults to 150 QPS / 300 burst when
+  # omitted (client-go itself defaults to 5 QPS / 10 burst, which throttles
+  # this process client-side under concurrent request load).
+  # kubeClient:
+  #   qps: 150
+  #   burst: 300
+
   # Namespaces where workspace injection is allowed.
   # If omitted or empty, injection is disabled and all inject requests are rejected.
   # Use explicit namespace names for Role-scoped operation.
