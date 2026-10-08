@@ -6,3 +6,7 @@
 
 image:
   repository: registry.k8shell.io/k8shell-base/worktrace
+
+imageRegistry:
+  host: registry.k8shell.io
+  existingSecret: regcred
