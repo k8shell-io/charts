@@ -21,12 +21,15 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/cm-config.yaml") . | sha256sum }}
-        checksum/rules: {{ include (print $.Template.BasePath "/cm-rules.yaml") . | sha256sum }}
       labels:
         k8shell.io/app: worktrace-detector
         {{- include "worktrace-detector.labels" . | nindent 8 }}
     spec:
       hostNetwork: {{ .Values.hostNetwork }}
+      {{- if .Values.hostNetwork }}
+      # hostNetwork pods only resolve cluster Services (the controller) with this policy
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
       {{- include "worktrace-detector.imagePullSecrets" . | nindent 6 }}
       serviceAccountName: worktrace-detector
       containers:
@@ -48,9 +51,14 @@ spec:
             - name: worktrace-detector-config
               mountPath: /etc/worktrace
               readOnly: true
-            - name: worktrace-detector-rules
-              mountPath: {{ .Values.config.detection.rules_dir | default "/etc/worktrace/rules" }}
+            - name: jwt
+              mountPath: /var/run/secrets/k8shell.io
               readOnly: true
+            {{- if .Values.certManager.enabled }}
+            - name: ca-cert
+              mountPath: /etc/k8shell/ca
+              readOnly: true
+            {{- end }}
             {{- if $baselineDir }}
             - name: baseline-persistence
               mountPath: {{ $baselineDir }}
@@ -61,9 +69,18 @@ spec:
         - name: worktrace-detector-config
           configMap:
             name: worktrace-detector-config
-        - name: worktrace-detector-rules
-          configMap:
-            name: worktrace-detector-rules
+        - name: jwt
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: controller
+                  audience: worktrace-controller
+                  expirationSeconds: {{ .Values.tokenExpiration }}
+        {{- if .Values.certManager.enabled }}
+        - name: ca-cert
+          secret:
+            secretName: worktrace-cluster-ca
+        {{- end }}
         {{- if $baselineDir }}
         - name: baseline-persistence
           hostPath:

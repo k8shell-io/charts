@@ -20,6 +20,29 @@ imageRegistry:
   password: ""
   existingSecret: ""
 
+# Enable JWT authentication on the controller's gRPC API: detectors authenticate with
+# a projected ServiceAccount token (audience: worktrace-controller).
+authEnabled: true
+
+# Lifetime of the projected ServiceAccount token, in seconds
+tokenExpiration: 600
+
+# Enable cert-manager to issue the controller's gRPC TLS certificate. This requires
+# cert-manager and an issuer (e.g. the same ClusterIssuer the k8shell chart uses).
+# If cert-manager is not enabled, TLS is disabled and detectors fall back to plaintext.
+certManager:
+  enabled: false
+  issuer:
+    name: vault-root-issuer
+    kind: ClusterIssuer
+  duration: 24h
+  renewBefore: 12h
+
+grpc:
+  # enables client-side load balancing between the detectors and the controller
+  # replicas; the controller Service becomes headless.
+  roundRobin: true
+
 # Log level of the detection engine (debug, info, warn, error)
 logLevel: info
 
@@ -52,9 +75,9 @@ config:
     max_retries: 5
     retry_delay: 5s
 
+  # Detection rules are not configured here: detectors fetch them from the controller
+  # (see rules below). The chart fills in detection.controller itself.
   detection:
-    # Must match the mount path of the rules ConfigMap (see rules below)
-    rules_dir: /etc/worktrace/rules
     enabled_pipelines:
       - direct
       - correlation
@@ -77,6 +100,8 @@ config:
   # Workspace namespace to monitor (exact match)
   namespace: k8shell-workspaces
 
+# rules are stored in a ConfigMap read by the controller, which serves them to the
+# detectors over gRPC and polls for changes: a rule change needs no detector restart.
 rules:
   # Include the bundled detection rules from files/rules/
   includeDefaults: true
@@ -87,14 +112,18 @@ rules:
   #     ...
   extra: {}
 
-# controller generates the Tetragon TracingPolicy (cilium.io/v1alpha1) from the rules
-# ConfigMap and keeps it in sync whenever the rules change. It runs as a separate
-# Deployment (same image, `controller` command) with leader election, so only one
-# replica writes and the per-node detectors need no access to cluster-scoped policies.
-# Disable it only if you manage the TracingPolicy yourself.
+# controller owns the detection rules and the Tetragon TracingPolicy. It serves the
+# rules to the per-node detectors over gRPC (port 9050) and generates the TracingPolicy
+# (cilium.io/v1alpha1) from the rules ConfigMap, keeping both in sync whenever the rules
+# change. It runs as a separate Deployment (same image, `controller` command): every
+# replica serves rules, and leader election ensures only one replica writes the policy,
+# so the detectors need no access to cluster-scoped policies. Detectors without a
+# reachable controller have no rules and detect nothing.
 controller:
-  enabled: true
   replicas: 2
+  # how often detectors check the controller for new rules
+  pollInterval: 30s
+  requestTimeout: 10s
   resources:
     requests:
       memory: 32Mi

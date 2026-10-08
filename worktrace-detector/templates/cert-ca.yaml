@@ -1,0 +1,18 @@
+# This is a "dummy" certificate whose purpose is to get hold of the CA cert used to issue
+# certificates in the cluster. The detectors do not serve gRPC and need no certificate of
+# their own; they use the CA from this certificate to verify the controller's certificate.
+{{- if .Values.certManager.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: worktrace-cluster-ca-publisher
+spec:
+  secretName: worktrace-cluster-ca
+  commonName: worktrace.cluster.ca
+  duration: 2160h
+  renewBefore: 360h
+  usages: ["server auth","client auth"]
+  issuerRef:
+    name: {{ .Values.certManager.issuer.name }}
+    kind: {{ .Values.certManager.issuer.kind }}
+{{- end }}

@@ -1,3 +1,20 @@
+{{- /*
+The detector fetches its rules from the controller; the connection settings are derived
+here so they follow certManager / grpc.roundRobin / controller.* instead of being repeated.
+*/ -}}
+{{- $cfg := deepCopy .Values.config }}
+{{- $det := $cfg.detection | default dict }}
+{{- $ctl := dict
+    "address" (ternary "dns:///worktrace-controller:9050" "worktrace-controller:9050" (and .Values.grpc .Values.grpc.roundRobin | default false))
+    "token_file" "/var/run/secrets/k8shell.io/controller"
+    "poll_interval" .Values.controller.pollInterval
+    "request_timeout" .Values.controller.requestTimeout }}
+{{- if .Values.certManager.enabled }}
+{{- $_ := set $ctl "ca_cert_file" "/etc/k8shell/ca/ca.crt" }}
+{{- $_ := set $ctl "server_name" (printf "worktrace-controller.%s.svc" .Release.Namespace) }}
+{{- end }}
+{{- $_ := set $det "controller" $ctl }}
+{{- $_ := set $cfg "detection" $det }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6,4 +23,4 @@ metadata:
     app: worktrace-detector
 data:
   config.yaml: |
-    {{- toYaml .Values.config | nindent 4 }}
+    {{- toYaml $cfg | nindent 4 }}
