@@ -15,6 +15,10 @@ here so they follow certManager / grpc.roundRobin / controller.* instead of bein
 {{- end }}
 {{- $_ := set $det "controller" $ctl }}
 {{- $_ := set $cfg "detection" $det }}
+{{- $_ := set $cfg "nats" (dict
+    "url" (printf "nats://%s:%v" .Values.nats.host .Values.nats.port)
+    "username" .Values.nats.username
+    "password_file" "/var/run/secrets/k8shell.io/nats-password") }}
 apiVersion: v1
 kind: ConfigMap
 metadata:

@@ -91,14 +91,28 @@ config:
       # persist_baseline: true
       # baseline_file: /var/lib/worktrace/baseline.json
 
+  # Detectors print no threats: they publish them to NATS (see nats below) for the
+  # controller. Threats with the same rule and workspace inside one batch window are
+  # collapsed into one with an "occurrences" count.
   aggregator:
-    # "logs" for structured stderr output (collected by Loki), "file" for JSON file output
-    output_mode: logs
     batch_size: 100
     batch_timeout: 5s
 
   # Workspace namespace to monitor (exact match)
   namespace: k8shell-workspaces
+
+# nats (JetStream) carries the threats detectors report to the controller. Same server
+# and credentials as the k8shell services (the NATS in this namespace).
+nats:
+  host: nats
+  port: 4222
+  username: k8shell-service
+  password:
+    # Use an existing Secret...
+    secretName: vault-nats
+    secretKey: NATS_K8SHELL_PASSWORD
+    # ...or set the password here; the chart then creates the Secret itself.
+    value: ""
 
 # rules are stored in a ConfigMap read by the controller, which serves them to the
 # detectors over gRPC and polls for changes: a rule change needs no detector restart.
@@ -124,6 +138,14 @@ controller:
   # how often detectors check the controller for new rules
   pollInterval: 30s
   requestTimeout: 10s
+  # The controller creates the WORKTRACE_THREATS stream the detectors publish to and
+  # consumes it (every replica shares one durable consumer, so each threat is handled
+  # once). For now it prints each threat as a JSON line on stdout.
+  threats:
+    # replicas of the stream; must not exceed the NATS cluster size
+    streamReplicas: 3
+    # how long the stream retains threats
+    maxAge: 24h
   resources:
     requests:
       memory: 32Mi

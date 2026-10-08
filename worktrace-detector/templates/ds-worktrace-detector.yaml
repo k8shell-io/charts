@@ -21,6 +21,7 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/cm-config.yaml") . | sha256sum }}
+        checksum/nats: {{ include (print $.Template.BasePath "/sec-nats.yaml") . | sha256sum }}
       labels:
         k8shell.io/app: worktrace-detector
         {{- include "worktrace-detector.labels" . | nindent 8 }}
@@ -76,6 +77,7 @@ spec:
                   path: controller
                   audience: worktrace-controller
                   expirationSeconds: {{ .Values.tokenExpiration }}
+              {{- include "worktrace-detector.natsPasswordSource" . | nindent 14 }}
         {{- if .Values.certManager.enabled }}
         - name: ca-cert
           secret:

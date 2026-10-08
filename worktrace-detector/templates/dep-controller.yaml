@@ -12,6 +12,8 @@ spec:
       k8shell.io/app: worktrace-detector-controller
   template:
     metadata:
+      annotations:
+        checksum/nats: {{ include (print $.Template.BasePath "/sec-nats.yaml") . | sha256sum }}
       labels:
         k8shell.io/app: worktrace-detector-controller
         {{- include "worktrace-detector.labels" . | nindent 8 }}
@@ -36,6 +38,11 @@ spec:
             - --grpc-auth={{ .Values.authEnabled }}
             - --grpc-audience=worktrace-controller
             - --grpc-allow={{ .Release.Namespace }}/worktrace-detector
+            - --nats-url=nats://{{ .Values.nats.host }}:{{ .Values.nats.port }}
+            - --nats-username={{ .Values.nats.username }}
+            - --nats-password-file=/var/run/secrets/k8shell.io/nats-password
+            - --threats-replicas={{ .Values.controller.threats.streamReplicas }}
+            - --threats-max-age={{ .Values.controller.threats.maxAge }}
             {{- if .Values.certManager.enabled }}
             - --grpc-tls
             - --grpc-tls-cert=/etc/tls/worktrace-controller/tls.crt
@@ -49,12 +56,15 @@ spec:
           ports:
             - containerPort: 9050
               name: grpc
-          {{- if .Values.certManager.enabled }}
           volumeMounts:
+            - name: secrets
+              mountPath: /var/run/secrets/k8shell.io
+              readOnly: true
+            {{- if .Values.certManager.enabled }}
             - name: controller-cert
               mountPath: /etc/tls/worktrace-controller
               readOnly: true
-          {{- end }}
+            {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -62,9 +72,13 @@ spec:
               drop: ["ALL"]
           resources:
             {{- toYaml .Values.controller.resources | nindent 12 }}
-      {{- if .Values.certManager.enabled }}
       volumes:
+        - name: secrets
+          projected:
+            sources:
+              {{- include "worktrace-detector.natsPasswordSource" . | nindent 14 }}
+        {{- if .Values.certManager.enabled }}
         - name: controller-cert
           secret:
             secretName: worktrace-controller-tls
-      {{- end }}
+        {{- end }}

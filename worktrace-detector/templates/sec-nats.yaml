@@ -1,0 +1,11 @@
+{{- if .Values.nats.password.value }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: worktrace-detector-nats
+  labels:
+    {{- include "worktrace-detector.labels" . | nindent 4 }}
+type: Opaque
+stringData:
+  password: {{ .Values.nats.password.value | quote }}
+{{- end }}

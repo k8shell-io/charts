@@ -32,3 +32,37 @@ imagePullSecrets:
 - name: {{ printf "%s-regcred" .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 {{- end }}
+
+{{/*
+Name and key of the Secret holding the NATS password: the one this chart creates
+when nats.password.value is set, else the configured existing Secret.
+*/}}
+{{- define "worktrace-detector.natsSecretName" -}}
+{{- if .Values.nats.password.value -}}
+worktrace-detector-nats
+{{- else if .Values.nats.password.secretName -}}
+{{- .Values.nats.password.secretName -}}
+{{- else -}}
+{{- fail "nats.password is required (set .value or .secretName/.secretKey)" -}}
+{{- end -}}
+{{- end }}
+
+{{- define "worktrace-detector.natsSecretKey" -}}
+{{- if .Values.nats.password.value -}}
+password
+{{- else -}}
+{{- required "nats.password.secretKey is required with nats.password.secretName" .Values.nats.password.secretKey -}}
+{{- end -}}
+{{- end }}
+
+{{/*
+Projected volume source adding the NATS password next to the projected tokens, so both
+pods find it at /var/run/secrets/k8shell.io/nats-password.
+*/}}
+{{- define "worktrace-detector.natsPasswordSource" -}}
+- secret:
+    name: {{ include "worktrace-detector.natsSecretName" . }}
+    items:
+      - key: {{ include "worktrace-detector.natsSecretKey" . }}
+        path: nats-password
+{{- end }}
