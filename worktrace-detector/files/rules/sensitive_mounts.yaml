@@ -1,0 +1,135 @@
+# Sensitive Mounts Detection Rules
+# Based on: https://0xn3va.gitbook.io/cheat-sheets/container/escaping/sensitive-mounts
+# These paths expose procfs/sysfs interfaces that can be abused for container escape,
+# privilege escalation, information disclosure, or denial of service attacks.
+
+rules:
+  # ============================================================================
+  # procfs - Information Disclosure
+  # ============================================================================
+
+  - id: "sensitive-mount-proc-config"
+    name: "Access to /proc/config.gz"
+    description: "Exposes a compressed version of the kernel configuration. Allows a compromised container to discover and target vulnerable areas enabled in the kernel."
+    report: true
+    confidence: 0.50
+    file: "/proc/config.gz"
+
+  - id: "sensitive-mount-proc-kmsg"
+    name: "Access to /proc/kmsg"
+    description: "Exposes kernel ring buffer messages (dmesg). Can aid in kernel exploits, trigger kernel address leaks (KASLR bypass), and disclose system information."
+    report: true
+    confidence: 0.50
+    file: "/proc/kmsg"
+
+  - id: "sensitive-mount-proc-kcore"
+    name: "Access to /proc/kcore"
+    description: "Represents physical memory in ELF core format. Can leak memory contents from the host system and other containers."
+    report: true
+    confidence: 0.70
+    file: "/proc/kcore"
+
+  - id: "sensitive-mount-proc-sched-debug"
+    name: "Access to /proc/sched_debug"
+    description: "Returns process scheduling information for the entire system including PIDs from all namespaces. Bypasses PID namespace protections and is world-readable."
+    report: true
+    confidence: 0.40
+    file: "/proc/sched_debug"
+
+  # ============================================================================
+  # procfs - Memory Access (Privilege Escalation)
+  # ============================================================================
+
+  - id: "sensitive-mount-proc-pid-mem"
+    name: "Access to /proc/[pid]/mem"
+    description: "Exposes interfaces to kernel memory device /dev/mem. Historically vulnerable for privilege escalation (CVE-2012-0056 and others)."
+    report: true
+    confidence: 0.70
+    file: "/proc/*/mem"
+
+  - id: "sensitive-mount-proc-kmem"
+    name: "Access to /proc/kmem"
+    description: "Alternate interface for /dev/kmem (kernel virtual memory). Allows both reading and writing, enabling direct modification of kernel memory."
+    report: true
+    confidence: 0.70
+    file: "/proc/kmem"
+
+  - id: "sensitive-mount-proc-mem"
+    name: "Access to /proc/mem"
+    description: "Alternate interface for /dev/mem (physical memory). Allows both reading and writing, enabling modification of all memory."
+    report: true
+    confidence: 0.70
+    file: "/proc/mem"
+
+  # ============================================================================
+  # procfs - Denial of Service / System Control
+  # ============================================================================
+
+  - id: "sensitive-mount-proc-sysrq"
+    name: "Access to /proc/sysrq-trigger"
+    description: "Allows triggering SysRq commands including immediate system reboot, sync, remounting filesystems read-only, and invoking kernel debuggers."
+    report: true
+    confidence: 0.70
+    file: "/proc/sysrq-trigger"
+
+  - id: "sensitive-mount-proc-panic-on-oom"
+    name: "Access to /proc/sys/vm/panic_on_oom"
+    description: "Global flag determining whether the kernel panics on OOM instead of invoking OOM killer. Can be used for DoS attacks against the host."
+    report: true
+    confidence: 0.50
+    file: "/proc/sys/vm/panic_on_oom"
+
+  # ============================================================================
+  # sysfs - Information Disclosure / KASLR Bypass
+  # ============================================================================
+
+  - id: "sensitive-mount-sys-vmcoreinfo"
+    name: "Access to /sys/kernel/vmcoreinfo"
+    description: "Can leak kernel addresses which could be used to defeat KASLR (Kernel Address Space Layout Randomization)."
+    report: true
+    confidence: 0.50
+    file: "/sys/kernel/vmcoreinfo"
+
+  # ============================================================================
+  # sysfs - Security Policy Modification
+  # ============================================================================
+
+  - id: "sensitive-mount-sys-security"
+    name: "Access to /sys/kernel/security"
+    description: "Mounted securityfs interface allowing configuration of Linux Security Modules. Access may allow a container to disable its MAC system (AppArmor)."
+    report: true
+    confidence: 0.70
+    file: "/sys/kernel/security"
+
+  - id: "sensitive-mount-sys-debug"
+    name: "Access to /sys/kernel/debug"
+    description: "Debugfs provides a 'no rules' interface for kernel debugging. Has had security issues and the lack of rules often clashes with security constraints."
+    report: true
+    confidence: 0.70
+    file: "/sys/kernel/debug"
+
+  # ============================================================================
+  # sysfs - Hardware / Firmware Access
+  # ============================================================================
+
+  - id: "sensitive-mount-sys-thermal"
+    name: "Access to /sys/class/thermal"
+    description: "Access to ACPI and hardware temperature control settings. May allow DoS attacks against the host, potentially leading to physical damage."
+    report: true
+    confidence: 0.50
+    file: "/sys/class/thermal"
+
+  - id: "sensitive-mount-sys-efi-vars"
+    name: "Access to /sys/firmware/efi/vars"
+    description: "Exposes interfaces for interacting with EFI variables in NVRAM. Permission weaknesses have led to bricked hardware."
+    report: true
+    confidence: 0.50
+    file: "/sys/firmware/efi/vars"
+
+  - id: "sensitive-mount-sys-efi-efivars"
+    name: "Access to /sys/firmware/efi/efivars"
+    description: "Interface to write to NVRAM used for UEFI boot arguments. Modifying them can render the host machine unbootable."
+    report: true
+    confidence: 0.50
+    file: "/sys/firmware/efi/efivars"
+

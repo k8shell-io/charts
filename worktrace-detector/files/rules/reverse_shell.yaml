@@ -1,0 +1,35 @@
+rules:
+  # --- Process-based reverse shell indicators (launched from inside pod) ---
+  - id: "revshell-bash-dev-tcp"
+    name: "Bash /dev/tcp reverse shell"
+    description: "Detects bash with /dev/tcp redirection inside a pod, used to open a reverse shell to an external listener"
+    report: true
+    confidence: 0.90
+    process: ["bash", "sh", "dash", "zsh"]
+    args: ["/dev/tcp"]
+
+  - id: "revshell-socat-exec"
+    name: "Socat shell execution"
+    description: "Detects socat with EXEC: inside a pod, used for reverse or bind shell connections"
+    report: true
+    confidence: 0.90
+    process: "socat"
+    args_match: "any"
+    args: ["EXEC:", "exec:"]
+
+  - id: "revshell-python-socket"
+    name: "Python socket-based reverse shell"
+    description: "Detects python one-liner reverse shell patterns (socket+os imports) executed inside a pod"
+    report: true
+    confidence: 0.90
+    process: ["python", "python3", "python2"]
+    args: ["import socket", "import os"]
+
+  - id: "revshell-perl-socket"
+    name: "Perl socket-based reverse shell"
+    description: "Detects perl socket reverse shell one-liners executed inside a pod"
+    report: true
+    confidence: 0.90
+    process: "perl"
+    args_match: "any"
+    args: ["IO::Socket", "socket(S"]
