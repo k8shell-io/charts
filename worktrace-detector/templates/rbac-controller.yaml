@@ -9,7 +9,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["configmaps"]
-    resourceNames: ["worktrace-detector-rules"]
+    resourceNames: [{{ .Values.rules.configMap | quote }}]
     verbs: ["get", "list", "watch"]
   - apiGroups: ["coordination.k8s.io"]
     resources: ["leases"]

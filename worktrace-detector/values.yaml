@@ -112,17 +112,15 @@ nats:
     # ...or set the password here; the chart then creates the Secret itself.
     value: ""
 
-# rules are stored in a ConfigMap read by the controller, which serves them to the
-# detectors over gRPC and polls for changes: a rule change needs no detector restart.
+# rules: this chart ships no detection rules. The controller reads them from a
+# ConfigMap in the release namespace that a separate chart or tool provides: one data
+# key per rule file (e.g. every *.yaml of rules-v1/ or rules-v2/ in the worktrace
+# repository). The controller watches it and serves the rules to the detectors over
+# gRPC, so a rule change needs no restart. Until the ConfigMap exists, the controller
+# keeps the current TracingPolicy and detectors have no rules.
 rules:
-  # Include the bundled detection rules from files/rules/
-  includeDefaults: true
-
-  # Additional rules; map of file name to rule YAML content, e.g.
-  # extra:
-  #   my_rule.yaml: |
-  #     ...
-  extra: {}
+  # name of the rules ConfigMap
+  configMap: worktrace-detector-rules
 
 # controller owns the detection rules and the Tetragon TracingPolicy. It serves the
 # rules to the per-node detectors over gRPC (port 9050) and generates the TracingPolicy
@@ -138,10 +136,12 @@ controller:
   requestTimeout: 10s
   # The controller creates the WORKTRACE_THREATS stream the detectors publish to and
   # consumes it (every replica shares one durable consumer, so each threat is handled
-  # once). Repeated threats for the same rule+workspace within dedupWindow are
-  # suppressed after the first (which is always reported immediately) and folded into
-  # a summary once the window elapses; set dedupWindow to 0s to report every
-  # occurrence individually instead. Each threat is printed as a JSON line on stdout,
+  # once). Within dedupWindow, threats from the same process (e.g. nsenter matching a
+  # name rule and the setns syscall rule) raise one alert: the first is reported and
+  # the rest are logged as "threat_merged" unless they raise the confidence. Repeated
+  # attack-path threats for the same rule+workspace are suppressed after the first
+  # (which is always reported immediately) and folded into a summary once the window
+  # elapses. Set dedupWindow to 0s to report every occurrence individually instead. Each threat is printed as a JSON line on stdout,
   # leveled by confidence: below warnConfidence is info, at/above errorConfidence is
   # error, otherwise warn.
   threats:

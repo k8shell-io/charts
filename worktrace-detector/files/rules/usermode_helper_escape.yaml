@@ -1,7 +1,0 @@
-rules:
-  - id: "write-usermode-helper-program"
-    name: "Access to usermode helper program paths"
-    description: "Detects access to usermode helper paths that could be used for privilege escalation"
-    report: true
-    confidence: 0.90
-    file: ["/proc/sys/kernel/core_pattern", "/sys/fs/cgroup/*/release_agent", "/sys/kernel/uevent_helper", "/proc/sys/fs/binfmt_misc/register", "/proc/sys/kernel/modprobe", "/proc/sys/kernel/hotplug", "/proc/sys/kernel/poweroff_cmd", "/proc/sys/kernel/keys/request-key-conf"]

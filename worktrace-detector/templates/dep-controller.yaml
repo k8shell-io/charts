@@ -30,7 +30,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - controller
-            - --rules-configmap=worktrace-detector-rules
+            - --rules-configmap={{ .Values.rules.configMap }}
             - --lease-name=worktrace-detector-controller
             - --owner-clusterrole=worktrace-detector-controller
             - --log-level={{ .Values.logLevel }}
