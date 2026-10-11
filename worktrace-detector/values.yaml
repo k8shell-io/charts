@@ -81,6 +81,11 @@ config:
     enabled_pipelines:
       - direct
       - correlation
+    # Categories detected on workspaces without an entry in the threat-detection
+    # NATS KV bucket, where k8shell stores the threat:detect policy result and
+    # overrides per workspace: "all", "none", or comma-separated categories
+    # (e.g. "container-escape,discovery").
+    workspace_default: none
     behavioral:
       learning_duration: 24h
       anomaly_threshold: 0.8
