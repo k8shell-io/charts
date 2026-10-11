@@ -16,4 +16,4 @@ spec:
       protocol: TCP
       name: grpc
   selector:
-    k8shell.io/app: worktrace-detector-controller
+    k8shell.io/app: worktrace-controller

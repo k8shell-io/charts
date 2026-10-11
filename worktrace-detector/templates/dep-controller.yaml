@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: worktrace-detector-controller
+  name: worktrace-controller
   labels:
     {{- include "worktrace-detector.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
@@ -9,17 +9,17 @@ spec:
   replicas: {{ .Values.controller.replicas }}
   selector:
     matchLabels:
-      k8shell.io/app: worktrace-detector-controller
+      k8shell.io/app: worktrace-controller
   template:
     metadata:
       annotations:
         checksum/nats: {{ include (print $.Template.BasePath "/sec-nats.yaml") . | sha256sum }}
       labels:
-        k8shell.io/app: worktrace-detector-controller
+        k8shell.io/app: worktrace-controller
         {{- include "worktrace-detector.labels" . | nindent 8 }}
     spec:
       {{- include "worktrace-detector.imagePullSecrets" . | nindent 6 }}
-      serviceAccountName: worktrace-detector-controller
+      serviceAccountName: worktrace-controller
       securityContext:
         runAsNonRoot: true
         runAsUser: 65532
@@ -31,8 +31,8 @@ spec:
           args:
             - controller
             - --rules-configmap={{ .Values.rules.configMap }}
-            - --lease-name=worktrace-detector-controller
-            - --owner-clusterrole=worktrace-detector-controller
+            - --lease-name=worktrace-controller
+            - --owner-clusterrole=worktrace-controller
             - --log-level={{ .Values.logLevel }}
             - --grpc-port=9050
             - --grpc-auth={{ .Values.authEnabled }}

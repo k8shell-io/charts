@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: worktrace-detector-controller
+  name: worktrace-controller
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "worktrace-detector.labels" . | nindent 4 }}
