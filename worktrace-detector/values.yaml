@@ -146,9 +146,10 @@ controller:
   # the rest are logged as "threat_merged" unless they raise the confidence. Repeated
   # attack-path threats for the same rule+workspace are suppressed after the first
   # (which is always reported immediately) and folded into a summary once the window
-  # elapses. Set dedupWindow to 0s to report every occurrence individually instead. Each threat is printed as a JSON line on stdout,
-  # leveled by confidence: below warnConfidence is info, at/above errorConfidence is
-  # error, otherwise warn.
+  # elapses. Set dedupWindow to 0s to report every occurrence individually instead.
+  # Each threat is printed as a JSON line on stdout carrying its severity (see
+  # severity below), which also sets the log level: low is info, medium warn, high
+  # and critical error.
   threats:
     # replicas of the stream and of the shared dedup state; must not exceed the NATS
     # cluster size
@@ -156,8 +157,12 @@ controller:
     # how long the stream retains threats
     maxAge: 24h
     dedupWindow: 60s
-    warnConfidence: 0.5
-    errorConfidence: 0.85
+    # severity of a threat from its confidence: the lower bound of each level
+    # (below medium: low); bounds must rise and lie in [0, 1]
+    severity:
+      medium: 0.5
+      high: 0.7
+      critical: 0.85
   resources:
     requests:
       memory: 32Mi

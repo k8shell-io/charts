@@ -44,8 +44,9 @@ spec:
             - --threats-replicas={{ .Values.controller.threats.streamReplicas }}
             - --threats-max-age={{ .Values.controller.threats.maxAge }}
             - --threats-dedup-window={{ .Values.controller.threats.dedupWindow }}
-            - --threats-warn-confidence={{ .Values.controller.threats.warnConfidence }}
-            - --threats-error-confidence={{ .Values.controller.threats.errorConfidence }}
+            - --threats-severity-medium={{ .Values.controller.threats.severity.medium }}
+            - --threats-severity-high={{ .Values.controller.threats.severity.high }}
+            - --threats-severity-critical={{ .Values.controller.threats.severity.critical }}
             {{- if .Values.certManager.enabled }}
             - --grpc-tls
             - --grpc-tls-cert=/etc/tls/worktrace-controller/tls.crt
