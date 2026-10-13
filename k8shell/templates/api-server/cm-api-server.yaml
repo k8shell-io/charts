@@ -103,6 +103,15 @@ data:
       serverName: ssh-shield.{{ .Release.Namespace }}.svc
       {{- end }}
 
+    # worktrace-detector controller configuration
+    worktraceController:
+      address: {{ if and .Values.grpc .Values.grpc.roundRobin }}dns:///worktrace-controller:9050{{ else }}worktrace-controller:9050{{ end }}
+      tokenFilePath: /var/run/secrets/k8shell.io/worktrace-controller
+      {{- if .Values.certManager.enabled }}
+      caCertPath: /etc/k8shell/ca/ca.crt
+      serverName: worktrace-controller.{{ .Release.Namespace }}.svc
+      {{- end }}
+
     # worksspace client configuration
     k8shelld:
       tokenFilePath: /var/run/secrets/k8shell.io/k8shelld

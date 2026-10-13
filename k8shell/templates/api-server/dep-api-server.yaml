@@ -108,6 +108,10 @@ spec:
                 audience: ssh-shield
                 expirationSeconds: {{ .Values.tokenExpiration }}
             - serviceAccountToken:
+                path: worktrace-controller
+                audience: worktrace-controller
+                expirationSeconds: {{ .Values.tokenExpiration }}
+            - serviceAccountToken:
                 path: k8shelld
                 audience: k8shelld
                 expirationSeconds: {{ .Values.tokenExpiration }}
