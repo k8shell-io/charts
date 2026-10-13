@@ -1,0 +1,30 @@
+{{- /*
+Secret values of the controller given as plain values (same pattern as int-<service> in
+the k8shell chart): keyed by the environment variable they are passed as. Values given as
+secretName/secretKey references are read from those Secrets instead.
+*/ -}}
+{{- $secrets := dict -}}
+{{- if .Values.postgresql.enabled -}}
+{{- $postgresSecrets := dict
+  "POSTGRES_USERNAME" .Values.postgresql.username.value
+  "POSTGRES_PASSWORD" .Values.postgresql.password.value
+-}}
+{{- range $key, $value := $postgresSecrets }}
+{{- if $value }}
+  {{- $_ := set $secrets $key $value }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- if $secrets }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: int-worktrace-controller
+  labels:
+    {{- include "worktrace-detector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+type: Opaque
+data:
+{{ include "worktrace-detector.secretData" $secrets | nindent 2 }}
+{{- end }}

@@ -133,12 +133,18 @@ rules:
 # change. It runs as a separate Deployment (same image, `controller` command): every
 # replica serves rules, and leader election ensures only one replica writes the policy,
 # so the detectors need no access to cluster-scoped policies. Detectors without a
-# reachable controller have no rules and detect nothing.
+# reachable controller have no rules and detect nothing. The controller also stores the
+# threats the detectors report (see postgresql below) and serves them to k8shell
+# services over the same gRPC API. It is configured by a config file the chart renders
+# from these values (ConfigMap worktrace-controller-config).
 controller:
   replicas: 2
   # how often detectors check the controller for new rules
   pollInterval: 30s
   requestTimeout: 10s
+  # delay after a rules ConfigMap change before the TracingPolicy is regenerated,
+  # coalescing bursts of changes
+  debounce: 2s
   # The controller creates the WORKTRACE_THREATS stream the detectors publish to and
   # consumes it (every replica shares one durable consumer, so each threat is handled
   # once). Within dedupWindow, threats from the same process (e.g. nsenter matching a
@@ -149,7 +155,7 @@ controller:
   # elapses. Set dedupWindow to 0s to report every occurrence individually instead.
   # Each threat is printed as a JSON line on stdout carrying its severity (see
   # severity below), which also sets the log level: low is info, medium warn, high
-  # and critical error.
+  # and critical error. Every threat printed is also stored (see store below).
   threats:
     # replicas of the stream and of the shared dedup state; must not exceed the NATS
     # cluster size
@@ -163,6 +169,16 @@ controller:
       medium: 0.5
       high: 0.7
       critical: 0.85
+    # Stored threats (only with postgresql.enabled). The table is partitioned by day
+    # (UTC) of detection; a day-partition is dropped once it lies entirely beyond the
+    # retention. A threat reported for a day older than the retention, or further ahead
+    # than partitionLookahead days (a skewed detector clock), is not stored.
+    store:
+      retention: 720h
+      # days ahead of today a partition is kept ready
+      partitionLookahead: 3
+      # how often upcoming partitions are created and expired ones dropped
+      janitorInterval: 1h
   resources:
     requests:
       memory: 32Mi
@@ -170,3 +186,23 @@ controller:
     limits:
       memory: 128Mi
       cpu: 200m
+
+# postgresql is the database the controller stores reported threats in, in its own
+# worktrace schema (created and migrated by the controller on startup). Same server and
+# credentials as the k8shell services (the PostgreSQL of k8shell-bundle). The controller
+# starts and serves rules even while the database is unreachable; threats it cannot
+# store are logged as warnings. When disabled, threats are only printed and cannot be
+# queried.
+postgresql:
+  enabled: true
+  host: db-postgresql
+  port: 5432
+  database: postgres
+  # Each credential is either a reference to an existing Secret (secretName/secretKey)
+  # or a value, which the chart stores in its own int-worktrace-controller Secret.
+  username:
+    secretName: vault-db
+    secretKey: POSTGRES_USERNAME
+  password:
+    secretName: vault-db
+    secretKey: POSTGRES_PASSWORD

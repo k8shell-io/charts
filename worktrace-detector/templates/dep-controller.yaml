@@ -14,6 +14,8 @@ spec:
     metadata:
       annotations:
         checksum/nats: {{ include (print $.Template.BasePath "/sec-nats.yaml") . | sha256sum }}
+        checksum/config: {{ include (print $.Template.BasePath "/cm-controller-config.yaml") . | sha256sum }}
+        checksum/secrets: {{ include (print $.Template.BasePath "/sec-controller.yaml") . | sha256sum }}
       labels:
         k8shell.io/app: worktrace-controller
         {{- include "worktrace-detector.labels" . | nindent 8 }}
@@ -30,37 +32,32 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - controller
-            - --rules-configmap={{ .Values.rules.configMap }}
-            - --lease-name=worktrace-controller
-            - --owner-clusterrole=worktrace-controller
+            - --config=/etc/worktrace-controller/config.yaml
             - --log-level={{ .Values.logLevel }}
-            - --grpc-port=9050
-            - --grpc-auth={{ .Values.authEnabled }}
-            - --grpc-audience=worktrace-controller
-            - --grpc-allow={{ .Release.Namespace }}/worktrace-detector
-            - --nats-url=nats://{{ .Values.nats.host }}:{{ .Values.nats.port }}
-            - --nats-username={{ .Values.nats.username }}
-            - --nats-password-file=/var/run/secrets/k8shell.io/nats-password
-            - --threats-replicas={{ .Values.controller.threats.streamReplicas }}
-            - --threats-max-age={{ .Values.controller.threats.maxAge }}
-            - --threats-dedup-window={{ .Values.controller.threats.dedupWindow }}
-            - --threats-severity-medium={{ .Values.controller.threats.severity.medium }}
-            - --threats-severity-high={{ .Values.controller.threats.severity.high }}
-            - --threats-severity-critical={{ .Values.controller.threats.severity.critical }}
-            {{- if .Values.certManager.enabled }}
-            - --grpc-tls
-            - --grpc-tls-cert=/etc/tls/worktrace-controller/tls.crt
-            - --grpc-tls-key=/etc/tls/worktrace-controller/tls.key
-            {{- end }}
           env:
             - name: POD_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+          {{- include "worktrace-detector.secretEnv" (dict
+            "enabled" .Values.postgresql.enabled
+            "name" "POSTGRES_USERNAME"
+            "secretDef" .Values.postgresql.username
+            "defaultSecret" "worktrace-controller"
+            "context" .) | nindent 12 }}
+          {{- include "worktrace-detector.secretEnv" (dict
+            "enabled" .Values.postgresql.enabled
+            "name" "POSTGRES_PASSWORD"
+            "secretDef" .Values.postgresql.password
+            "defaultSecret" "worktrace-controller"
+            "context" .) | nindent 12 }}
           ports:
             - containerPort: 9050
               name: grpc
           volumeMounts:
+            - name: config
+              mountPath: /etc/worktrace-controller
+              readOnly: true
             - name: secrets
               mountPath: /var/run/secrets/k8shell.io
               readOnly: true
@@ -77,6 +74,9 @@ spec:
           resources:
             {{- toYaml .Values.controller.resources | nindent 12 }}
       volumes:
+        - name: config
+          configMap:
+            name: worktrace-controller-config
         - name: secrets
           projected:
             sources:

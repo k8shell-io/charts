@@ -1,0 +1,60 @@
+{{- /*
+The controller's configuration file (see controller.Config in the worktrace repository).
+The database credentials are not rendered here: the config references the
+POSTGRES_USERNAME/POSTGRES_PASSWORD environment variables, set from a Secret in
+dep-controller.yaml.
+*/ -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: worktrace-controller-config
+  labels:
+    {{- include "worktrace-detector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+data:
+  config.yaml: |
+    namespace: {{ .Release.Namespace }}
+    rulesConfigMap: {{ .Values.rules.configMap }}
+    leaseName: worktrace-controller
+    ownerClusterRole: worktrace-controller
+    debounce: {{ .Values.controller.debounce }}
+
+    # gRPC API: rules for the detectors, stored threats for the k8shell services.
+    # Callers authenticate with a projected ServiceAccount token of audience
+    # worktrace-controller; an empty namespace means the release namespace.
+    grpc:
+      port: 9050
+      authEnabled: {{ .Values.authEnabled }}
+      audience: worktrace-controller
+      {{- if .Values.certManager.enabled }}
+      enableTLS: true
+      certFile: /etc/tls/worktrace-controller/tls.crt
+      keyFile: /etc/tls/worktrace-controller/tls.key
+      {{- end }}
+      allowed:
+        - serviceAccount: worktrace-detector
+        - serviceAccount: api-server
+
+    nats:
+      url: nats://{{ .Values.nats.host }}:{{ .Values.nats.port }}
+      username: {{ .Values.nats.username }}
+      passwordFile: /var/run/secrets/k8shell.io/nats-password
+
+    threats:
+      streamReplicas: {{ .Values.controller.threats.streamReplicas }}
+      maxAge: {{ .Values.controller.threats.maxAge }}
+      dedupWindow: {{ .Values.controller.threats.dedupWindow }}
+      severity:
+        {{- toYaml .Values.controller.threats.severity | nindent 8 }}
+      store:
+        {{- toYaml .Values.controller.threats.store | nindent 8 }}
+
+    db:
+      enabled: {{ .Values.postgresql.enabled }}
+      {{- if .Values.postgresql.enabled }}
+      hostname: {{ .Values.postgresql.host }}
+      port: {{ .Values.postgresql.port }}
+      database: {{ .Values.postgresql.database }}
+      username: ${POSTGRES_USERNAME}
+      password: ${POSTGRES_PASSWORD}
+      {{- end }}

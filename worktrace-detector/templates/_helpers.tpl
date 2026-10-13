@@ -66,3 +66,35 @@ pods find it at /var/run/secrets/k8shell.io/nats-password.
       - key: {{ include "worktrace-detector.natsSecretKey" . }}
         path: nats-password
 {{- end }}
+
+{{/*
+Env variable from a secret definition (same as k8shell.secretEnv in the k8shell chart):
+.secretDef.secretName/.secretKey reference an existing Secret; otherwise the value comes
+from this chart's int-<defaultSecret> Secret, keyed by the variable name. Disabled: empty.
+*/}}
+{{- define "worktrace-detector.secretEnv" -}}
+{{- if .enabled -}}
+- name: {{ .name }}
+  valueFrom:
+    secretKeyRef:
+      {{- if .secretDef.secretName }}
+      name: {{ .secretDef.secretName }}
+      key: {{ .secretDef.secretKey }}
+      {{- else }}
+      name: int-{{ .defaultSecret }}
+      key: {{ .name }}
+      {{- end }}
+{{- else -}}
+- name: {{ .name }}
+  value: ""
+{{- end }}
+{{- end }}
+
+{{/*
+Render Secret data entries from a key/value dict (same as k8shell.secretData).
+*/}}
+{{- define "worktrace-detector.secretData" -}}
+{{- range $key, $value := . }}
+{{ $key }}: {{ $value | b64enc }}
+{{- end }}
+{{- end }}
