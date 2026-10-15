@@ -13,10 +13,16 @@ spec:
     targetRevision: {{ .Values.charts.postgresql.chartVersion }}
     helm:
       valuesObject:
-        {{- if .Values.postgresql.persistentVolumeClaim.install }}
+        {{- if or .Values.postgresql.persistentVolumeClaim.install .Values.postgresql.resources }}
         primary:
+          {{- if .Values.postgresql.persistentVolumeClaim.install }}
           persistence:
             existingClaim: pvc-postgresql
+          {{- end }}
+          {{- with .Values.postgresql.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
         {{- end }}
         global:
           postgresql:

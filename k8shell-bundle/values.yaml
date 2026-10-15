@@ -248,6 +248,10 @@ k8shell:
 
 #### PostgreSQL app
 postgresql:
+  resources: {}
+  resources:
+    requests: { cpu: 500m, memory: 1Gi }
+    limits:   { cpu: "8",  memory: 8Gi }
   persistentVolumeClaim:
     install: false
     annotations: {}
