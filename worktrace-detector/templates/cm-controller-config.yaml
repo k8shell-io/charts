@@ -48,6 +48,24 @@ data:
         {{- toYaml .Values.controller.threats.severity | nindent 8 }}
       store:
         {{- toYaml .Values.controller.threats.store | nindent 8 }}
+    {{- with .Values.controller.response }}
+    {{- if .rules }}
+
+    # Threats matching a rule stop their workspace through the provisioner, which
+    # must allow the worktrace-controller ServiceAccount.
+    response:
+      cooldown: {{ .cooldown }}
+      provisioner:
+        address: {{ .provisioner.address }}
+        tokenFilePath: /var/run/secrets/k8shell.io/provisioner
+        {{- if $.Values.certManager.enabled }}
+        caCertPath: /etc/k8shell/ca/ca.crt
+        serverName: {{ .provisioner.serverName | default (printf "provisioner.%s.svc" $.Release.Namespace) }}
+        {{- end }}
+      rules:
+        {{- toYaml .rules | nindent 8 }}
+    {{- end }}
+    {{- end }}
 
     db:
       enabled: {{ .Values.postgresql.enabled }}

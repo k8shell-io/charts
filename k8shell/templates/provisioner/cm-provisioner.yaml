@@ -76,6 +76,7 @@ data:
       allowed:
         - serviceAccount: ssh-proxy
         - serviceAccount: api-server
+        - serviceAccount: worktrace-controller
 
     db:
       enabled: {{ .Values.postgresql.enabled }}

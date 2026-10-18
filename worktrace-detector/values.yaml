@@ -179,6 +179,24 @@ controller:
       partitionLookahead: 3
       # how often upcoming partitions are created and expired ones dropped
       janitorInterval: 1h
+  # Response to reported threats: a threat matching a rule stops its workspace through
+  # the provisioner (StopWorkspace). Shadow, merged and node-level threats are never
+  # acted on. With no rules nothing is done and no provisioner token is mounted. With
+  # rules, the provisioner must allow the worktrace-controller ServiceAccount (the
+  # k8shell chart does, for a worktrace installed in its namespace).
+  response:
+    # a workspace is stopped at most once within this time; 0s acts on every threat
+    cooldown: 5m
+    provisioner:
+      # gRPC address (dns:///provisioner:9030 to balance over a headless Service)
+      address: provisioner:9030
+      # TLS server name (with certManager.enabled); default provisioner.<release namespace>.svc
+      serverName: ""
+    rules: []
+    #  - name: stop-bruckins
+    #    action: stopWorkspace       # the only action so far
+    #    minSeverity: critical       # low, medium, high or critical (default critical)
+    #    workspaces: ["bruckins-*"]  # glob patterns of workspace names; "*" for all
   resources:
     requests:
       memory: 32Mi

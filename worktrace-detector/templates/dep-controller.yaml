@@ -65,6 +65,11 @@ spec:
             - name: controller-cert
               mountPath: /etc/tls/worktrace-controller
               readOnly: true
+            {{- if .Values.controller.response.rules }}
+            - name: ca-cert
+              mountPath: /etc/k8shell/ca
+              readOnly: true
+            {{- end }}
             {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
@@ -81,8 +86,20 @@ spec:
           projected:
             sources:
               {{- include "worktrace-detector.natsPasswordSource" . | nindent 14 }}
+              {{- if .Values.controller.response.rules }}
+              # stops workspaces in response to threats (controller.response)
+              - serviceAccountToken:
+                  path: provisioner
+                  audience: provisioner
+                  expirationSeconds: {{ .Values.tokenExpiration }}
+              {{- end }}
         {{- if .Values.certManager.enabled }}
         - name: controller-cert
           secret:
             secretName: worktrace-controller-tls
+        {{- if .Values.controller.response.rules }}
+        - name: ca-cert
+          secret:
+            secretName: worktrace-cluster-ca
+        {{- end }}
         {{- end }}
