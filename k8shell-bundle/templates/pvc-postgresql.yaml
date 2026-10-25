@@ -1,3 +1,4 @@
+{{- if eq (include "k8shell-bundle.postgresqlMode" .) "bitnami" }}
 {{- if .Values.postgresql.persistentVolumeClaim.install }}
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -9,4 +10,5 @@ metadata:
   {{- end }}
 spec:
   {{- toYaml .Values.postgresql.persistentVolumeClaim.spec | nindent 2 }}
+{{- end }}
 {{- end }}

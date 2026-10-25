@@ -8,11 +8,20 @@ spec:
   ports:
     - name: postgresql
       port: 5432
+      {{- if eq (include "k8shell-bundle.postgresqlMode" .) "cnpg" }}
+      targetPort: 5432
+      {{- else }}
       targetPort: tcp-postgresql
+      {{- end }}
       protocol: TCP
       nodePort: {{ required "postgresql.nodePort.port is required when postgresql.nodePort.enabled=true" .Values.postgresql.nodePort.port }}
   selector:
+    {{- if eq (include "k8shell-bundle.postgresqlMode" .) "cnpg" }}
+    cnpg.io/cluster: db-postgresql
+    cnpg.io/instanceRole: primary
+    {{- else }}
     app.kubernetes.io/component: primary
     app.kubernetes.io/instance: db-postgresql
     app.kubernetes.io/name: postgresql
+    {{- end }}
 {{- end }}
