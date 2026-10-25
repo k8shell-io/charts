@@ -16,3 +16,15 @@ syncPolicy:
   {{- end }}
   {{- end }}
 {{- end }}
+
+{{/*
+Postgres deployment mode: "bitnami" (default, single primary StatefulSet) or "cnpg" (CloudNativePG cluster).
+The CloudNativePG operator must already be installed in the cluster for "cnpg".
+*/}}
+{{- define "k8shell-bundle.postgresqlMode" -}}
+{{- $mode := .Values.postgresql.mode | default "bitnami" -}}
+{{- if not (has $mode (list "bitnami" "cnpg")) -}}
+{{- fail (printf "postgresql.mode must be \"bitnami\" or \"cnpg\", got %q" $mode) -}}
+{{- end -}}
+{{- $mode -}}
+{{- end }}

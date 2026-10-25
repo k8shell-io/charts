@@ -1,0 +1,97 @@
+{{- if eq (include "k8shell-bundle.postgresqlMode" .) "cnpg" }}
+{{- $cnpg := .Values.postgresql.cnpg }}
+{{- $pathParts := regexSplit "/" (printf "%s/db" .Values.vault.pathPrefix) -1 }}
+# CloudNativePG requires a kubernetes.io/basic-auth secret for the superuser;
+# vault-db has POSTGRES_USERNAME/POSTGRES_PASSWORD keys, so remap them here.
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: db-postgresql-superuser
+spec:
+  vaultAuthRef: vault-auth
+  mount: {{ index $pathParts 0 }}
+  path: {{ join "/" (slice $pathParts 1 (len $pathParts)) }}
+  type: kv-v1
+  destination:
+    name: db-postgresql-superuser
+    create: true
+    type: kubernetes.io/basic-auth
+    labels:
+      cnpg.io/reload: "true"
+    transformation:
+      excludeRaw: true
+      excludes:
+        - .*
+      templates:
+        username:
+          text: postgres
+        password:
+          text: {{ `{{ get .Secrets "POSTGRES_PASSWORD" }}` | quote }}
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: db-postgresql
+spec:
+  instances: {{ $cnpg.instances }}
+  {{- with $cnpg.imageName }}
+  imageName: {{ . | quote }}
+  {{- end }}
+  enableSuperuserAccess: true
+  superuserSecret:
+    name: db-postgresql-superuser
+  {{- with $cnpg.bootstrap }}
+  bootstrap:
+    {{- toYaml . | nindent 4 }}
+  {{- else }}
+  bootstrap:
+    initdb:
+      database: app
+      owner: app
+  {{- end }}
+  {{- with $cnpg.externalClusters }}
+  externalClusters:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  storage:
+    {{- with $cnpg.storage.storageClassName }}
+    storageClass: {{ . | quote }}
+    {{- end }}
+    size: {{ $cnpg.storage.size | quote }}
+  {{- with .Values.postgresql.resources }}
+  resources:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname
+    podAntiAffinityType: {{ $cnpg.podAntiAffinityType }}
+  {{- if or $cnpg.parameters $cnpg.synchronous }}
+  postgresql:
+    {{- with $cnpg.parameters }}
+    parameters:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with $cnpg.synchronous }}
+    synchronous:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- end }}
+---
+# Keeps the "db-postgresql" host name used by k8shell, the backup job and
+# other consumers; CloudNativePG itself only creates db-postgresql-rw/-ro/-r.
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-postgresql
+spec:
+  type: ClusterIP
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
+  selector:
+    cnpg.io/cluster: db-postgresql
+    cnpg.io/instanceRole: primary
+{{- end }}

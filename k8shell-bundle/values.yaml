@@ -248,14 +248,37 @@ k8shell:
 
 #### PostgreSQL app
 postgresql:
+  # "bitnami": single-primary Bitnami chart (default).
+  # "cnpg": highly available CloudNativePG cluster; the CloudNativePG operator
+  #         must already be installed in the cluster.
+  mode: bitnami
   resources: {}
   resources:
     requests: { cpu: 500m, memory: 1Gi }
     limits:   { cpu: "8",  memory: 8Gi }
+  # bitnami mode only
   persistentVolumeClaim:
     install: false
     annotations: {}
     spec: {}
+  # cnpg mode only
+  cnpg:
+    instances: 3
+    # empty = operator default image
+    imageName: ""
+    storage:
+      storageClassName: ""
+      size: 20Gi
+    # "preferred" spreads instances over nodes when possible, "required" insists
+    podAntiAffinityType: preferred
+    # postgresql.conf parameters
+    parameters: {}
+    # e.g. { method: any, number: 1 } for quorum synchronous replication;
+    # empty = asynchronous replicas
+    synchronous: {}
+    # replaces the default initdb bootstrap, e.g. initdb.import or recovery
+    bootstrap: {}
+    externalClusters: []
   nodePort:
     enabled: false
     port: ""
