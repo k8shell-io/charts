@@ -296,6 +296,10 @@ nats:
     size: 10Gi
     reclaimPolicy: Delete
 
+  # pod affinity for the NATS StatefulSet, e.g. a required podAntiAffinity on
+  # kubernetes.io/hostname to keep the cluster members on different nodes
+  affinity: {}
+
 #### idp-github app
 idpGithub:
   enabled: true

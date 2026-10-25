@@ -59,6 +59,13 @@ spec:
                     },
                   ]
                 }
+        {{- with .Values.nats.affinity }}
+        podTemplate:
+          merge:
+            spec:
+              affinity:
+                {{- toYaml . | nindent 16 }}
+        {{- end }}
         natsBox:
           enabled: true
         statefulSet:
