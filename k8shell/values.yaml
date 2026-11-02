@@ -304,6 +304,13 @@ provisioner:
   # injectNamespaces:
   #   - default
 
+  # Node label keys whose values are discovered from cluster nodes and offered as
+  # placement options (see the GetNodeSelectorOptions RPC). When non-empty, a
+  # ClusterRole granting get/list/watch on nodes is created for the provisioner.
+  # Set to [] to disable node discovery.
+  nodeSelectorKeys:
+    - k8shell.io/pool
+
   # defaultRegistry is the default registry host for workspace images when no
   # registry is specified in a blueprint.
   defaultRegistry:

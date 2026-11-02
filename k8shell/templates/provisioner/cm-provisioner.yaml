@@ -25,6 +25,16 @@ data:
     {{- end }}
     {{- end }}
 
+    {{- /* Node label keys whose values are discovered from cluster nodes and offered as
+    placement options (see the GetNodeSelectorOptions RPC). Requires get/list/watch
+    on nodes (see clusterrole-nodes.yaml). */}}
+    {{- with .Values.provisioner.nodeSelectorKeys }}
+    nodeSelectorKeys:
+    {{- range . }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+
     {{- if .Values.provisioner.defaultRegistry.host }}
     defaultRegistry:
       host: ${DEFAULT_REGISTRY_HOST}

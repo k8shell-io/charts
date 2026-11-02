@@ -582,6 +582,13 @@
                         "type": "string"
                     }
                 },
+                "nodeSelectorKeys": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": ["k8shell.io/pool"]
+                },
                 "workspaceStorageClass": {
                     "type": "string"
                 },
