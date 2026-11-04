@@ -9,7 +9,7 @@ charts:
   k8shell:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/k8shell"
-    chartVersion: 1.1.9-pr-12-74507a7
+    chartVersion: 1.1.10
 
   idpGithub:
     repoURL: ghcr.io/k8shell-io
