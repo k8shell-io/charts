@@ -96,4 +96,3 @@ google:
     email: !cel "claims.email"
     uid: !cel "uid"
     gid: !cel "uid"
-    action: allow
