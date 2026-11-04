@@ -21,6 +21,11 @@ charts:
     chartName: "charts/idp-gitlab"
     chartVersion: 0.1.8 # not updated in this release, should be disabled (will not work) 
 
+  idpGoogle:
+    repoURL: ghcr.io/k8shell-io
+    chartName: "charts/idp-google"
+    chartVersion: 0.1.0
+
   nats:
     repoURL: https://nats-io.github.io/k8s/helm/charts/
     chartName: nats
@@ -87,7 +92,7 @@ k8shell:
         secretName: "vault-jwt"
         secretKey: "SIGNING_METHOD"
 
-    # Static remote providers. idp-github is injected automatically when idpGithub.enabled=true.
+    # Static remote providers. idp-github / idp-google are injected automatically when idpGithub.enabled / idpGoogle.enabled=true.
     remoteProviders: []
 
     smtp:
@@ -334,6 +339,38 @@ idpGithub:
   #   user:
   #     username: !cel "user.login"
   #     ...
+
+#### idp-google app
+idpGoogle:
+  enabled: false
+  replicas: 1
+  image: {}
+
+  nats:
+    enabled: true
+    host: "nats"
+    port: 4222
+    username: "k8shell-service"
+    password:
+      secretName: "vault-nats"
+      secretKey: "NATS_K8SHELL_PASSWORD"
+
+  google:
+    clientId:
+      secretName: "vault-google"
+      secretKey: "GOOGLE_CLIENT_ID"
+    clientSecret:
+      secretName: "vault-google"
+      secretKey: "GOOGLE_CLIENT_SECRET"
+    # Google Workspace domains ("hd" claim) that may sign in. "*" admits any Workspace.
+    allowedDomains: []
+    allowPersonal: false
+    personalEmailDomains: []
+    personalAllowedEmails: []
+    onboardRules: []
+    # onboardRuleTemplate: |
+    #   username: !cel "emailLocal"
+    #   ...
 
 idpGitlab:
   enabled: true

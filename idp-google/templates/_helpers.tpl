@@ -1,0 +1,64 @@
+{{- define "idp-google.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{- define "idp-google.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{- define "idp-google.labels" -}}
+helm.sh/chart: {{ include "idp-google.chart" . }}
+{{ include "idp-google.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{- define "idp-google.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "idp-google.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Add env variable from secret
+*/}}
+{{- define "idp-google.secretEnv" -}}
+{{- if .enabled }}
+- name: {{ .name }}
+  valueFrom:
+    secretKeyRef:
+      {{- if .secretDef.secretName }}
+      name: {{ .secretDef.secretName }}
+      key: {{ .secretDef.secretKey }}
+      {{- else }}
+      name: int-{{ .defaultSecret }}
+      key: {{ .name }}
+      {{- end }}
+{{- else }}
+- name: {{ .name }}
+  value: ""
+{{- end }}
+{{- end }}
+
+{{/*
+Render Secret data entries from a key/value dict
+*/}}
+{{- define "idp-google.secretData" -}}
+{{- range $key, $value := . }}
+{{ $key }}: {{ $value | b64enc }}
+{{- end }}
+{{- end }}
+
+{{/* 
+Add imagePullSecrets
+*/}}
+{{- define "idp-google.imagePullSecrets" -}}
+{{- if and .Values.imageRegistry.host .Values.imageRegistry.existingSecret }}
+imagePullSecrets:
+- name: {{ .Values.imageRegistry.existingSecret }}
+{{- else if and .Values.imageRegistry.host .Values.imageRegistry.username .Values.imageRegistry.password }}
+imagePullSecrets:
+- name: {{ printf "%s-regcred" .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}

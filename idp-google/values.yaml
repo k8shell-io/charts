@@ -1,0 +1,99 @@
+# values.yaml for idp-google Helm chart
+#
+# NOTE on usernames/passwords:
+# usernames and passwords are provided as env variables in Pods.
+# When a field has a value of {}, there are two options:
+#
+# 1. field.value: the actual value will be used to create a Kubernetes secret with key equal
+#    to the env variable name. See templates/sec-idp-google.yaml for how the secret is created
+#    and dep-idp-google.yaml for how it is consumed via the idp-google.secretEnv helper.
+#
+# 2. field.secretName and field.secretKey: uses an existing Kubernetes secret.
+
+replicas: 1
+
+image:
+  repository: ghcr.io/k8shell-io/idp-google
+  tag: pr-1-4952aba
+
+# imageRegistry defines a private container registry used to create an image pull secret (regcred).
+imageRegistry:
+  host: ""
+  existingSecret: ""
+  username: ""
+  password: ""
+
+authEnabled: true
+
+certManager:
+  enabled: false
+  issuer:
+    name: vault-root-issuer
+    kind: ClusterIssuer
+  duration: 24h
+  renewBefore: 12h
+
+grpc:
+  roundRobin: true
+
+nats:
+  enabled: true
+  host: nats
+  port: 4222
+  username: "k8shell-service"
+  password: {}
+
+postgresql:
+  enabled: true
+  host: "postgresql"
+  port: 5432
+  database: ""
+  username: {}
+  password: {}
+
+google:
+  # OAuth 2.0 "Web application" client from Google Cloud Console (APIs & Services >
+  # Credentials). Its authorized redirect URIs must include the URI the identity
+  # client passes to OnboardUserWebFlow.
+  clientId: {}
+  clientSecret: {}
+
+  # --- Who may sign in (hard gate, evaluated before the template below) ---------
+  # Google Workspace domains ("hd" claim) that may sign in. "*" admits any Workspace.
+  allowedDomains:
+    - example.com
+
+  # Personal Google accounts (no "hd" claim, e.g. @gmail.com). Off by default.
+  allowPersonal: false
+  # Email domains accepted for personal accounts (default: gmail.com, googlemail.com).
+  personalEmailDomains: []
+  # Narrow personal sign-in to exactly these addresses (empty = any personal account).
+  personalAllowedEmails: []
+
+  # --- What an admitted user gets -------------------------------------------------
+  # Fixed rules per username (the username the template produces), taking priority
+  # over the template. They never bypass the gate above.
+  onboardRules: []
+    # - username: "tomas.vitvar"
+    #   sudo: true
+    #   roles: ["admin"]
+    #   action: "allow"
+
+  # onboardRuleTemplate is the fallback rule applied to admitted users.
+  # Stored as a raw string to preserve !cel tags (Helm's YAML parser strips custom tags).
+  #
+  # CEL scope: `claims` (sub, email, email_verified, hd, name, given_name, family_name,
+  # picture, locale), `personal` (bool: no "hd"), `uid` (uint, derived from sub) and
+  # the lowercased email split into `emailLocal` (tomas.vitvar), `emailDomain`
+  # (example.com) and `emailProvider` (first domain label: example). The CEL
+  # environment has no split()/substring(), hence these helpers.
+  # Workspace users get their email local part (tomas.vitvar@example.com ->
+  # tomas.vitvar); personal users should be suffixed with the mail provider
+  # (tomas@gmail.com -> tomas-gmail) so they cannot collide with Workspace users.
+  onboardRuleTemplate: |
+    username: !cel "emailLocal"
+    fullname: !cel "claims.name"
+    email: !cel "claims.email"
+    uid: !cel "uid"
+    gid: !cel "uid"
+    action: allow

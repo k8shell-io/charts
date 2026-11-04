@@ -1,0 +1,46 @@
+{{- if .Values.idpGoogle.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: idp-google
+  namespace: {{ .Values.targetNamespace }}
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: 'default'
+  source:
+    chart: "{{ .Values.charts.idpGoogle.chartName }}"
+    repoURL: {{ .Values.charts.idpGoogle.repoURL }}
+    targetRevision: "{{ .Values.charts.idpGoogle.chartVersion }}"
+    helm:
+      valuesObject:
+        imageRegistry:
+          {{- toYaml .Values.k8shell.imageRegistry | nindent 10 }}
+
+        certManager:
+          {{- toYaml .Values.k8shell.certManager | nindent 10 }}
+
+        grpc:
+          {{- toYaml .Values.k8shell.grpc | nindent 10 }}
+
+        nats:
+          {{- merge .Values.idpGoogle.nats (dict "enabled" .Values.k8shell.nats.enabled "host" .Values.k8shell.nats.host "port" .Values.k8shell.nats.port) | toYaml | nindent 10 }}
+
+        postgresql:
+          {{- toYaml .Values.k8shell.postgresql | nindent 10 }}
+
+        authEnabled: {{ .Values.k8shell.authEnabled }}
+
+        {{- with .Values.idpGoogle }}
+        replicas: {{ .replicas }}
+        image:
+          {{- toYaml .image | nindent 10 }}
+        google:
+          {{- toYaml .google | nindent 10 }}
+        {{- end }}
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ .Values.targetNamespace }}
+  {{- include "k8shell-bundle.syncPolicy" (dict "root" .) | nindent 2 }}
+{{- end }}

@@ -31,6 +31,10 @@ spec:
         {{- $idpProvider := dict "address" (printf "%sidp-gitlab:9030" $addressPrefix) "serverName" "idp-gitlab" }}
         {{- $existing = append $existing $idpProvider }}
         {{- end }}
+        {{- if .Values.idpGoogle.enabled }}
+        {{- $idpProvider := dict "address" (printf "%sidp-google:9031" $addressPrefix) "serverName" "idp-google" }}
+        {{- $existing = append $existing $idpProvider }}
+        {{- end }}
         {{- $_ := set $k8shell.identity "remoteProviders" $existing }}
         {{- $cmaps := default list $k8shell.provisioner.blueprintFilesConfigMaps }}
         {{- if or .Values.idpGithub.enabled .Values.idpGitlab.enabled }}

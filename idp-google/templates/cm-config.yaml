@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: idp-google-config
+  labels:
+    app: idp-google
+data:
+  config.yaml: |
+    grpc:
+      port: 9031
+
+      {{- if .Values.certManager.enabled }}
+      enableTLS: true
+      certFile: /etc/tls/identity/tls.crt
+      keyFile: /etc/tls/identity/tls.key
+      {{- else }}
+      enableTLS: false
+      {{- end }}
+
+      # JWT required claims for authentication
+      authEnabled: {{ .Values.authEnabled }}
+      audience: identity
+      allowed:
+        - serviceAccount: identity
+
+    nats:
+      enabled: {{ .Values.nats.enabled }}
+      url: nats://{{ .Values.nats.host }}:{{ .Values.nats.port }}
+      username: {{ .Values.nats.username }}
+      password: ${NATS_K8SHELL_PASSWORD}
+
+    db:
+      enabled: true
+      database: {{ .Values.postgresql.database }}
+      hostname: {{ .Values.postgresql.host }}
+      port: {{ .Values.postgresql.port }}
+      username: ${POSTGRES_USERNAME}
+      password: ${POSTGRES_PASSWORD}
+
+    google:
+      clientId: ${GOOGLE_CLIENT_ID}
+      clientSecret: ${GOOGLE_CLIENT_SECRET}
+
+      allowedDomains:
+        {{- toYaml .Values.google.allowedDomains | nindent 8 }}
+      allowPersonal: {{ .Values.google.allowPersonal }}
+      {{- with .Values.google.personalEmailDomains }}
+      personalEmailDomains:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.google.personalAllowedEmails }}
+      personalAllowedEmails:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      onboardRules:
+        {{- toYaml .Values.google.onboardRules | nindent 8 }}
+
+      onboardRuleTemplate: |
+        {{- .Values.google.onboardRuleTemplate | nindent 8 }}

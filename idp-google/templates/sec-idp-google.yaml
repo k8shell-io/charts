@@ -1,0 +1,40 @@
+{{- if not .Values.postgresql.enabled -}}
+{{- fail "postgresql.enabled must be true: idp-google requires a PostgreSQL database" -}}
+{{- end -}}
+{{- if and (not .Values.google.clientId.value) (not .Values.google.clientId.secretName) -}}
+{{- fail "google.clientId is required (set .value or .secretName/.secretKey)" -}}
+{{- end -}}
+{{- if and (not .Values.google.clientSecret.value) (not .Values.google.clientSecret.secretName) -}}
+{{- fail "google.clientSecret is required (set .value or .secretName/.secretKey)" -}}
+{{- end -}}
+{{- $secrets := dict -}}
+{{- if .Values.nats.enabled -}}
+{{- if .Values.nats.password.value -}}
+{{- $_ := set $secrets "NATS_K8SHELL_PASSWORD" .Values.nats.password.value -}}
+{{- end -}}
+{{- end -}}
+{{- if .Values.postgresql.enabled -}}
+{{- if .Values.postgresql.username.value -}}
+{{- $_ := set $secrets "POSTGRES_USERNAME" .Values.postgresql.username.value -}}
+{{- end -}}
+{{- if .Values.postgresql.password.value -}}
+{{- $_ := set $secrets "POSTGRES_PASSWORD" .Values.postgresql.password.value -}}
+{{- end -}}
+{{- end -}}
+{{- if .Values.google.clientId.value -}}
+{{- $_ := set $secrets "GOOGLE_CLIENT_ID" .Values.google.clientId.value -}}
+{{- end -}}
+{{- if .Values.google.clientSecret.value -}}
+{{- $_ := set $secrets "GOOGLE_CLIENT_SECRET" .Values.google.clientSecret.value -}}
+{{- end -}}
+{{- if $secrets }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: int-idp-google
+  labels:
+    {{- include "idp-google.labels" . | nindent 4 }}
+type: Opaque
+data:
+{{ include "idp-google.secretData" $secrets | nindent 2 }}
+{{- end }}

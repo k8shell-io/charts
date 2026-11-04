@@ -32,7 +32,7 @@ Each top-level directory is an independent Helm chart published to `oci://ghcr.i
 |-------|------|
 | `k8shell` | Core platform — the primary chart users install |
 | `k8shell-bundle` | Umbrella chart; wraps all charts as ArgoCD `Application` objects |
-| `idp-github` / `idp-gitlab` | External identity providers; plugged into k8shell via `identity.remoteProviders` |
+| `idp-github` / `idp-gitlab` / `idp-google` | External identity providers; plugged into k8shell via `identity.remoteProviders` |
 | `vault-secrets` | Maps HashiCorp Vault secrets to Kubernetes Secrets |
 | `worktrace-detector` | Threat detection engine; DaemonSet consuming Tetragon events (needs Tetragon installed). Ships no rules: a leader-elected `controller` Deployment reads them from an externally provided ConfigMap (`rules.configMap`), serves them to the detectors and generates the TracingPolicy from them |
 
