@@ -25,7 +25,7 @@ charts:
     repoURL: ghcr.io/k8shell-io
     chartName: "charts/idp-google"
     chartVersion: 0.1.0
-
+ 
   nats:
     repoURL: https://nats-io.github.io/k8s/helm/charts/
     chartName: nats
