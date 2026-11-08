@@ -42,6 +42,22 @@ charts:
     chartVersion: "18.2.3"
 
 #### Vault
+# enabled: the k8shell-secrets app (vault-secrets chart), the vault-sa service
+# account and, with postgresql.mode cnpg, a VaultStaticSecret for the superuser
+# sync the secrets below from Vault (needs the Vault Secrets Operator).
+# disabled: create these Kubernetes Secrets by other means (e.g. sops + Ansible),
+# with the same names and keys:
+#   vault-ssh               SERVER_KEY
+#   vault-jwt               PRIVATE_KEY, SIGNING_METHOD
+#   vault-db                POSTGRES_USERNAME, POSTGRES_PASSWORD
+#   vault-nats              NATS_K8SHELL_PASSWORD
+#   vault-private-registry  ADDRESS, USERNAME, PASSWORD
+#   vault-smtp              SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM
+#   regcred                 kubernetes.io/dockerconfigjson for the registry
+#   vault-github            K8SHELL_CLIENT_ID, K8SHELL_CLIENT_SECRET (idpGithub.enabled)
+#   vault-gitlab            (idpGitlab.enabled)
+#   vault-nfgate            NFGATE_AUTH_KEY (k8shell.sshShield.enabled)
+#   db-postgresql-superuser kubernetes.io/basic-auth, username postgres (postgresql.mode cnpg)
 vault:
   enabled: true
   address: ""

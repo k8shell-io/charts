@@ -1,5 +1,8 @@
 {{- if eq (include "k8shell-bundle.postgresqlMode" .) "cnpg" }}
 {{- $cnpg := .Values.postgresql.cnpg }}
+{{- /* without Vault the secret db-postgresql-superuser must exist (username
+     postgres, password = POSTGRES_PASSWORD of vault-db), see values.yaml */}}
+{{- if .Values.vault.enabled }}
 {{- $pathParts := regexSplit "/" (printf "%s/db" .Values.vault.pathPrefix) -1 }}
 # CloudNativePG requires a kubernetes.io/basic-auth secret for the superuser;
 # vault-db has POSTGRES_USERNAME/POSTGRES_PASSWORD keys, so remap them here.
@@ -28,6 +31,7 @@ spec:
         password:
           text: {{ `{{ get .Secrets "POSTGRES_PASSWORD" }}` | quote }}
 ---
+{{- end }}
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
