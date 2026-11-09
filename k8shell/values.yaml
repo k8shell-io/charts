@@ -281,7 +281,7 @@ authz:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/authz
-    tag: v0.3.5
+    tag: v0.3.6
 
   # policiesConfigMap is the name of an existing ConfigMap whose keys are
   # mounted as policy files (*.rego) into /app/policies, replacing the chart's
