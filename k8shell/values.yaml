@@ -435,7 +435,9 @@ frontend:
     httpOnly: true
     sameSite: Strict
     maxAgeSeconds: 86400
-    path: /api/v1
+    # "/": the cookie (domain .<frontend.host>) must also reach workspace apps
+    # on the subdomains <port>--<workspace>.<frontend.host>
+    path: /
   features:
     # web UI navigation (sidebar): off, short or full
     navigation: full
