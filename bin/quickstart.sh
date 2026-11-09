@@ -21,7 +21,7 @@ set -euo pipefail
 
 SCRIPT_VERSION="1.0.0"
 CHART_VERSION=""
-CHART_REF="oci://ghcr.io/k8shell-io/charts/k8shell"
+CHART_REF="oci://registry.k8shell.io/charts/k8shell"
 VALUES_FILES=()
 ASSUME_YES="false"
 REGISTRY_HOST="registry.k8shell.io"
@@ -307,6 +307,13 @@ EOV
 )
 
 valuesArgs=(-f "$registryValues")
+
+# the chart itself is in the same registry
+if [[ "$CHART_REF" == "oci://$REGISTRY_HOST/"* ]]; then
+    printf '%s' "$REGISTRY_PASSWORD" | helm registry login "$REGISTRY_HOST" \
+        --username "$REGISTRY_USERNAME" --password-stdin >/dev/null \
+        || error "helm registry login to $REGISTRY_HOST failed"
+fi
 for f in ${VALUES_FILES[@]+"${VALUES_FILES[@]}"}; do
     valuesArgs+=(-f "$f")
 done
