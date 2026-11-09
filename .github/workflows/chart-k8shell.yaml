@@ -50,7 +50,8 @@ jobs:
       - name: Package helm chart
         run: |
           mkdir -p dist
-          # the NATS subchart (Chart.lock)
+          # the NATS subchart (Chart.lock); build needs the repository known
+          helm repo add nats https://nats-io.github.io/k8s/helm/charts/
           helm dependency build k8shell
           helm package k8shell -d dist/ --version "${{ steps.ver.outputs.chart_version }}"
 
