@@ -120,6 +120,22 @@
                 },
                 "renewBefore": {
                     "type": "string"
+                },
+                "ingressIssuer": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "kind": {
+                            "type": "string",
+                            "enum": [
+                                "Issuer",
+                                "ClusterIssuer"
+                            ]
+                        }
+                    }
                 }
             }
         },

@@ -55,6 +55,13 @@ certManager:
     kind: ClusterIssuer
   duration: 24h
   renewBefore: 12h
+  # ingressIssuer issues the certificate of the web host (frontend.host and
+  # *.frontend.host), e.g. a public ACME issuer while the services use an
+  # internal CA; empty name: issuer above. Its certificate keeps the issuer's
+  # own lifetime (duration/renewBefore apply to the services only).
+  ingressIssuer:
+    name: ""
+    kind: ClusterIssuer
 
 grpc:
   # enables client-side load balancing for gRPC communication between services.

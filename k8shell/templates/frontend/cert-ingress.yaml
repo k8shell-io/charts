@@ -6,16 +6,20 @@ metadata:
   name: ingress-cert
 spec:
   secretName: ingress-tls
+  {{- if not .Values.certManager.ingressIssuer.name }}
   duration: {{ .Values.certManager.duration }}
   renewBefore: {{ .Values.certManager.renewBefore }}
+  {{- end }}
   commonName: {{ .Values.frontend.host }}
   dnsNames:
     - {{ .Values.frontend.host }}
     - "*.{{ .Values.frontend.host }}"
   usages:
     - server auth
+  {{- $issuer := .Values.certManager.issuer }}
+  {{- if .Values.certManager.ingressIssuer.name }}{{ $issuer = .Values.certManager.ingressIssuer }}{{ end }}
   issuerRef:
-    name: {{ .Values.certManager.issuer.name }}
-    kind: {{ .Values.certManager.issuer.kind }}
+    name: {{ $issuer.name }}
+    kind: {{ $issuer.kind }}
 {{- end }}
 {{- end }}
