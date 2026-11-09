@@ -25,3 +25,12 @@
 {{- fail (printf "identity.users: the organization %q of user %q must be declared in identity.organizations (declared: %s)" (toString .organization) .username (join ", " $orgs)) }}
 {{- end }}
 {{- end }}
+{{- $keys := .Values.provisioner.nodeSelectorKeys | default list }}
+{{- range .Values.identity.organizations }}
+{{- $org := .name }}
+{{- range $k, $v := .nodeSelectors }}
+{{- if not (has $k $keys) }}
+{{- fail (printf "identity.organizations: node selector key %q of organization %q must be one of provisioner.nodeSelectorKeys (%s): the provisioner rejects other keys" $k $org (join ", " $keys)) }}
+{{- end }}
+{{- end }}
+{{- end }}
