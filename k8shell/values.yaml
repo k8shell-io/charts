@@ -74,7 +74,7 @@ sshProxy:
   
   image:
     repository: registry.k8shell.io/k8shell-base/ssh-proxy
-    tag: v0.18.4
+    tag: v0.18.6
   
   proxyProtocol: false
   
@@ -113,7 +113,7 @@ identity:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/identity
-    tag: v0.18.5
+    tag: v0.18.6
 
   # jwtIssuer configures JWT token issuance for k8shell services.
   jwtIssuer:
@@ -281,7 +281,7 @@ authz:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/authz
-    tag: v0.3.3
+    tag: v0.3.5
 
   # policiesConfigMap is the name of an existing ConfigMap whose keys are
   # mounted as policy files (*.rego) into /app/policies, replacing the chart's
@@ -317,13 +317,13 @@ provisioner:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/provisioner
-    tag: v0.17.8
+    tag: v0.17.10
 
   # k8shelld is the default image for k8shelld defined in base blueprint
   k8shelld:
     image:
       repository: registry.k8shell.io/k8shell-base/k8shelld
-      tag: v0.17.3
+      tag: v0.17.4
 
   # blueprintsConfigMap is the name of an existing ConfigMap with blueprint
   # files that replaces the chart's defaults (the ConfigMap blueprint-base-files
@@ -427,7 +427,7 @@ frontend:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/frontend
-    tag: v0.18.4
+    tag: v0.18.6
   scheme: "http"
   host: "localtest.me"
   sessionCookie:
@@ -448,7 +448,7 @@ apiServer:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/api-server
-    tag: v0.19.4
+    tag: v0.19.6
   logging:
     requestHeaders: false
     responseHeaders: false
@@ -472,7 +472,7 @@ session:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/session
-    tag: v0.15.2
+    tag: v0.15.3
 
   # Janitor ends sessions that stop sending upserts (e.g. client killed).
   # pg_try_advisory_lock ensures only one replica runs the sweep at a time.
@@ -499,7 +499,7 @@ sshShield:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/ssh-shield
-    tag: v0.13.2
+    tag: v0.13.3
 
   # NATS subject to subscribe to for SSH failure events.
   # Must match sshProxy.publishSshFailures.subject.
@@ -687,7 +687,7 @@ idpGithub:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-idp/idp-github
-    tag: v0.14.3
+    tag: v0.14.4
 
   github:
     # client ID/secret of the GitHub App
@@ -743,8 +743,7 @@ idpGoogle:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-idp/idp-google
-    # as in the idp-google chart 0.1.1 (no release tag yet)
-    tag: pr-1-4952aba
+    tag: v0.1.0
 
   google:
     # OAuth 2.0 "Web application" client from Google Cloud Console (APIs & Services >
