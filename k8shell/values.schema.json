@@ -476,6 +476,12 @@
                                 "items": {
                                     "type": "string"
                                 }
+                            },
+                            "priority": {
+                                "type": "integer"
+                            },
+                            "note": {
+                                "type": "string"
                             }
                         }
                     }
