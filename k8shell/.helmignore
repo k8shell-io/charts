@@ -1,0 +1,7 @@
+# not part of the packaged chart
+policy-tests/
+.DS_Store
+*.swp
+*.bak
+*.tmp
+*.orig

@@ -1,0 +1,14 @@
+{{- if include "k8shell.gitIdpEnabled" . }}
+# blueprints of workspaces created from a git repository (git identity providers)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: git-blueprints
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+data:
+{{- range $path, $file := .Files.Glob "files/git-blueprints/*" }}
+  {{ base $path }}: |
+{{ $file | toString | indent 4 }}
+{{- end }}
+{{- end }}

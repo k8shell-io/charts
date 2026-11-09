@@ -1,0 +1,26 @@
+{{- if and .Values.postgresql.enabled (eq (include "k8shell.postgresqlMode" .) "simple") }}
+{{- $p := .Values.postgresql.simple.persistence }}
+{{- if and $p.enabled (not $p.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-db-postgresql
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+  annotations:
+    # helm uninstall keeps the database
+    helm.sh/resource-policy: keep
+    {{- with $p.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  accessModes: [ReadWriteOnce]
+  {{- with $p.storageClassName }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ $p.size | quote }}
+{{- end }}
+{{- end }}

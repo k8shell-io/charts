@@ -1,0 +1,82 @@
+{{- if .Values.idpGoogle.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: idp-google
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: idp-google
+spec:
+  replicas: {{ .Values.idpGoogle.replicas }}
+  selector:
+    matchLabels:
+      k8shell.io/app: idp-google
+  template:
+    metadata:
+      annotations:
+        # restart when the configuration changes
+        checksum/config: {{ print (include (print $.Template.BasePath "/idp-google/cm-idp-google-config.yaml") .) | sha256sum }}
+      labels:
+        k8shell.io/app: idp-google
+        {{- include "k8shell.labels" . | nindent 8 }}
+    spec:
+      {{- include "k8shell.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: idp-google
+      containers:
+        - name: idp-google
+          image: {{ .Values.idpGoogle.image.repository }}:{{ .Values.idpGoogle.image.tag }}
+          workingDir: /app
+          ports:
+            - containerPort: 9031
+              name: grpc
+          env:
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" .Values.nats.enabled
+            "name" "NATS_K8SHELL_PASSWORD"
+            "secretDef" .Values.nats.password
+            "defaultSecret" "idp-google"
+            "context" .) | nindent 12 }}
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" .Values.postgresql.enabled
+            "name" "POSTGRES_USERNAME"
+            "secretDef" .Values.postgresql.username
+            "defaultSecret" "idp-google"
+            "context" .) | nindent 12 }}
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" .Values.postgresql.enabled
+            "name" "POSTGRES_PASSWORD"
+            "secretDef" .Values.postgresql.password
+            "defaultSecret" "idp-google"
+            "context" .) | nindent 12 }}
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" true
+            "name" "GOOGLE_CLIENT_ID"
+            "secretDef" .Values.idpGoogle.google.clientId
+            "defaultSecret" "idp-google"
+            "context" .) | nindent 12 }}
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" true
+            "name" "GOOGLE_CLIENT_SECRET"
+            "secretDef" .Values.idpGoogle.google.clientSecret
+            "defaultSecret" "idp-google"
+            "context" .) | nindent 12 }}
+          volumeMounts:
+            - name: idp-google-config
+              mountPath: /app/config
+              readOnly: true
+          {{- if .Values.certManager.enabled }}
+            - name: idp-google-cert
+              mountPath: /etc/tls/identity
+              readOnly: true
+          {{- end }}
+
+      volumes:
+        - name: idp-google-config
+          configMap:
+            name: idp-google-config
+        {{- if .Values.certManager.enabled }}
+        - name: idp-google-cert
+          secret:
+            secretName: idp-google-tls
+        {{- end }}
+{{- end }}

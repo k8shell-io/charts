@@ -13,6 +13,9 @@ spec:
       k8shell.io/app: session
   template:
     metadata:
+      annotations:
+        # restart when the configuration changes
+        checksum/config: {{ print (include (print $.Template.BasePath "/session/cm-session.yaml") .) | sha256sum }}
       labels:
         k8shell.io/app: session
         {{- include "k8shell.labels" . | nindent 8 }}
@@ -31,14 +34,14 @@ spec:
           "enabled" .Values.postgresql.enabled
           "name" "POSTGRES_USERNAME" 
           "secretDef" .Values.postgresql.username 
-          "defaultSecret" "session" 
+          "defaultSecret" "identity" 
           "context" .) | nindent 8 
         }}
         {{- include "k8shell.secretEnv" (dict 
           "enabled" .Values.postgresql.enabled
           "name" "POSTGRES_PASSWORD" 
           "secretDef" .Values.postgresql.password 
-          "defaultSecret" "session" 
+          "defaultSecret" "identity" 
           "context" .) | nindent 8 
         }}
         {{- include "k8shell.secretEnv" (dict 

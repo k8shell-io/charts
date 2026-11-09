@@ -1,0 +1,25 @@
+{{- if and .Values.apiServer.enabled (not .Values.apiServer.infraVersionsConfigMap) (include "k8shell.infraVersionsConfigMap" .) }}
+{{- $versions := dict }}
+{{- if and .Values.postgresql.enabled (ne (include "k8shell.postgresqlMode" .) "external") }}
+{{- if eq (include "k8shell.postgresqlMode" .) "simple" }}
+{{- $_ := set $versions "postgresql" (dict "imageTag" (toString .Values.postgresql.simple.image.tag)) }}
+{{- else }}
+{{- $image := .Values.postgresql.cnpg.imageName }}
+{{- $_ := set $versions "postgresql" (dict "imageTag" (ternary (regexReplaceAll "^.*:" $image "") "cnpg" (contains ":" $image))) }}
+{{- end }}
+{{- end }}
+{{- if .Values.nats.install }}
+{{- $chart := "" }}
+{{- range .Chart.Dependencies }}{{ if eq .Name "natsServer" "nats" }}{{ $chart = .Version }}{{ end }}{{ end }}
+{{- $_ := set $versions "nats" (dict "chartVersion" $chart "imageTag" (toString .Values.natsServer.container.image.tag)) }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8shell-infra-versions
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+data:
+  versions.json: |
+    {{ $versions | toJson }}
+{{- end }}

@@ -1,0 +1,10 @@
+{{- if .Values.idpGithub.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: idp-github
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: idp-github
+{{- end }}

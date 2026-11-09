@@ -13,6 +13,9 @@ spec:
       k8shell.io/app: api-server
   template:
     metadata:
+      annotations:
+        # restart when the configuration changes
+        checksum/config: {{ print (include (print $.Template.BasePath "/api-server/cm-api-server.yaml") .) | sha256sum }}
       labels:
         k8shell.io/app: api-server
         {{- include "k8shell.labels" . | nindent 8 }}
@@ -52,7 +55,7 @@ spec:
         - name: versions
           mountPath: /app/versions
           readOnly: true
-        {{- if .Values.apiServer.infraVersionsConfigMap }}
+        {{- if include "k8shell.infraVersionsConfigMap" . }}
         - name: infra-versions
           mountPath: /app/infra-versions
           readOnly: true
@@ -75,10 +78,10 @@ spec:
       - name: versions
         configMap:
           name: k8shell-versions
-      {{- if .Values.apiServer.infraVersionsConfigMap }}
+      {{- if include "k8shell.infraVersionsConfigMap" . }}
       - name: infra-versions
         configMap:
-          name: {{ .Values.apiServer.infraVersionsConfigMap }}
+          name: {{ include "k8shell.infraVersionsConfigMap" . }}
       {{- end }}
       - name: jwt
         projected:

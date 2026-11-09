@@ -21,9 +21,12 @@ set -euo pipefail
 
 SCRIPT_VERSION="1.0.0"
 CHART_VERSION=""
+CHART_REF="oci://ghcr.io/k8shell-io/charts/k8shell"
+VALUES_FILES=()
+ASSUME_YES="false"
 NAMESPACE="k8shell-system"
 TARGET_NAMESPACE="k8shell-workspaces"
-QUICKSTART_DIR="$HOME/k8shell-quickstart"
+QUICKSTART_DIR="${K8SHELL_QUICKSTART_DIR:-$HOME/k8shell-quickstart}"
 GENERATED_SSH_KEY="$QUICKSTART_DIR/admin-ssh-key"
 NODE_PORT_ENABLED="true"
 NODE_PORT="30022"
@@ -41,6 +44,11 @@ License : AGPL-3.0-or-later — https://github.com/k8shell-io/charts
 
 Options:
   -v, --version VERSION      Helm chart version (default: latest)
+  -c, --chart REF            Chart to install: OCI reference or local chart
+                             directory (default: $CHART_REF)
+  -f, --values FILE          Additional values file (repeatable), e.g. for a
+                             private registry
+  -y, --yes                  Do not ask for confirmation
   -n, --namespace NS         k8shell release namespace (default: $NAMESPACE)
   -t, --target-namespace NS  Workspace target namespace (default: $TARGET_NAMESPACE)
       --node-port PORT       Expose SSH via NodePort (default: $NODE_PORT)
@@ -54,6 +62,9 @@ EOF
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -v|--version)           CHART_VERSION="$2"; shift 2 ;;
+        -c|--chart)             CHART_REF="$2"; shift 2 ;;
+        -f|--values)            VALUES_FILES+=("$2"); shift 2 ;;
+        -y|--yes)               ASSUME_YES="true"; shift ;;
         -n|--namespace)         NAMESPACE="$2";       shift 2 ;;
         -t|--target-namespace)  TARGET_NAMESPACE="$2"; shift 2 ;;
         --node-port)            NODE_PORT="$2"; shift 2 ;;
@@ -114,6 +125,17 @@ ensure_ec_key() {
     if [ ! -f "$file" ]; then
         info "Generating EC key: $file"
         openssl ecparam -name prime256v1 -genkey -noout -out "$file"
+    fi
+    cat "$file"
+}
+
+# a random password kept in a file, so upgrades keep it (the database and NATS
+# are initialized with it)
+ensure_password() {
+    local file="$1"
+    if [ ! -f "$file" ]; then
+        info "Generating password: $file"
+        (umask 077; openssl rand -hex 24 > "$file")
     fi
     cat "$file"
 }
@@ -211,7 +233,10 @@ fi
 
 echo 
 echo "  Helm action        : $helmAction"
-echo "  Chart version      : ${CHART_VERSION:-latest}"
+echo "  Chart              : $CHART_REF ${CHART_VERSION:-(latest)}"
+for f in ${VALUES_FILES[@]+"${VALUES_FILES[@]}"}; do
+echo "  Values file        : $f"
+done
 echo "  Release namespace  : $NAMESPACE (will be created if absent)"
 echo "  Target namespace   : $TARGET_NAMESPACE ($targetNsStatus)"
 echo "  SSH NodePort       : $([ "$NODE_PORT_ENABLED" = "true" ] && echo "enabled (port $NODE_PORT)" || echo "disabled")"
@@ -219,7 +244,11 @@ echo "  SSH proxy key      : $serverKeyDesc"
 echo "  Admin user         : admin (sudo enabled, shell: /bin/bash)"
 echo "  Admin SSH key      : $adminKeySource"
 echo
-read -rp "Proceed with installation? [y/N] " confirm </dev/tty
+if [ "$ASSUME_YES" = "true" ]; then
+    confirm="y"
+else
+    read -rp "Proceed with installation? [y/N] " confirm </dev/tty
+fi
 case "$confirm" in
     [yY][eE][sS]|[yY]) ;;
     *) info "Installation cancelled."; exit 0 ;;
@@ -231,6 +260,8 @@ if [ "$targetNsStatus" = "will be created" ]; then
 fi
 
 serverKey=$(ensure_ec_key "$QUICKSTART_DIR/server-key.pem")
+dbPassword=$(ensure_password "$QUICKSTART_DIR/db-password")
+natsPassword=$(ensure_password "$QUICKSTART_DIR/nats-password")
 adminKey=$(generate_admin_public_key)
 privateKeyPath=$(resolve_private_key_path | sed "s|$HOME|~|g")
 
@@ -244,17 +275,29 @@ fi
 
 info "Running helm $helmAction for k8shell ${CHART_VERSION:-latest}..."
 
-helm $helmAction k8shell oci://ghcr.io/k8shell-io/charts/k8shell \
+valuesArgs=()
+for f in ${VALUES_FILES[@]+"${VALUES_FILES[@]}"}; do
+    valuesArgs+=(-f "$f")
+done
+
+helm $helmAction k8shell "$CHART_REF" \
   ${CHART_VERSION:+--version "$CHART_VERSION"} \
+  ${valuesArgs[@]+"${valuesArgs[@]}"} \
   --namespace "$NAMESPACE" \
   --create-namespace \
   --set provisioner.targetNamespace="$TARGET_NAMESPACE" \
   --set sshProxy.serverKey.value="$serverKey" \
+  --set postgresql.username.value=k8shell \
+  --set postgresql.password.value="$dbPassword" \
+  --set nats.password.value="$natsPassword" \
   --set identity.users[0].username=admin \
   --set identity.users[0].uid=1001 \
   --set identity.users[0].gid=1001 \
   --set identity.users[0].publicKey="$adminKey" \
   --set identity.users[0].sudo="true" \
+  --set identity.users[0].roles[0]=admin \
+  --set identity.users[0].roles[1]=developer \
+  --set identity.users[0].organization=default \
   --set identity.users[0].shell="/bin/bash" \
   --set sshProxy.nodePort.enabled="$NODE_PORT_ENABLED" \
   --set sshProxy.nodePort.port="$NODE_PORT"

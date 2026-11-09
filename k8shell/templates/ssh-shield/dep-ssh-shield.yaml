@@ -14,6 +14,9 @@ spec:
       k8shell.io/app: ssh-shield
   template:
     metadata:
+      annotations:
+        # restart when the configuration changes
+        checksum/config: {{ print (include (print $.Template.BasePath "/ssh-shield/cm-ssh-shield.yaml") .) (include (print $.Template.BasePath "/ssh-shield/cm-ssh-shield-plugins.yaml") .) | sha256sum }}
       labels:
         k8shell.io/app: ssh-shield
         {{- include "k8shell.labels" . | nindent 8 }}

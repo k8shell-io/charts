@@ -1,0 +1,57 @@
+{{- if and .Values.postgresql.enabled (eq (include "k8shell.postgresqlMode" .) "cnpg") }}
+{{- $cnpg := .Values.postgresql.cnpg }}
+{{- /* the superuser Secret (kubernetes.io/basic-auth, username postgres) is
+     created outside the chart, see values.yaml */}}
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: db-postgresql
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+spec:
+  instances: {{ $cnpg.instances }}
+  {{- with $cnpg.imageName }}
+  imageName: {{ . | quote }}
+  {{- end }}
+  enableSuperuserAccess: true
+  superuserSecret:
+    name: {{ $cnpg.superuserSecret }}
+  {{- with $cnpg.bootstrap }}
+  bootstrap:
+    {{- toYaml . | nindent 4 }}
+  {{- else }}
+  bootstrap:
+    initdb:
+      database: app
+      owner: app
+  {{- end }}
+  {{- with $cnpg.externalClusters }}
+  externalClusters:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  storage:
+    {{- with $cnpg.storage.storageClassName }}
+    storageClass: {{ . | quote }}
+    {{- end }}
+    size: {{ $cnpg.storage.size | quote }}
+  {{- with .Values.postgresql.resources }}
+  resources:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname
+    podAntiAffinityType: {{ $cnpg.podAntiAffinityType }}
+  {{- if or $cnpg.parameters $cnpg.synchronous }}
+  postgresql:
+    {{- with $cnpg.parameters }}
+    parameters:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with $cnpg.synchronous }}
+    synchronous:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- end }}
+{{- end }}

@@ -12,6 +12,9 @@ spec:
       k8shell.io/app: identity
   template:
     metadata:
+      annotations:
+        # restart when the configuration changes
+        checksum/config: {{ print (include (print $.Template.BasePath "/identity/cm-identity.yaml") .) (include (print $.Template.BasePath "/identity/cm-identity-users.yaml") .) (include (print $.Template.BasePath "/identity/sec-identity-users.yaml") .) | sha256sum }}
       labels:
         k8shell.io/app: identity
         {{- include "k8shell.labels" . | nindent 8 }}

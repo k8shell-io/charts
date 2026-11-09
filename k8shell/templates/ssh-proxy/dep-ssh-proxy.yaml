@@ -13,6 +13,9 @@ spec:
       k8shell.io/app: ssh-proxy
   template:
     metadata:
+      annotations:
+        # restart when the configuration changes
+        checksum/config: {{ print (include (print $.Template.BasePath "/ssh-proxy/cm-ssh-proxy.yaml") .) | sha256sum }}
       labels:
         k8shell.io/app: ssh-proxy
         {{- include "k8shell.labels" . | nindent 8 }}

@@ -1,0 +1,24 @@
+{{- if .Values.idpGoogle.enabled }}
+{{- if .Values.certManager.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: idp-google-cert
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+spec:
+  secretName: idp-google-tls
+  duration: {{ .Values.certManager.duration }}
+  renewBefore: {{ .Values.certManager.renewBefore }}
+  commonName: idp-google.{{ .Release.Namespace }}.svc.cluster.local
+  dnsNames:
+    - idp-google
+    - idp-google.{{ .Release.Namespace }}.svc
+    - idp-google.{{ .Release.Namespace }}.svc.cluster.local
+  usages:
+    - server auth
+  issuerRef:
+    name: {{ .Values.certManager.issuer.name }}
+    kind: {{ .Values.certManager.issuer.kind }}
+{{- end }}
+{{- end }}

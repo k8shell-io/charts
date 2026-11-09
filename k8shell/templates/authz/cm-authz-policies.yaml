@@ -1,0 +1,15 @@
+{{- if and .Values.authz.enabled (not .Values.authz.policiesConfigMap) }}
+# default policies; replaced by authz.policiesConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authz-policies-default
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: authz
+data:
+{{- range $path, $file := .Files.Glob "files/policies/*.rego" }}
+  {{ base $path }}: |
+{{ $file | toString | indent 4 }}
+{{- end }}
+{{- end }}

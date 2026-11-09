@@ -11,6 +11,9 @@ sshProxy:
 identity:
   image:
     repository: registry.k8shell.io/k8shell-base/identity
+    # TODO: identity PR #46 (local users: uid/gid, password; developer and
+    # git-workspace roles); replace with the release that contains it
+    tag: pr-46-723947c
 
 authz:
   image:
@@ -26,6 +29,9 @@ provisioner:
 frontend:
   image:
     repository: registry.k8shell.io/k8shell-base/frontend
+    # TODO: frontend PR #89 (runtime values not cached as immutable); replace
+    # with the release that contains it
+    tag: pr-89-b933566
 
 apiServer:
   image:
@@ -34,3 +40,15 @@ apiServer:
 session:
   image:
     repository: registry.k8shell.io/k8shell-base/session
+
+sshShield:
+  image:
+    repository: registry.k8shell.io/k8shell-base/ssh-shield
+
+idpGithub:
+  image:
+    repository: registry.k8shell.io/k8shell-idp/idp-github
+
+idpGoogle:
+  image:
+    repository: registry.k8shell.io/k8shell-idp/idp-google

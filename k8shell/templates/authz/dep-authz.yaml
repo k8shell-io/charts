@@ -13,6 +13,11 @@ spec:
       k8shell.io/app: authz
   template:
     metadata:
+      annotations:
+        # restart when the configuration changes
+        checksum/config: {{ print (include (print $.Template.BasePath "/authz/cm-authz.yaml") .) | sha256sum }}
+        # restart when the chart's default policies change
+        checksum/policies: {{ include (print $.Template.BasePath "/authz/cm-authz-policies.yaml") . | sha256sum }}
       labels:
         k8shell.io/app: authz
         {{- include "k8shell.labels" . | nindent 8 }}
@@ -90,12 +95,8 @@ spec:
         configMap:
           name: authz-config
       - name: authz-policies
-      {{- if .Values.authz.policiesConfigMap }}
         configMap:
-          name: {{ .Values.authz.policiesConfigMap }}
-      {{- else }}
-        emptyDir: {}
-      {{- end }}
+          name: {{ .Values.authz.policiesConfigMap | default "authz-policies-default" }}
       {{- if .Values.certManager.enabled }}
       - name: authz-cert
         secret:

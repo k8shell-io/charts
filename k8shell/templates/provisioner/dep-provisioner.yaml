@@ -12,6 +12,12 @@ spec:
       k8shell.io/app: provisioner
   template:
     metadata:
+      annotations:
+        # restart when the configuration changes
+        checksum/config: {{ print (include (print $.Template.BasePath "/provisioner/cm-provisioner.yaml") .) | sha256sum }}
+        # restart when the chart's blueprints change (external ConfigMaps are
+        # hot-reloaded by the provisioner)
+        checksum/blueprints: {{ include (print $.Template.BasePath "/provisioner/cm-blueprints.yaml") . | sha256sum }}
       labels:
         k8shell.io/app: provisioner
         {{- include "k8shell.labels" . | nindent 8 }}
@@ -128,12 +134,10 @@ spec:
         projected:
           sources:
           - configMap:
-              name: blueprint-base-files
-          {{- if .Values.provisioner.blueprintFilesConfigMaps }}
-          {{- range .Values.provisioner.blueprintFilesConfigMaps }}
+              name: {{ .Values.provisioner.blueprintsConfigMap | default "blueprint-base-files" }}
+          {{- range include "k8shell.blueprintFilesConfigMaps" . | fromJsonArray }}
           - configMap:
               name: {{ . }}
-          {{- end }}
           {{- end }}
       {{ if .Values.provisioner.privateRegistry.cert }}
       - name: regcert

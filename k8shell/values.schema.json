@@ -587,7 +587,9 @@
                     "items": {
                         "type": "string"
                     },
-                    "default": ["k8shell.io/pool"]
+                    "default": [
+                        "k8shell.io/pool"
+                    ]
                 },
                 "workspaceStorageClass": {
                     "type": "string"
@@ -677,6 +679,9 @@
                             }
                         }
                     }
+                },
+                "blueprintsConfigMap": {
+                    "type": "string"
                 }
             }
         },
@@ -708,7 +713,13 @@
                     "additionalProperties": false,
                     "properties": {
                         "navigation": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "off",
+                                "short",
+                                "full",
+                                ""
+                            ]
                         }
                     }
                 },
@@ -922,7 +933,10 @@
                     "properties": {
                         "type": {
                             "type": "string",
-                            "enum": ["memory", "nats-kv"]
+                            "enum": [
+                                "memory",
+                                "nats-kv"
+                            ]
                         },
                         "bucket": {
                             "type": "string"
@@ -960,6 +974,118 @@
                 },
                 "password": {
                     "$ref": "#/definitions/secretRef"
+                },
+                "mode": {
+                    "type": "string",
+                    "enum": [
+                        "simple",
+                        "cnpg",
+                        "external"
+                    ]
+                },
+                "resources": {
+                    "type": "object"
+                },
+                "simple": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "image": {
+                            "$ref": "#/definitions/image"
+                        },
+                        "persistence": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "enabled": {
+                                    "type": "boolean"
+                                },
+                                "existingClaim": {
+                                    "type": "string"
+                                },
+                                "storageClassName": {
+                                    "type": "string"
+                                },
+                                "size": {
+                                    "type": "string"
+                                },
+                                "annotations": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "nodeSelector": {
+                            "type": "object"
+                        },
+                        "tolerations": {
+                            "type": "array"
+                        },
+                        "affinity": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "cnpg": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "instances": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "imageName": {
+                            "type": "string"
+                        },
+                        "superuserSecret": {
+                            "type": "string"
+                        },
+                        "storage": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "storageClassName": {
+                                    "type": "string"
+                                },
+                                "size": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "podAntiAffinityType": {
+                            "type": "string",
+                            "enum": [
+                                "preferred",
+                                "required"
+                            ]
+                        },
+                        "parameters": {
+                            "type": "object"
+                        },
+                        "synchronous": {
+                            "type": "object"
+                        },
+                        "bootstrap": {
+                            "type": "object"
+                        },
+                        "externalClusters": {
+                            "type": "array"
+                        }
+                    }
+                },
+                "nodePort": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "port": {
+                            "type": [
+                                "integer",
+                                "string"
+                            ]
+                        }
+                    }
                 }
             }
         },
@@ -987,6 +1113,109 @@
                 },
                 "password": {
                     "$ref": "#/definitions/natsPassword"
+                },
+                "install": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "global": {
+            "type": "object"
+        },
+        "natsServer": {
+            "type": "object",
+            "description": "values of the nats subchart (nats.install)"
+        },
+        "idpGithub": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "replicas": {
+                    "type": "integer"
+                },
+                "image": {
+                    "$ref": "#/definitions/image"
+                },
+                "github": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "clientId": {
+                            "$ref": "#/definitions/secretRef"
+                        },
+                        "clientSecret": {
+                            "$ref": "#/definitions/secretRef"
+                        },
+                        "appSlug": {
+                            "type": "string"
+                        },
+                        "onboardRules": {
+                            "type": "array"
+                        },
+                        "onboardRuleTemplate": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "githubUserTemplate": {
+                    "type": "string"
+                }
+            }
+        },
+        "idpGoogle": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "replicas": {
+                    "type": "integer"
+                },
+                "image": {
+                    "$ref": "#/definitions/image"
+                },
+                "google": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "clientId": {
+                            "$ref": "#/definitions/secretRef"
+                        },
+                        "clientSecret": {
+                            "$ref": "#/definitions/secretRef"
+                        },
+                        "allowedDomains": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "allowPersonal": {
+                            "type": "boolean"
+                        },
+                        "personalEmailDomains": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "personalAllowedEmails": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "onboardRules": {
+                            "type": "array"
+                        },
+                        "onboardRuleTemplate": {
+                            "type": "string"
+                        }
+                    }
                 }
             }
         }

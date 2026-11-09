@@ -53,10 +53,20 @@ data:
         - /app/files/identity-users.yaml
     {{- end }}
 
-    {{- if .Values.identity.remoteProviders }}
+    {{- /* the identity providers installed with the chart are added to
+         identity.remoteProviders */}}
+    {{- $providers := concat (.Values.identity.remoteProviders | default list) list }}
+    {{- range (include "k8shell.idps" . | fromJsonArray) }}
+    {{- $address := printf "%s:%v" .name .port }}
+    {{- if and $.Values.grpc $.Values.grpc.roundRobin }}
+    {{- $address = printf "dns:///%s" $address }}
+    {{- end }}
+    {{- $providers = append $providers (dict "address" $address "serverName" .name) }}
+    {{- end }}
+    {{- if $providers }}
     {{- $root := . }}
     remoteProviders:
-    {{- range .Values.identity.remoteProviders }}
+    {{- range $providers }}
       - address: {{ .address }}
         tokenFilePath: /var/run/secrets/k8shell.io/identity
         {{- if $root.Values.certManager.enabled }}
@@ -85,7 +95,13 @@ data:
       signingMethod: ${JWT_SIGNING_METHOD}
       privateKeyFile: /run/secrets/jwt-issuer/private-key.pem
 
-    {{- with .Values.identity.onboardRules }}
+    {{- /* the local users of identity.users are onboarded as defined there:
+         identity rejects users no rule allows */}}
+    {{- $rules := concat (.Values.identity.onboardRules | default list) list }}
+    {{- range .Values.identity.users }}
+    {{- $rules = append $rules (dict "idp" "idp.k8shell.io/file" "usernamePattern" .username "org" (default "default" .organization) "action" "allow" "sudo" (default false .sudo) "roles" (default list .roles)) }}
+    {{- end }}
+    {{- with $rules }}
     onboardRules:
       {{- toYaml . | nindent 6 }}
     {{- end }}
@@ -98,15 +114,14 @@ data:
     # SMTP relay for password-reset and announcement email
     smtp:
       enabled: {{ .Values.identity.smtp.enabled }}
+      {{- /* without SMTP the variables are empty, and an empty port is not an int */}}
+      {{- if .Values.identity.smtp.enabled }}
       host: ${SMTP_HOST}
       port: !!int ${SMTP_PORT}
       username: ${SMTP_USERNAME}
-      {{- if .Values.identity.smtp.enabled }}
       password: !file ${SECRET_FILES}/smtp_password
-      {{- else }}
-      password: ""
-      {{- end }}
       from: ${SMTP_FROM}
+      {{- end }}
 
     # Password-reset token lifecycle
     passwordReset:

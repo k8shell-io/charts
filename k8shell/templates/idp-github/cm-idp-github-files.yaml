@@ -1,0 +1,11 @@
+{{- if .Values.idpGithub.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: idp-github-files
+  labels:
+    app: idp-github
+data:
+  github-user-template.yaml: |
+    {{- .Values.idpGithub.githubUserTemplate | nindent 4 }}
+{{- end }}

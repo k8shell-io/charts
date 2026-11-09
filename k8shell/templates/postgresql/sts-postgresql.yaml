@@ -1,0 +1,98 @@
+{{- if and .Values.postgresql.enabled (eq (include "k8shell.postgresqlMode" .) "simple") }}
+{{- $pg := .Values.postgresql }}
+{{- $s := $pg.simple }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db-postgresql
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+spec:
+  replicas: 1
+  serviceName: db-postgresql
+  selector:
+    matchLabels:
+      k8shell.io/app: db-postgresql
+  template:
+    metadata:
+      labels:
+        k8shell.io/app: db-postgresql
+        {{- include "k8shell.labels" . | nindent 8 }}
+        app.kubernetes.io/component: postgresql
+    spec:
+      {{- include "k8shell.imagePullSecrets" . | nindent 6 }}
+      securityContext:
+        # uid/gid of the postgres user in the official image
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        fsGroupChangePolicy: OnRootMismatch
+      {{- with $s.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $s.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $s.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: postgresql
+        image: {{ $s.image.repository }}:{{ $s.image.tag }}
+        ports:
+        - containerPort: 5432
+          name: postgresql
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            {{- include "k8shell.secretKeyRef" (dict "secretDef" $pg.username "defaultSecret" "identity" "defaultKey" "POSTGRES_USERNAME") | nindent 12 }}
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            {{- include "k8shell.secretKeyRef" (dict "secretDef" $pg.password "defaultSecret" "identity" "defaultKey" "POSTGRES_PASSWORD") | nindent 12 }}
+        - name: POSTGRES_DB
+          value: {{ $pg.database | quote }}
+        # a subdirectory: initdb refuses a non-empty directory (lost+found)
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        readinessProbe:
+          exec:
+            command: ["sh", "-c", "pg_isready -h 127.0.0.1 -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+          periodSeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          exec:
+            command: ["sh", "-c", "pg_isready -h 127.0.0.1 -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+          initialDelaySeconds: 30
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 6
+        {{- with $pg.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+        - name: run
+          mountPath: /var/run/postgresql
+        - name: shm
+          mountPath: /dev/shm
+      volumes:
+      - name: data
+        {{- if $s.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ $s.persistence.existingClaim | default "data-db-postgresql" }}
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
+      - name: run
+        emptyDir: {}
+      - name: shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 256Mi
+{{- end }}

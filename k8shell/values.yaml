@@ -4,6 +4,12 @@
 # k8shell Helm chart. Users can override these values by providing their own
 # values.yaml file or by using --set during helm install/upgrade commands.
 #
+# The chart installs the whole platform: the k8shell services, PostgreSQL
+# (postgresql.mode), NATS (nats.install, values under natsServer) and the
+# optional identity providers (idpGithub, idpGoogle). Not installed: cert-manager
+# (certManager.enabled), the CloudNativePG operator (postgresql.mode cnpg) and
+# the Secrets the fields below refer to by secretName.
+#
 # NOTE on usernames/passwords:
 # usernames and passwords are provided as env variables in Pods.
 # When a field with name "field1" has a value of {}, there can be following
@@ -192,7 +198,8 @@ identity:
       blueprints: ["*"]
       sudo: true
       shell: /bin/bash
-      roles: [admin]
+      # developer: may also inject workspaces into existing workloads
+      roles: [admin, developer]
       organization: "default"
       password: ""  
       publicKey: ""
@@ -212,7 +219,9 @@ identity:
     #   publicKey: ""
 
   # onboardRules is a list of explicit allow/deny/waitlist rules matched against
-  # incoming users from remote identity providers during onboarding.
+  # incoming users from remote identity providers during onboarding. Users no
+  # rule allows are rejected. The users above get an allow rule automatically
+  # (provider idp.k8shell.io/file, with their organization, roles and sudo).
   onboardRules: []
     # - idp: "idp.k8shell.io/github"
     #   usernamePattern: "bobmarley"
@@ -231,14 +240,20 @@ identity:
 
 # authz is the authorization service that evaluates OPA policies.
 authz:
-  enabled: false
+  enabled: true
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/authz
     tag: v0.3.3
 
   # policiesConfigMap is the name of an existing ConfigMap whose keys are
-  # mounted as policy files into /app/policies. Leave empty to omit the mount.
+  # mounted as policy files (*.rego) into /app/policies, replacing the chart's
+  # default policies. Empty: the chart creates the ConfigMap
+  # authz-policies-default from files/policies/. The default policies hold no
+  # site-specific settings: what users may do follows from their roles
+  # (admin, org-admin, <group>-admin, developer for inject mode,
+  # git-workspace for repositories). A replacement must hold the complete
+  # policy set (copy the chart's files/policies/ as a starting point).
   policiesConfigMap: ""
 
   # defaultPolicy is the inline OPA Rego policy used when no policy file matches.
@@ -273,16 +288,27 @@ provisioner:
       repository: ghcr.io/k8shell-io/k8shelld
       tag: v0.17.3
 
+  # blueprintsConfigMap is the name of an existing ConfigMap with blueprint
+  # files that replaces the chart's defaults (the ConfigMap blueprint-base-files
+  # with files/blueprints/base.yaml and, with includeBlueprintSamples,
+  # samples.yaml). A replacement must define the "base" template if any of its
+  # blueprints (or those of blueprintFilesConfigMaps) extend it.
+  blueprintsConfigMap: ""
+
   # if true, the sample blueprints (samples.yaml) will be included alongside
-  # the base blueprints (base.yaml). base.yaml is always included.
+  # the base blueprints (base.yaml). Only used without blueprintsConfigMap.
   includeBlueprintSamples: true
 
-  # defaultCustomBlueprint is the default blueprint when custom blueprint 
-  # does not exist in a git repository
-  defaultCustomBlueprint: base
+  # defaultCustomBlueprint is the default blueprint when custom blueprint
+  # does not exist in a git repository. Empty: "git-dev" when a git identity
+  # provider (idpGithub) is enabled, otherwise "base".
+  defaultCustomBlueprint: ""
 
-  # optional list of configmaps that provide extra files for workspace blueprints
-  # their files are mounted into /app/blueprints together with blueprint-base-files
+  # optional list of ConfigMaps with additional blueprint files, mounted into
+  # /app/blueprints together with the defaults (or blueprintsConfigMap); the
+  # git-blueprints ConfigMap is added automatically when idpGithub is enabled.
+  # File names must be unique across all of them, blueprint names across all
+  # files (the provisioner refuses duplicates).
   blueprintFilesConfigMaps: []
 
   # targetNamespace is the namespace where provisioner will create workspaces.
@@ -332,7 +358,8 @@ provisioner:
   # shells configures PTY shell session behavior for k8shell workspaces.
   shells:
     # allowSessionDetach controls whether clients can detach from PTY shell sessions
-    allowSessionDetach: false
+    # (and reattach to them); the web terminal needs it
+    allowSessionDetach: true
     # detachedTTL is how long a detached session is kept alive before automatic termination
     detachedTTL: "30m"
     # allowUnlimittedTTL allows clients to set unlimited TTL for detached sessions
@@ -355,13 +382,9 @@ provisioner:
 
 
 
-# Below services are disabled in k8shell chart. They are used in k8shell-bundle
-# that provides full set of k8shell services with postgresql and nats
-# dependencies.
-
 # frontend serves the k8shell web UI.
 frontend:
-  enabled: false
+  enabled: true
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/frontend
@@ -375,11 +398,12 @@ frontend:
     maxAgeSeconds: 86400
     path: /api/v1
   features:
-    navigation: ""
+    # web UI navigation (sidebar): off, short or full
+    navigation: full
 
 # apiServer provides the k8shell REST API.
 apiServer:
-  enabled: false
+  enabled: true
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/api-server
@@ -391,9 +415,9 @@ apiServer:
     enabled: false
 
   # infraVersionsConfigMap is the name of an existing ConfigMap holding version
-  # info for external infra services (e.g. postgresql, nats). When set, it is
-  # mounted into api-server at /app/infra-versions. When empty, nothing is
-  # mounted. k8shell-bundle populates this automatically.
+  # info for infra services (e.g. postgresql, nats), mounted into api-server at
+  # /app/infra-versions. Empty: the chart's own k8shell-infra-versions, with the
+  # versions of the PostgreSQL and NATS it installs.
   infraVersionsConfigMap: ""
 
   # workspaces configures the domain used to build ssh / VS Code Remote connection strings for workspaces.
@@ -403,7 +427,7 @@ apiServer:
 
 # session manages terminal session state and recording.
 session:
-  enabled: false
+  enabled: true
   replicas: 1
   image:
     repository: ghcr.io/k8shell-io/session
@@ -477,19 +501,240 @@ sshShield:
       # every gRPC call. Must match the authKey configured on the nfgate server.
       authKey: {}
 
-# postgresql is the database backend for identity, session, and provisioner services.
+
+# postgresql is the database of identity, session, provisioner, authz and the
+# identity providers.
 postgresql:
-  enabled: false
-  host: "postgresql"
+  enabled: true
+  # mode decides who runs the database:
+  #   simple:   the chart runs a single PostgreSQL instance (StatefulSet with
+  #             one pod), no prerequisites; no HA, no built-in backups
+  #   cnpg:     the chart creates a CloudNativePG Cluster (HA, failover);
+  #             the CloudNativePG operator must be installed
+  #   external: an existing server at host:port, nothing is installed
+  mode: simple
+  # simple/cnpg: the Service the chart creates for the primary
+  host: "db-postgresql"
   port: 5432
-  database: ""
+  database: "postgres"
+  # credentials of the k8shell services; simple mode creates this user as the
+  # superuser, cnpg mode expects the superuser "postgres" (see cnpg below)
   username: {}
   password: {}
+  resources: {}
+
+  simple:
+    image:
+      repository: postgres
+      tag: "18"
+    persistence:
+      # false: emptyDir, the data is lost when the pod is deleted
+      enabled: true
+      # an existing PVC to use instead of the one the chart creates
+      existingClaim: ""
+      # empty: the cluster's default StorageClass
+      storageClassName: ""
+      size: 10Gi
+      annotations: {}
+    # node selection for the database pod (its volume may be node-local)
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  cnpg:
+    instances: 3
+    # empty = operator default image
+    imageName: ""
+    # kubernetes.io/basic-auth Secret with username "postgres" and the password
+    # of postgresql.password, created outside the chart
+    superuserSecret: db-postgresql-superuser
+    storage:
+      storageClassName: ""
+      size: 20Gi
+    # "preferred" spreads instances over nodes when possible, "required" insists
+    podAntiAffinityType: preferred
+    # postgresql.conf parameters
+    parameters: {}
+    # e.g. { method: any, number: 1 } for quorum synchronous replication;
+    # empty = asynchronous replicas
+    synchronous: {}
+    # replaces the default initdb bootstrap, e.g. initdb.import or recovery
+    bootstrap: {}
+    externalClusters: []
+
+  # additional NodePort Service to the primary (simple and cnpg modes)
+  nodePort:
+    enabled: false
+    port: ""
 
 # nats is the message broker used for inter-service communication and KV storage.
 nats:
-  enabled: false
+  enabled: true
+  # install the NATS server (subchart, values under natsServer); false: use an
+  # existing server at host:port
+  install: true
   host: "nats"
   port: 4222
+  # the user the k8shell services connect as; natsServer's auth.conf defines it
   username: "k8shell-service"
+  # with nats.install the NATS server reads the password from the same Secret:
+  # .value -> the chart's Secret int-nats (natsServer default); .secretName ->
+  # set natsServer.container.env.NATS_K8SHELL_PASSWORD to the same Secret/key
   password: {}
+
+# natsServer configures the NATS server installed with nats.install: values of
+# the official chart (https://github.com/nats-io/k8s/tree/main/helm/charts/nats).
+# The defaults run a cluster of 3 servers with JetStream on 10Gi volumes: the
+# k8shell services create JetStream KV buckets with 3 replicas, which a single
+# server refuses.
+natsServer:
+  fullnameOverride: nats
+  container:
+    image:
+      repository: nats
+      tag: "2.11.9-alpine"
+    env:
+      NATS_K8SHELL_PASSWORD:
+        valueFrom:
+          secretKeyRef:
+            name: int-nats
+            key: NATS_K8SHELL_PASSWORD
+  config:
+    cluster:
+      enabled: true
+      replicas: 3
+    merge:
+      $include: auth.conf
+    jetstream:
+      enabled: true
+      fileStore:
+        enabled: true
+        pvc:
+          enabled: true
+          size: 10Gi
+          # storageClassName: ""
+  configMap:
+    merge:
+      data:
+        auth.conf: |
+          authorization: {
+            users: [
+              {
+                user: "k8shell-service",
+                password: $NATS_K8SHELL_PASSWORD,
+                permissions: {
+                  subscribe: { allow: [">"] },
+                  publish: { allow: [">"] }
+                }
+              },
+            ]
+          }
+  natsBox:
+    enabled: true
+  statefulSet:
+    merge:
+      spec:
+        persistentVolumeClaimRetentionPolicy:
+          whenDeleted: Delete
+
+# idpGithub is the GitHub identity provider (users sign in with GitHub, through
+# a GitHub App). It uses the settings above (certManager, grpc, authEnabled,
+# imageRegistry, nats, postgresql) and is added to identity.remoteProviders
+# automatically.
+idpGithub:
+  enabled: false
+  replicas: 1
+  image:
+    repository: ghcr.io/k8shell-io/idp-github
+    tag: v0.14.3
+
+  github:
+    # client ID/secret of the GitHub App
+    clientId: {}
+    clientSecret: {}
+    appSlug: "k8shell-io"
+
+    # onboardRules is a list of explicit allow/deny/waitlist rules matched against
+    # incoming GitHub users before onboardRuleTemplate is applied.
+    onboardRules: []
+      # - username: "bobmarley"
+      #   sudo: true
+      #   roles: ["admin"]
+      #   action: "allow"
+
+    # onboardRuleTemplate is the fallback rule applied to users not matched by onboardRules.
+    # Stored as a raw string to preserve !cel tags (Helm's YAML parser strips custom tags).
+    onboardRuleTemplate: |
+      username: !cel "user.login"
+      fullname: !cel "has(user.name) && user.name != null ? user.name : ''"
+      uid: !cel "uint(user.id)"
+      gid: !cel "uint(user.id)"
+      email: !cel |
+         emails.exists(e, e.primary == true)
+          ? emails.filter(e, e.primary == true)[0].email
+          : "unknown@nowhere.com"
+
+  # githubUserTemplate is used to map the user from github to the k8shell user.
+  # Stored as a raw string to preserve !cel tags (Helm's YAML parser strips custom tags).
+  githubUserTemplate: |
+    user:
+      username: !cel "user.login"
+      fullname: ""
+      uid: !cel "100000 + int(user.id)"
+      gid: !cel "100000 + int(user.id)"
+      email: !cel |
+        emails.exists(e, e.primary == true)
+          ? emails.filter(e, e.primary == true)[0].email
+          : "unknown@nowhere.com"
+      auths: [publickey]
+      blueprints: ["*"]
+      roles: ["workspace-user"]
+      isValid: true
+      shell: "/bin/bash"
+      sudo: true
+      organization: "github"
+
+# idpGoogle is the Google identity provider (Google Workspace and, optionally,
+# personal Google accounts). Like idpGithub it uses the shared settings above
+# and is added to identity.remoteProviders automatically.
+idpGoogle:
+  enabled: false
+  replicas: 1
+  image:
+    repository: ghcr.io/k8shell-io/idp-google
+    # as in the idp-google chart 0.1.1 (no release tag yet)
+    tag: pr-1-4952aba
+
+  google:
+    # OAuth 2.0 "Web application" client from Google Cloud Console (APIs & Services >
+    # Credentials). Its authorized redirect URIs must include the URI the identity
+    # client passes to OnboardUserWebFlow.
+    clientId: {}
+    clientSecret: {}
+
+    # --- Who may sign in (hard gate, evaluated before the template below) ---------
+    # Google Workspace domains ("hd" claim) that may sign in. "*" admits any Workspace.
+    allowedDomains: []
+
+    # Personal Google accounts (no "hd" claim, e.g. @gmail.com). Off by default.
+    allowPersonal: false
+    # Email domains accepted for personal accounts (default: gmail.com, googlemail.com).
+    personalEmailDomains: []
+    # Narrow personal sign-in to exactly these addresses (empty = any personal account).
+    personalAllowedEmails: []
+
+    # --- What an admitted user gets -------------------------------------------------
+    # Fixed rules per username (the username the template produces), taking priority
+    # over the template. They never bypass the gate above.
+    onboardRules: []
+
+    # onboardRuleTemplate is the fallback rule applied to admitted users.
+    # Stored as a raw string to preserve !cel tags (Helm's YAML parser strips custom tags).
+    # See the idp-google chart for the CEL scope (claims, personal, uid, emailLocal,
+    # emailDomain, emailProvider).
+    onboardRuleTemplate: |
+      username: !cel "emailLocal"
+      fullname: !cel "claims.name"
+      email: !cel "claims.email"
+      uid: !cel "uid"
+      gid: !cel "uid"

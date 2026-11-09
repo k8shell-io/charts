@@ -1,0 +1,20 @@
+{{- /* checks of the database and NATS settings; renders nothing */}}
+{{- if .Values.postgresql.enabled }}
+{{- $mode := include "k8shell.postgresqlMode" . }}
+{{- include "k8shell.requireSecret" (dict "field" .Values.postgresql.username "path" "postgresql.username") }}
+{{- include "k8shell.requireSecret" (dict "field" .Values.postgresql.password "path" "postgresql.password") }}
+{{- if and (ne $mode "external") (not (hasPrefix "db-postgresql" .Values.postgresql.host)) }}
+{{- fail (printf "postgresql.host must be the chart's Service db-postgresql with postgresql.mode %s (got %q)" $mode .Values.postgresql.host) }}
+{{- end }}
+{{- end }}
+{{- if .Values.nats.enabled }}
+{{- include "k8shell.requireSecret" (dict "field" .Values.nats.password "path" "nats.password") }}
+{{- end }}
+{{- if .Values.nats.install }}
+{{- $ref := .Values.natsServer.container.env.NATS_K8SHELL_PASSWORD.valueFrom.secretKeyRef }}
+{{- $name := .Values.nats.password.secretName | default "int-nats" }}
+{{- $key := .Values.nats.password.secretKey | default "NATS_K8SHELL_PASSWORD" }}
+{{- if or (ne $ref.name $name) (ne $ref.key $key) }}
+{{- fail (printf "the NATS server must read the password the services use: set natsServer.container.env.NATS_K8SHELL_PASSWORD.valueFrom.secretKeyRef to name %q, key %q (now %q, %q)" $name $key $ref.name $ref.key) }}
+{{- end }}
+{{- end }}

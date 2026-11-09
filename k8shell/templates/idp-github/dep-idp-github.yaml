@@ -1,0 +1,88 @@
+{{- if .Values.idpGithub.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: idp-github
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: idp-github
+spec:
+  replicas: {{ .Values.idpGithub.replicas }}
+  selector:
+    matchLabels:
+      k8shell.io/app: idp-github
+  template:
+    metadata:
+      annotations:
+        # restart when the configuration changes
+        checksum/config: {{ print (include (print $.Template.BasePath "/idp-github/cm-idp-github-config.yaml") .) (include (print $.Template.BasePath "/idp-github/cm-idp-github-files.yaml") .) | sha256sum }}
+      labels:
+        k8shell.io/app: idp-github
+        {{- include "k8shell.labels" . | nindent 8 }}
+    spec:
+      {{- include "k8shell.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: idp-github
+      containers:
+        - name: idp-github
+          image: {{ .Values.idpGithub.image.repository }}:{{ .Values.idpGithub.image.tag }}
+          workingDir: /app
+          ports:
+            - containerPort: 9030
+              name: grpc
+          env:
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" .Values.nats.enabled
+            "name" "NATS_K8SHELL_PASSWORD"
+            "secretDef" .Values.nats.password
+            "defaultSecret" "idp-github"
+            "context" .) | nindent 12 }}
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" .Values.postgresql.enabled
+            "name" "POSTGRES_USERNAME"
+            "secretDef" .Values.postgresql.username
+            "defaultSecret" "idp-github"
+            "context" .) | nindent 12 }}
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" .Values.postgresql.enabled
+            "name" "POSTGRES_PASSWORD"
+            "secretDef" .Values.postgresql.password
+            "defaultSecret" "idp-github"
+            "context" .) | nindent 12 }}
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" true
+            "name" "GITHUB_CLIENT_ID"
+            "secretDef" .Values.idpGithub.github.clientId
+            "defaultSecret" "idp-github"
+            "context" .) | nindent 12 }}
+          {{- include "k8shell.secretEnv" (dict
+            "enabled" true
+            "name" "GITHUB_CLIENT_SECRET"
+            "secretDef" .Values.idpGithub.github.clientSecret
+            "defaultSecret" "idp-github"
+            "context" .) | nindent 12 }}
+          volumeMounts:
+            - name: idp-github-config
+              mountPath: /app/config
+              readOnly: true
+            - name: idp-github-files
+              mountPath: /app/files
+              readOnly: true
+          {{- if .Values.certManager.enabled }}
+            - name: idp-github-cert
+              mountPath: /etc/tls/identity
+              readOnly: true
+          {{- end }}
+
+      volumes:
+        - name: idp-github-config
+          configMap:
+            name: idp-github-config
+        - name: idp-github-files
+          configMap:
+            name: idp-github-files
+        {{- if .Values.certManager.enabled }}
+        - name: idp-github-cert
+          secret:
+            secretName: idp-github-tls
+        {{- end }}
+{{- end }}

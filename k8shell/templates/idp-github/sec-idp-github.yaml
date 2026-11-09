@@ -1,0 +1,42 @@
+{{- if .Values.idpGithub.enabled }}
+{{- if not .Values.postgresql.enabled -}}
+{{- fail "postgresql.enabled must be true: idp-github requires a PostgreSQL database" -}}
+{{- end -}}
+{{- if and (not .Values.idpGithub.github.clientId.value) (not .Values.idpGithub.github.clientId.secretName) -}}
+{{- fail "idpGithub.github.clientId is required (set .value or .secretName/.secretKey)" -}}
+{{- end -}}
+{{- if and (not .Values.idpGithub.github.clientSecret.value) (not .Values.idpGithub.github.clientSecret.secretName) -}}
+{{- fail "idpGithub.github.clientSecret is required (set .value or .secretName/.secretKey)" -}}
+{{- end -}}
+{{- $secrets := dict -}}
+{{- if .Values.nats.enabled -}}
+{{- if .Values.nats.password.value -}}
+{{- $_ := set $secrets "NATS_K8SHELL_PASSWORD" .Values.nats.password.value -}}
+{{- end -}}
+{{- end -}}
+{{- if .Values.postgresql.enabled -}}
+{{- if .Values.postgresql.username.value -}}
+{{- $_ := set $secrets "POSTGRES_USERNAME" .Values.postgresql.username.value -}}
+{{- end -}}
+{{- if .Values.postgresql.password.value -}}
+{{- $_ := set $secrets "POSTGRES_PASSWORD" .Values.postgresql.password.value -}}
+{{- end -}}
+{{- end -}}
+{{- if .Values.idpGithub.github.clientId.value -}}
+{{- $_ := set $secrets "GITHUB_CLIENT_ID" .Values.idpGithub.github.clientId.value -}}
+{{- end -}}
+{{- if .Values.idpGithub.github.clientSecret.value -}}
+{{- $_ := set $secrets "GITHUB_CLIENT_SECRET" .Values.idpGithub.github.clientSecret.value -}}
+{{- end -}}
+{{- if $secrets }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: int-idp-github
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+type: Opaque
+data:
+{{ include "k8shell.secretData" $secrets | nindent 2 }}
+{{- end }}
+{{- end }}

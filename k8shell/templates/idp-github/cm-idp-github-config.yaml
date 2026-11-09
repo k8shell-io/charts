@@ -1,0 +1,51 @@
+{{- if .Values.idpGithub.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: idp-github-config
+  labels:
+    app: idp-github
+data:
+  config.yaml: |
+    grpc:
+      port: 9030
+
+      {{- if .Values.certManager.enabled }}
+      enableTLS: true
+      certFile: /etc/tls/identity/tls.crt
+      keyFile: /etc/tls/identity/tls.key
+      {{- else }}
+      enableTLS: false
+      {{- end }}
+
+      # JWT required claims for authentication
+      authEnabled: {{ .Values.authEnabled }}
+      audience: identity
+      allowed:
+        - serviceAccount: identity
+
+    nats:
+      enabled: {{ .Values.nats.enabled }}
+      url: nats://{{ .Values.nats.host }}:{{ .Values.nats.port }}
+      username: {{ .Values.nats.username }}
+      password: ${NATS_K8SHELL_PASSWORD}
+
+    db:
+      enabled: true
+      database: {{ .Values.postgresql.database }}
+      hostname: {{ .Values.postgresql.host }}
+      port: {{ .Values.postgresql.port }}
+      username: ${POSTGRES_USERNAME}
+      password: ${POSTGRES_PASSWORD}
+
+    github:
+      clientId: ${GITHUB_CLIENT_ID}
+      clientSecret: ${GITHUB_CLIENT_SECRET}
+      appSlug: {{ .Values.idpGithub.github.appSlug }}
+
+      onboardRules:
+        {{- toYaml .Values.idpGithub.github.onboardRules | nindent 8 }}
+
+      onboardRuleTemplate: |
+        {{- .Values.idpGithub.github.onboardRuleTemplate | nindent 8 }}
+{{- end }}

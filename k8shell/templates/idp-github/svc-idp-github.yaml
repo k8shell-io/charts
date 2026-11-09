@@ -1,0 +1,21 @@
+{{- if .Values.idpGithub.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: idp-github
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: idp-github
+spec:
+  type: ClusterIP
+  {{- if and .Values.grpc .Values.grpc.roundRobin }}
+  clusterIP: None
+  {{- end }}
+  ports:
+    - port: 9030
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
+  selector:
+    k8shell.io/app: idp-github
+{{- end }}

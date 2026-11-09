@@ -14,8 +14,8 @@ Helm charts for [k8shell](https://k8shell.io) — Cloud-native Development Envir
 
 | Chart | Description |
 |-------|-------------|
-| [k8shell](./k8shell) | Core k8shell platform — open-source components (ssh-proxy, identity, provisioner) plus extended services (api-server, authz, session, frontend, sshShield). |
-| [k8shell-bundle](./k8shell-bundle) | Umbrella chart deploying k8shell together with PostgreSQL, NATS, and Vault-backed secrets. |
+| [k8shell](./k8shell) | The k8shell platform in one chart (2.x): the services (ssh-proxy, identity, provisioner, authz, api-server, session, frontend, sshShield), PostgreSQL (single instance, CloudNativePG cluster or external), NATS, the GitHub and Google identity providers, default authz policies and blueprints. |
+| [k8shell-bundle](./k8shell-bundle) | Umbrella chart deploying k8shell 1.x together with PostgreSQL, NATS, and Vault-backed secrets as ArgoCD Applications. Frozen at 0.7.x, replaced by k8shell 2.x. |
 | [idp-github](./idp-github) | GitHub Identity Provider — authenticates users via GitHub OAuth. |
 | [idp-gitlab](./idp-gitlab) | GitLab Identity Provider — authenticates users via GitLab OAuth. |
 | [idp-google](./idp-google) | Google Identity Provider — authenticates users via Google OAuth (Workspace and optionally personal accounts). |

@@ -1,0 +1,47 @@
+{{- if .Values.postgresql.enabled }}
+{{- $mode := include "k8shell.postgresqlMode" . }}
+{{- if ne $mode "external" }}
+{{- $selector := dict "k8shell.io/app" "db-postgresql" }}
+{{- if eq $mode "cnpg" }}
+{{- $selector = dict "cnpg.io/cluster" "db-postgresql" "cnpg.io/instanceRole" "primary" }}
+{{- end }}
+# The primary, under the same name in both modes ("db-postgresql"; CloudNativePG
+# itself only creates db-postgresql-rw/-ro/-r).
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-postgresql
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+spec:
+  type: ClusterIP
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
+  selector:
+    {{- toYaml $selector | nindent 4 }}
+{{- if .Values.postgresql.nodePort.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: np-postgresql
+  labels:
+    {{- include "k8shell.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+spec:
+  type: NodePort
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
+      nodePort: {{ required "postgresql.nodePort.port is required when postgresql.nodePort.enabled=true" .Values.postgresql.nodePort.port }}
+  selector:
+    {{- toYaml $selector | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}

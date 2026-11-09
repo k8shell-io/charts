@@ -30,9 +30,9 @@ Each top-level directory is an independent Helm chart published to `oci://ghcr.i
 
 | Chart | Role |
 |-------|------|
-| `k8shell` | Core platform — the primary chart users install |
-| `k8shell-bundle` | Umbrella chart; wraps all charts as ArgoCD `Application` objects |
-| `idp-github` / `idp-gitlab` / `idp-google` | External identity providers; plugged into k8shell via `identity.remoteProviders` |
+| `k8shell` | The whole platform in one chart (2.x): services, PostgreSQL, NATS (subchart), idp-github/idp-google, default policies and blueprints |
+| `k8shell-bundle` | Umbrella chart for k8shell 1.x; wraps all charts as ArgoCD `Application` objects. Frozen at 0.7.x, replaced by k8shell 2.x |
+| `idp-github` / `idp-gitlab` / `idp-google` | Identity providers as separate charts (used by k8shell-bundle); idp-github and idp-google are also part of the k8shell chart since 2.0 |
 | `vault-secrets` | Maps HashiCorp Vault secrets to Kubernetes Secrets |
 | `worktrace-detector` | Threat detection engine; DaemonSet consuming Tetragon events (needs Tetragon installed). Ships no rules: a leader-elected `controller` Deployment reads them from an externally provided ConfigMap (`rules.configMap`), serves them to the detectors and generates the TracingPolicy from them |
 
@@ -42,11 +42,16 @@ The k8shell chart deploys two tiers of services:
 
 **Core (always enabled):** `ssh-proxy`, `identity`, `provisioner`, `authz`
 
-**Extended (disabled by default, enabled in k8shell-bundle):** `api-server`, `session`, `frontend`
+**Extended (enabled by default since 2.0):** `api-server`, `session`, `frontend`, `authz`
 
 **Optional (disabled by default, opt-in even in k8shell-bundle):** `sshShield`
 
-**External dependencies (disabled by default):** `postgresql`, `nats` — toggled via `postgresql.enabled` / `nats.enabled`.
+**Infrastructure (installed by default since 2.0):**
+- `postgresql` — `postgresql.mode`: `simple` (a single-instance StatefulSet `db-postgresql`, official postgres image, PVC kept on uninstall), `cnpg` (a CloudNativePG `Cluster` `db-postgresql`, operator required) or `external`. The Service `db-postgresql` points at the primary in both installed modes.
+- `nats` — `nats.install` adds the official NATS chart as the subchart `natsServer` (values under `natsServer`, `fullnameOverride: nats`). `nats.enabled` still means "the services use NATS"; `templates/validate.yaml` checks that the NATS server reads the same password Secret as the services.
+- `k8shell-infra-versions` ConfigMap (versions of the installed PostgreSQL/NATS for api-server) is created automatically.
+
+**Identity providers (disabled by default):** `idpGithub`, `idpGoogle` — templates in `templates/idp-github/`, `templates/idp-google/`, using the chart's shared settings (certManager, grpc, authEnabled, imageRegistry, nats, postgresql). Enabled providers are appended to `identity.remoteProviders`; idpGithub also adds the `git-blueprints` ConfigMap (`files/git-blueprints/`) and makes `git-dev` the default custom blueprint.
 
 Service-to-service communication is gRPC. When `certManager.enabled: true`, every service gets a cert-manager-issued TLS certificate and the chart wires mTLS automatically. Without cert-manager, services fall back to plaintext.
 
@@ -54,7 +59,7 @@ JWT auth (`authEnabled: true`) is enforced across all gRPC endpoints. The `ident
 
 ### authz service
 
-`authz` (disabled by default, `authz.enabled: false`) is an OPA-based authorization sidecar on gRPC port 9011. It accepts requests from `ssh-proxy`, `provisioner`, `api-server`, and `identity`. Policies are either mounted from a ConfigMap (`authz.policiesConfigMap`) or fall back to the inline `authz.defaultPolicy` Rego rule. It shares the JWT private key with `identity`.
+`authz` (disabled by default, `authz.enabled: false`) is an OPA-based authorization sidecar on gRPC port 9011. It accepts requests from `ssh-proxy`, `provisioner`, `api-server`, and `identity`. The chart ships default policies (`files/policies/*.rego`, ConfigMap `authz-policies-default`); they hold no site-specific settings, permissions follow from roles (`admin`, `org-admin`, `<group>-admin`, `developer` for inject mode, `git-workspace` for repositories). `authz.policiesConfigMap` replaces the whole set with an external ConfigMap. `authz.defaultPolicy` is the inline rule used when no policy file matches. Policy tests: `k8shell/policy-tests/run.sh` (needs opa, jq). It shares the JWT private key with `identity`.
 
 ### sshShield service
 
@@ -62,7 +67,7 @@ JWT auth (`authEnabled: true`) is enforced across all gRPC endpoints. The `ident
 
 ### Blueprints
 
-`provisioner` mounts workspace blueprint YAML from `k8shell/files/blueprints/` (`base.yaml` always; `samples.yaml` when `provisioner.includeBlueprintSamples: true`). Extra blueprints can be injected via `provisioner.blueprintFilesConfigMaps`. When an IDP chart is enabled in k8shell-bundle, a `git-blueprints` ConfigMap is automatically appended to that list.
+`provisioner` mounts workspace blueprint YAML from `k8shell/files/blueprints/` (`base.yaml` always; `samples.yaml` when `provisioner.includeBlueprintSamples: true`) as the ConfigMap `blueprint-base-files`; `provisioner.blueprintsConfigMap` replaces it with an external ConfigMap. Extra blueprints are added via `provisioner.blueprintFilesConfigMaps` (file names unique across ConfigMaps, blueprint names unique across files). With idpGithub enabled, `git-blueprints` is appended automatically.
 
 ## k8shell-bundle Architecture
 
