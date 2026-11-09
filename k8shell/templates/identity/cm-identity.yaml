@@ -99,10 +99,20 @@ data:
          identity rejects users no rule allows */}}
     {{- $rules := concat (.Values.identity.onboardRules | default list) list }}
     {{- range .Values.identity.users }}
-    {{- $rules = append $rules (dict "idp" "idp.k8shell.io/file" "usernamePattern" .username "org" (default "default" .organization) "action" "allow" "sudo" (default false .sudo) "roles" (default list .roles)) }}
+    {{- $rules = append $rules (dict "idp" "idp.k8shell.io/file" "usernamePattern" .username "org" .organization "action" "allow" "sudo" (default false .sudo) "roles" (default list .roles)) }}
     {{- end }}
     {{- with $rules }}
     onboardRules:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+
+    {{- /* created at startup if missing, before the onboarding rules */}}
+    {{- with .Values.identity.roles }}
+    roles:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .Values.identity.organizations }}
+    organizations:
       {{- toYaml . | nindent 6 }}
     {{- end }}
 

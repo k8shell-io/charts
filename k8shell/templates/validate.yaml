@@ -1,4 +1,4 @@
-{{- /* checks of the database and NATS settings; renders nothing */}}
+{{- /* checks of the settings; renders nothing */}}
 {{- if .Values.postgresql.enabled }}
 {{- $mode := include "k8shell.postgresqlMode" . }}
 {{- include "k8shell.requireSecret" (dict "field" .Values.postgresql.username "path" "postgresql.username") }}
@@ -16,5 +16,12 @@
 {{- $key := .Values.nats.password.secretKey | default "NATS_K8SHELL_PASSWORD" }}
 {{- if or (ne $ref.name $name) (ne $ref.key $key) }}
 {{- fail (printf "the NATS server must read the password the services use: set natsServer.container.env.NATS_K8SHELL_PASSWORD.valueFrom.secretKeyRef to name %q, key %q (now %q, %q)" $name $key $ref.name $ref.key) }}
+{{- end }}
+{{- end }}
+{{- $orgs := list }}
+{{- range .Values.identity.organizations }}{{ $orgs = append $orgs .name }}{{ end }}
+{{- range .Values.identity.users }}
+{{- if not (has .organization $orgs) }}
+{{- fail (printf "identity.users: the organization %q of user %q must be declared in identity.organizations (declared: %s)" (toString .organization) .username (join ", " $orgs)) }}
 {{- end }}
 {{- end }}

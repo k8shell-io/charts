@@ -32,7 +32,7 @@ data:
       shell: {{ default "/bin/bash" .shell }}
       auths: [{{ $auths | join ", " }}]
       roles: {{ .roles | toJson }}
-      organization: {{ default "default" .organization | quote }}
+      organization: {{ .organization | quote }}
     {{- if ne $pub "" }}
       authKeys: !file /app/secrets/users/{{ .username }}/publickey
     {{- end }}

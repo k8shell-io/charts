@@ -51,6 +51,8 @@ The k8shell chart deploys two tiers of services:
 - `nats` — `nats.install` adds the official NATS chart as the subchart `natsServer` (values under `natsServer`, `fullnameOverride: nats`). `nats.enabled` still means "the services use NATS"; `templates/validate.yaml` checks that the NATS server reads the same password Secret as the services.
 - `k8shell-infra-versions` ConfigMap (versions of the installed PostgreSQL/NATS for api-server) is created automatically.
 
+**Organizations and roles:** identity has no built-in organization. `identity.organizations` (name, description, nodeSelectors, organization-scoped roles) and `identity.roles` (global roles besides the built-in `admin` and `org-admin`; defaults `developer`, `git-workspace`) are rendered into identity's config and created at startup if missing; node selectors are set only while an organization has none. Every entry of `identity.users` needs an `organization` declared there (`templates/validate.yaml`) and gets an onboarding rule with its organization, roles and sudo.
+
 **Identity providers (disabled by default):** `idpGithub`, `idpGoogle` — templates in `templates/idp-github/`, `templates/idp-google/`, using the chart's shared settings (certManager, grpc, authEnabled, imageRegistry, nats, postgresql). Enabled providers are appended to `identity.remoteProviders`; idpGithub also adds the `git-blueprints` ConfigMap (`files/git-blueprints/`) and makes `git-dev` the default custom blueprint.
 
 Service-to-service communication is gRPC. When `certManager.enabled: true`, every service gets a cert-manager-issued TLS certificate and the chart wires mTLS automatically. Without cert-manager, services fall back to plaintext.

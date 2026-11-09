@@ -11,9 +11,9 @@ sshProxy:
 identity:
   image:
     repository: registry.k8shell.io/k8shell-base/identity
-    # TODO: identity PR #46 (local users: uid/gid, password; developer and
-    # git-workspace roles); replace with the release that contains it
-    tag: pr-46-723947c
+    # TODO: identity PR #46 (local users: uid/gid, password; organizations and
+    # roles from the config); replace with the release that contains it
+    tag: pr-46-f9ec532
 
 authz:
   image:

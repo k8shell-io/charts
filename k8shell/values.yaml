@@ -189,6 +189,32 @@ identity:
     # trailing 24h window. 0 disables the cap.
     dailyRecipientCap: 0
 
+  # roles are global roles created at startup if missing, besides the built-in
+  # admin and org-admin. The default policies give developer inject mode and
+  # git-workspace the repositories and git workspaces of external identity
+  # providers. Existing roles are left untouched.
+  roles:
+    - name: developer
+      description: Inject workspaces into existing workloads
+    - name: git-workspace
+      description: Repository catalog and git-sourced workspaces of the identity provider
+
+  # organizations are created at startup if missing; no organization is built
+  # in. nodeSelectors (label key -> value) place the workspaces of an
+  # organization's users and are set only while the organization has none, so
+  # changes made in the admin UI are kept; without any, an admin must set them
+  # before its users can start workspaces. roles are organization-scoped roles
+  # (admin and org-admin cannot be declared here: they are global).
+  organizations:
+    - name: default
+      description: Default organization
+      nodeSelectors:
+        kubernetes.io/os: linux
+      roles: []
+
+  # users are local users (identity's user file). organization is required and
+  # must be one of the organizations above; each user gets an onboarding rule
+  # with its organization, roles and sudo.
   users:
     - username: "admin"
       uid: 1001
@@ -213,7 +239,7 @@ identity:
     #   blueprints: ["*"]
     #   sudo: false
     #   shell: /bin/bash
-    #   roles: [workspace-user]
+    #   roles: [developer]
     #   organization: "default"
     #   password: ""
     #   publicKey: ""
