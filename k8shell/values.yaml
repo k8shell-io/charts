@@ -323,7 +323,7 @@ provisioner:
   k8shelld:
     image:
       repository: registry.k8shell.io/k8shell-base/k8shelld
-      tag: v0.17.4
+      tag: v0.17.5
 
   # blueprintsConfigMap is the name of an existing ConfigMap with blueprint
   # files that replaces the chart's defaults (the ConfigMap blueprint-base-files
