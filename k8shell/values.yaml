@@ -446,7 +446,7 @@ apiServer:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/api-server
-    tag: v0.21.1
+    tag: v0.19.4
   logging:
     requestHeaders: false
     responseHeaders: false
