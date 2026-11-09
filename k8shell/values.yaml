@@ -25,8 +25,12 @@
 #    Kubernetes secret with the specified name and key
 
 # imageRegistry defines a private container registry used to create an image pull secret (regcred).
-imageRegistry: 
-  host: ""
+# The images are pulled from registry.k8shell.io for now, which requires
+# credentials: set username/password (the chart creates the pull Secret) or
+# existingSecret. Workspaces pull k8shelld from it too: set
+# provisioner.privateRegistry as well (quickstart.sh does both).
+imageRegistry:
+  host: registry.k8shell.io
 
   # only one of username/password or existingSecret should be set
   username: ""
@@ -62,7 +66,7 @@ sshProxy:
   replicas: 1
   
   image:
-    repository: ghcr.io/k8shell-io/ssh-proxy
+    repository: registry.k8shell.io/k8shell-base/ssh-proxy
     tag: v0.18.4
   
   proxyProtocol: false
@@ -101,8 +105,8 @@ sshProxy:
 identity:
   replicas: 1
   image:
-    repository: ghcr.io/k8shell-io/identity
-    tag: v0.18.4
+    repository: registry.k8shell.io/k8shell-base/identity
+    tag: v0.18.5
 
   # jwtIssuer configures JWT token issuance for k8shell services.
   jwtIssuer:
@@ -269,7 +273,7 @@ authz:
   enabled: true
   replicas: 1
   image:
-    repository: ghcr.io/k8shell-io/authz
+    repository: registry.k8shell.io/k8shell-base/authz
     tag: v0.3.3
 
   # policiesConfigMap is the name of an existing ConfigMap whose keys are
@@ -305,13 +309,13 @@ authz:
 provisioner:
   replicas: 1
   image:
-    repository: ghcr.io/k8shell-io/provisioner
+    repository: registry.k8shell.io/k8shell-base/provisioner
     tag: v0.17.8
 
   # k8shelld is the default image for k8shelld defined in base blueprint
   k8shelld:
     image:
-      repository: ghcr.io/k8shell-io/k8shelld
+      repository: registry.k8shell.io/k8shell-base/k8shelld
       tag: v0.17.3
 
   # blueprintsConfigMap is the name of an existing ConfigMap with blueprint
@@ -415,8 +419,8 @@ frontend:
   enabled: true
   replicas: 1
   image:
-    repository: ghcr.io/k8shell-io/frontend
-    tag: v0.18.3
+    repository: registry.k8shell.io/k8shell-base/frontend
+    tag: v0.18.4
   scheme: "http"
   host: "localtest.me"
   sessionCookie:
@@ -434,8 +438,8 @@ apiServer:
   enabled: true
   replicas: 1
   image:
-    repository: ghcr.io/k8shell-io/api-server
-    tag: v0.19.4
+    repository: registry.k8shell.io/k8shell-base/api-server
+    tag: v0.21.1
   logging:
     requestHeaders: false
     responseHeaders: false
@@ -458,7 +462,7 @@ session:
   enabled: true
   replicas: 1
   image:
-    repository: ghcr.io/k8shell-io/session
+    repository: registry.k8shell.io/k8shell-base/session
     tag: v0.15.2
 
   # Janitor ends sessions that stop sending upserts (e.g. client killed).
@@ -485,7 +489,7 @@ sshShield:
   enabled: false
   replicas: 1
   image:
-    repository: ghcr.io/k8shell-io/ssh-shield
+    repository: registry.k8shell.io/k8shell-base/ssh-shield
     tag: v0.13.2
 
   # NATS subject to subscribe to for SSH failure events.
@@ -673,7 +677,7 @@ idpGithub:
   enabled: false
   replicas: 1
   image:
-    repository: ghcr.io/k8shell-io/idp-github
+    repository: registry.k8shell.io/k8shell-idp/idp-github
     tag: v0.14.3
 
   github:
@@ -729,7 +733,7 @@ idpGoogle:
   enabled: false
   replicas: 1
   image:
-    repository: ghcr.io/k8shell-io/idp-google
+    repository: registry.k8shell.io/k8shell-idp/idp-google
     # as in the idp-google chart 0.1.1 (no release tag yet)
     tag: pr-1-4952aba
 

@@ -1,54 +1,7 @@
 # values-internal.yaml
 #
-# Overrides image repositories to use the internal registry (registry.k8shell.io)
-# instead of the default public registry (ghcr.io).
+# Overrides for internal installs. The chart's defaults already use the
+# internal registry (registry.k8shell.io) and its latest releases, so nothing
+# needs overriding at the moment.
 # Use with: helm install ... -f values.yaml -f values-internal.yaml
-
-sshProxy:
-  image:
-    repository: registry.k8shell.io/k8shell-base/ssh-proxy
-
-identity:
-  image:
-    repository: registry.k8shell.io/k8shell-base/identity
-    # TODO: identity PR #46 (local users: uid/gid, password; organizations and
-    # roles from the config); replace with the release that contains it
-    tag: pr-46-f9ec532
-
-authz:
-  image:
-    repository: registry.k8shell.io/k8shell-base/authz
-
-provisioner:
-  image:
-    repository: registry.k8shell.io/k8shell-base/provisioner
-  k8shelld:
-    image:
-      repository: registry.k8shell.io/k8shell-base/k8shelld
-
-frontend:
-  image:
-    repository: registry.k8shell.io/k8shell-base/frontend
-    # TODO: frontend PR #89 (runtime values not cached as immutable); replace
-    # with the release that contains it
-    tag: pr-89-b933566
-
-apiServer:
-  image:
-    repository: registry.k8shell.io/k8shell-base/api-server
-
-session:
-  image:
-    repository: registry.k8shell.io/k8shell-base/session
-
-sshShield:
-  image:
-    repository: registry.k8shell.io/k8shell-base/ssh-shield
-
-idpGithub:
-  image:
-    repository: registry.k8shell.io/k8shell-idp/idp-github
-
-idpGoogle:
-  image:
-    repository: registry.k8shell.io/k8shell-idp/idp-google
+{}

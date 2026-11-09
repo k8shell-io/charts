@@ -24,6 +24,9 @@ CHART_VERSION=""
 CHART_REF="oci://ghcr.io/k8shell-io/charts/k8shell"
 VALUES_FILES=()
 ASSUME_YES="false"
+REGISTRY_HOST="registry.k8shell.io"
+REGISTRY_USERNAME="${K8SHELL_REGISTRY_USERNAME:-}"
+REGISTRY_PASSWORD="${K8SHELL_REGISTRY_PASSWORD:-}"
 NAMESPACE="k8shell-system"
 TARGET_NAMESPACE="k8shell-workspaces"
 QUICKSTART_DIR="${K8SHELL_QUICKSTART_DIR:-$HOME/k8shell-quickstart}"
@@ -49,6 +52,9 @@ Options:
   -f, --values FILE          Additional values file (repeatable), e.g. for a
                              private registry
   -y, --yes                  Do not ask for confirmation
+      --registry-username U  Username for $REGISTRY_HOST, where the images
+                             come from (or K8SHELL_REGISTRY_USERNAME)
+      --registry-password P  Its password (or K8SHELL_REGISTRY_PASSWORD)
   -n, --namespace NS         k8shell release namespace (default: $NAMESPACE)
   -t, --target-namespace NS  Workspace target namespace (default: $TARGET_NAMESPACE)
       --node-port PORT       Expose SSH via NodePort (default: $NODE_PORT)
@@ -65,6 +71,8 @@ while [[ $# -gt 0 ]]; do
         -c|--chart)             CHART_REF="$2"; shift 2 ;;
         -f|--values)            VALUES_FILES+=("$2"); shift 2 ;;
         -y|--yes)               ASSUME_YES="true"; shift ;;
+        --registry-username)    REGISTRY_USERNAME="$2"; shift 2 ;;
+        --registry-password)    REGISTRY_PASSWORD="$2"; shift 2 ;;
         -n|--namespace)         NAMESPACE="$2";       shift 2 ;;
         -t|--target-namespace)  TARGET_NAMESPACE="$2"; shift 2 ;;
         --node-port)            NODE_PORT="$2"; shift 2 ;;
@@ -214,6 +222,10 @@ EOF
 
 check_prereqs
 
+if [ -z "$REGISTRY_USERNAME" ] || [ -z "$REGISTRY_PASSWORD" ]; then
+    error "Credentials for $REGISTRY_HOST are required: --registry-username and --registry-password (or K8SHELL_REGISTRY_USERNAME and K8SHELL_REGISTRY_PASSWORD)"
+fi
+
 mkdir -p "$QUICKSTART_DIR"
 
 serverKeyDesc=$(describe_ec_key "$QUICKSTART_DIR/server-key.pem" | sed "s|$HOME|~|g")
@@ -275,7 +287,26 @@ fi
 
 info "Running helm $helmAction for k8shell ${CHART_VERSION:-latest}..."
 
-valuesArgs=()
+# Registry credentials as a values file (not --set: passwords may hold
+# commas); services pull with the pull Secret, workspaces pull k8shelld through
+# the provisioner's private registry.
+yamlQuote() { printf "'%s'" "${1//\'/\'\'}"; }
+registryValues="$QUICKSTART_DIR/registry-values.yaml"
+(umask 077; cat > "$registryValues" <<EOV
+imageRegistry:
+  host: $(yamlQuote "$REGISTRY_HOST")
+  username: $(yamlQuote "$REGISTRY_USERNAME")
+  password: $(yamlQuote "$REGISTRY_PASSWORD")
+provisioner:
+  privateRegistry:
+    enabled: true
+    host: {value: $(yamlQuote "$REGISTRY_HOST")}
+    username: {value: $(yamlQuote "$REGISTRY_USERNAME")}
+    password: {value: $(yamlQuote "$REGISTRY_PASSWORD")}
+EOV
+)
+
+valuesArgs=(-f "$registryValues")
 for f in ${VALUES_FILES[@]+"${VALUES_FILES[@]}"}; do
     valuesArgs+=(-f "$f")
 done
