@@ -683,6 +683,43 @@
                         "k8shell.io/pool"
                     ]
                 },
+                "gpu": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "resources": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "count": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                },
+                                "cores": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "tolerations": {
+                            "type": "array",
+                            "items": {
+                                "type": "object"
+                            }
+                        },
+                        "nodeSelector": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
                 "workspaceStorageClass": {
                     "type": "string"
                 },

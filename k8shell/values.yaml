@@ -317,7 +317,7 @@ provisioner:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/provisioner
-    tag: v0.17.10
+    tag: pr-66-33a2c27
 
   # k8shelld is the default image for k8shelld defined in base blueprint
   k8shelld:
@@ -375,6 +375,29 @@ provisioner:
   nodeSelectorKeys:
     - k8shell.io/pool
     - kubernetes.io/os
+
+  # gpu configures GPU support for workspaces: blueprints request GPUs with
+  # resources.gpu (count, optional memory/cores for a slice) and the provisioner
+  # maps the request to these extended resources, tolerations and node selector.
+  # The defaults match HAMi (nvidia.com/gpu, gpumem in MiB, gpucores in %).
+  # enabled: false renders no gpu section (GPU support off, blueprints with
+  # resources.gpu are rejected).
+  gpu:
+    enabled: false
+    # extended resource names; an empty memory/cores disables gpu.memory/gpu.cores in blueprints
+    resources:
+      count: nvidia.com/gpu
+      memory: nvidia.com/gpumem
+      cores: nvidia.com/gpucores
+    # added to the pod of a workspace with a GPU
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+    # added to the node selection of a workspace with a GPU; wins over the
+    # organization's node selector for the same key. {}: the organization's
+    # selectors alone decide.
+    nodeSelector: {}
 
   # defaultRegistry is the default registry host for workspace images when no
   # registry is specified in a blueprint.
