@@ -1,13 +1,28 @@
-{{- if .Values.provisioner.nodeSelectorKeys }}
+{{- $nu := .Values.provisioner.nodeUsage | default dict }}
+{{- if or .Values.provisioner.nodeSelectorKeys $nu.enabled }}
 {{- $name := printf "provisioner-nodes-%s" .Release.Namespace | trunc 63 | trimSuffix "-" }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: {{ $name }}
 rules:
+# node selector discovery (nodeSelectorKeys) and node usage (nodeUsage.enabled)
 - apiGroups: [""]
   resources: ["nodes"]
   verbs: ["get", "list", "watch"]
+{{- if and $nu.enabled $nu.nodeMetrics }}
+# node usage: each node's usage (nodeUsage.nodeMetrics)
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["nodes"]
+  verbs: ["get", "list"]
+{{- end }}
+{{- if and $nu.enabled $nu.otherPods }}
+# node usage: the requests and limits of the other pods on each node
+# (nodeUsage.otherPods)
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+{{- end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
