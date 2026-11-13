@@ -35,6 +35,45 @@ data:
     {{- end }}
     {{- end }}
 
+    {{- /* Workspace run schedules: only the settings that are set, the provisioner
+    defaults the rest (local zone, 1h). */}}
+    {{- with .Values.provisioner.schedule }}
+    {{- if or .timezone .forceStartDuration }}
+    schedule:
+      {{- with .timezone }}
+      timezone: {{ . | quote }}
+      {{- end }}
+      {{- with .forceStartDuration }}
+      forceStartDuration: {{ . | quote }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+
+    {{- /* Node usage and its optional parts (see values.yaml provisioner.nodeUsage and
+    the matching rules in clusterrole-nodes.yaml). */}}
+    {{- with .Values.provisioner.nodeUsage }}
+    {{- if .enabled }}
+    nodeUsage:
+      enabled: true
+      nodeMetrics: {{ .nodeMetrics | default false }}
+      otherPods: {{ .otherPods | default false }}
+    {{- end }}
+    {{- end }}
+
+    {{- with .Values.provisioner.gpu }}
+    {{- if .enabled }}
+    gpu:
+      resources:
+        count: {{ .resources.count | quote }}
+        memory: {{ .resources.memory | default "" | quote }}
+        cores: {{ .resources.cores | default "" | quote }}
+      tolerations:
+      {{- toYaml (.tolerations | default list) | nindent 8 }}
+      nodeSelector:
+      {{- toYaml (.nodeSelector | default dict) | nindent 8 }}
+    {{- end }}
+    {{- end }}
+
     {{- if .Values.provisioner.defaultRegistry.host }}
     defaultRegistry:
       host: ${DEFAULT_REGISTRY_HOST}

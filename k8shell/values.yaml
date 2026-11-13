@@ -317,13 +317,13 @@ provisioner:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/provisioner
-    tag: v0.17.10
+    tag: pr-66-33a2c27
 
   # k8shelld is the default image for k8shelld defined in base blueprint
   k8shelld:
     image:
       repository: registry.k8shell.io/k8shell-base/k8shelld
-      tag: v0.17.5
+      tag: v0.17.6
 
   # blueprintsConfigMap is the name of an existing ConfigMap with blueprint
   # files that replaces the chart's defaults (the ConfigMap blueprint-base-files
@@ -375,6 +375,55 @@ provisioner:
   nodeSelectorKeys:
     - k8shell.io/pool
     - kubernetes.io/os
+
+  # schedule: how workspace run schedules (blueprint `schedule`) are read.
+  schedule:
+    # IANA zone (e.g. "Europe/Prague") for schedule times without an offset,
+    # unless the blueprint sets its own; empty: the provisioner's local zone
+    # (UTC in the container)
+    timezone: ""
+    # how long a force-started workspace whose schedule has ended may run
+    # when the start names no expiry (e.g. "1h"); empty: 1h
+    forceStartDuration: ""
+
+  # nodeUsage turns on the node usage view (Performance -> Usage; the
+  # GetNodeUsage RPC and GET /nodes/usage) and its optional parts. Off by
+  # default, so a minimal installation needs no extra permissions for it.
+  # Each flag adds the cluster-wide rules it needs to the provisioner's
+  # ClusterRole (clusterrole-nodes.yaml); if a permission is missing anyway,
+  # the provisioner logs a warning and leaves that part out.
+  nodeUsage:
+    # nodes with their allocatable CPU/memory and the requests, limits and
+    # usage of the workspaces on each (needs list on nodes)
+    enabled: false
+    # each node's usage, and so the other pods' usage (metrics.k8s.io nodes)
+    nodeMetrics: false
+    # the requests and limits of the non-workspace pods on each node, so a
+    # node's requested share is complete (list pods in all namespaces)
+    otherPods: false
+
+  # gpu configures GPU support for workspaces: blueprints request GPUs with
+  # resources.gpu (count, optional memory/cores for a slice) and the provisioner
+  # maps the request to these extended resources, tolerations and node selector.
+  # The defaults match HAMi (nvidia.com/gpu, gpumem in MiB, gpucores in %).
+  # enabled: false renders no gpu section (GPU support off, blueprints with
+  # resources.gpu are rejected).
+  gpu:
+    enabled: false
+    # extended resource names; an empty memory/cores disables gpu.memory/gpu.cores in blueprints
+    resources:
+      count: nvidia.com/gpu
+      memory: nvidia.com/gpumem
+      cores: nvidia.com/gpucores
+    # added to the pod of a workspace with a GPU
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+    # added to the node selection of a workspace with a GPU; wins over the
+    # organization's node selector for the same key. {}: the organization's
+    # selectors alone decide.
+    nodeSelector: {}
 
   # defaultRegistry is the default registry host for workspace images when no
   # registry is specified in a blueprint.
