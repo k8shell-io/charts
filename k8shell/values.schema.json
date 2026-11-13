@@ -683,6 +683,25 @@
                         "k8shell.io/pool"
                     ]
                 },
+                "nodeUsage": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "description": "Node usage view (Performance -> Usage) and its optional parts; each flag adds the cluster-wide RBAC rules it needs.",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "nodeMetrics": {
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "otherPods": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                },
                 "gpu": {
                     "type": "object",
                     "additionalProperties": false,

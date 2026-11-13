@@ -35,6 +35,17 @@ data:
     {{- end }}
     {{- end }}
 
+    {{- /* Node usage and its optional parts (see values.yaml provisioner.nodeUsage and
+    the matching rules in clusterrole-nodes.yaml). */}}
+    {{- with .Values.provisioner.nodeUsage }}
+    {{- if .enabled }}
+    nodeUsage:
+      enabled: true
+      nodeMetrics: {{ .nodeMetrics | default false }}
+      otherPods: {{ .otherPods | default false }}
+    {{- end }}
+    {{- end }}
+
     {{- with .Values.provisioner.gpu }}
     {{- if .enabled }}
     gpu:

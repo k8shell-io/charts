@@ -376,6 +376,22 @@ provisioner:
     - k8shell.io/pool
     - kubernetes.io/os
 
+  # nodeUsage turns on the node usage view (Performance -> Usage; the
+  # GetNodeUsage RPC and GET /nodes/usage) and its optional parts. Off by
+  # default, so a minimal installation needs no extra permissions for it.
+  # Each flag adds the cluster-wide rules it needs to the provisioner's
+  # ClusterRole (clusterrole-nodes.yaml); if a permission is missing anyway,
+  # the provisioner logs a warning and leaves that part out.
+  nodeUsage:
+    # nodes with their allocatable CPU/memory and the requests, limits and
+    # usage of the workspaces on each (needs list on nodes)
+    enabled: false
+    # each node's usage, and so the other pods' usage (metrics.k8s.io nodes)
+    nodeMetrics: false
+    # the requests and limits of the non-workspace pods on each node, so a
+    # node's requested share is complete (list pods in all namespaces)
+    otherPods: false
+
   # gpu configures GPU support for workspaces: blueprints request GPUs with
   # resources.gpu (count, optional memory/cores for a slice) and the provisioner
   # maps the request to these extended resources, tolerations and node selector.
