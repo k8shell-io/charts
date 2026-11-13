@@ -683,6 +683,21 @@
                         "k8shell.io/pool"
                     ]
                 },
+                "schedule": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "description": "How workspace run schedules are read.",
+                    "properties": {
+                        "timezone": {
+                            "type": "string",
+                            "default": ""
+                        },
+                        "forceStartDuration": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    }
+                },
                 "nodeUsage": {
                     "type": "object",
                     "additionalProperties": false,

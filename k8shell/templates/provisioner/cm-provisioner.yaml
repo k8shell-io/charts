@@ -35,6 +35,20 @@ data:
     {{- end }}
     {{- end }}
 
+    {{- /* Workspace run schedules: only the settings that are set, the provisioner
+    defaults the rest (local zone, 1h). */}}
+    {{- with .Values.provisioner.schedule }}
+    {{- if or .timezone .forceStartDuration }}
+    schedule:
+      {{- with .timezone }}
+      timezone: {{ . | quote }}
+      {{- end }}
+      {{- with .forceStartDuration }}
+      forceStartDuration: {{ . | quote }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+
     {{- /* Node usage and its optional parts (see values.yaml provisioner.nodeUsage and
     the matching rules in clusterrole-nodes.yaml). */}}
     {{- with .Values.provisioner.nodeUsage }}
