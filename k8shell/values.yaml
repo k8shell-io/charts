@@ -376,6 +376,16 @@ provisioner:
     - k8shell.io/pool
     - kubernetes.io/os
 
+  # schedule: how workspace run schedules (blueprint `schedule`) are read.
+  schedule:
+    # IANA zone (e.g. "Europe/Prague") for schedule times without an offset,
+    # unless the blueprint sets its own; empty: the provisioner's local zone
+    # (UTC in the container)
+    timezone: ""
+    # how long a force-started workspace whose schedule has ended may run
+    # when the start names no expiry (e.g. "1h"); empty: 1h
+    forceStartDuration: ""
+
   # nodeUsage turns on the node usage view (Performance -> Usage; the
   # GetNodeUsage RPC and GET /nodes/usage) and its optional parts. Off by
   # default, so a minimal installation needs no extra permissions for it.
