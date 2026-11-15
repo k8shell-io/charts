@@ -401,6 +401,18 @@ provisioner:
     # the requests and limits of the non-workspace pods on each node, so a
     # node's requested share is complete (list pods in all namespaces)
     otherPods: false
+    # GPU usage from HAMi's vGPU monitor (GPU capacity and allocations are
+    # shown without it). The provisioner finds each GPU node's monitor pod
+    # through the monitor service's EndpointSlices and scrapes it directly;
+    # role-gpu-metrics.yaml grants list on endpointslices in `namespace`.
+    gpuMetrics:
+      enabled: false
+      # HAMi's namespace and its monitor service (HAMi chart defaults)
+      namespace: hami-system
+      service: hami-device-plugin-monitor
+      # the monitor pods' port; 0 = the EndpointSlice's port
+      port: 0
+      path: /metrics
 
   # gpu configures GPU support for workspaces: blueprints request GPUs with
   # resources.gpu (count, optional memory/cores for a slice) and the provisioner
