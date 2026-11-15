@@ -57,6 +57,16 @@ data:
       enabled: true
       nodeMetrics: {{ .nodeMetrics | default false }}
       otherPods: {{ .otherPods | default false }}
+      {{- with .gpuMetrics }}
+      {{- if .enabled }}
+      gpuMetrics:
+        enabled: true
+        namespace: {{ .namespace | default "hami-system" | quote }}
+        service: {{ .service | default "hami-device-plugin-monitor" | quote }}
+        port: {{ .port | default 0 }}
+        path: {{ .path | default "/metrics" | quote }}
+      {{- end }}
+      {{- end }}
     {{- end }}
     {{- end }}
 

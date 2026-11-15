@@ -714,6 +714,35 @@
                         "otherPods": {
                             "type": "boolean",
                             "default": false
+                        },
+                        "gpuMetrics": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "GPU usage from HAMi's vGPU monitor; adds a Role in its namespace to list the monitor service's EndpointSlices.",
+                            "properties": {
+                                "enabled": {
+                                    "type": "boolean",
+                                    "default": false
+                                },
+                                "namespace": {
+                                    "type": "string",
+                                    "default": "hami-system"
+                                },
+                                "service": {
+                                    "type": "string",
+                                    "default": "hami-device-plugin-monitor"
+                                },
+                                "port": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 65535,
+                                    "default": 0
+                                },
+                                "path": {
+                                    "type": "string",
+                                    "default": "/metrics"
+                                }
+                            }
                         }
                     }
                 },
