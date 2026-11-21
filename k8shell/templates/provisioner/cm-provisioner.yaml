@@ -1,6 +1,12 @@
 {{- if not .Values.provisioner.targetNamespace }}
 {{- fail "provisioner.targetNamespace is required and it must be an existing namespace name" }}
 {{- end }}
+{{- if and .Values.certManager.enabled (ne .Values.certManager.issuer.kind "ClusterIssuer") }}
+{{- fail "certManager.issuer.kind must be ClusterIssuer: workspace certificates are issued in the organization namespaces, where a namespaced Issuer does not exist" }}
+{{- end }}
+{{- if gt (len .Values.provisioner.targetNamespace) 22 }}
+{{- fail "provisioner.targetNamespace may be at most 22 characters: it is the prefix of the organization namespaces (<targetNamespace>-<organization>)" }}
+{{- end }}
 
 apiVersion: v1
 kind: ConfigMap
@@ -11,6 +17,13 @@ metadata:
 data:
   config.yaml: |
     targetNamespace: {{ .Values.provisioner.targetNamespace }}
+    orgNamespaces:
+      workspaceClusterRole: {{ include "k8shell.provisionerWorkspaceClusterRole" . }}
+      serviceAccount: provisioner
+      {{- with (.Values.provisioner.orgNamespaces | default dict).containerDefaults }}
+      containerDefaults:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 
     {{- if .Values.provisioner.kubeClient }}
     kubeClient:
@@ -32,6 +45,55 @@ data:
     nodeSelectorKeys:
     {{- range . }}
       - {{ . }}
+    {{- end }}
+    {{- end }}
+
+    {{- /* Workspace run schedules: only the settings that are set, the provisioner
+    defaults the rest (local zone, 1h). */}}
+    {{- with .Values.provisioner.schedule }}
+    {{- if or .timezone .forceStartDuration }}
+    schedule:
+      {{- with .timezone }}
+      timezone: {{ . | quote }}
+      {{- end }}
+      {{- with .forceStartDuration }}
+      forceStartDuration: {{ . | quote }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+
+    {{- /* Node usage and its optional parts (see values.yaml provisioner.nodeUsage and
+    the matching rules in clusterrole-nodes.yaml). */}}
+    {{- with .Values.provisioner.nodeUsage }}
+    {{- if .enabled }}
+    nodeUsage:
+      enabled: true
+      nodeMetrics: {{ .nodeMetrics | default false }}
+      otherPods: {{ .otherPods | default false }}
+      {{- with .gpuMetrics }}
+      {{- if .enabled }}
+      gpuMetrics:
+        enabled: true
+        namespace: {{ .namespace | default "hami-system" | quote }}
+        service: {{ .service | default "hami-device-plugin-monitor" | quote }}
+        port: {{ .port | default 0 }}
+        path: {{ .path | default "/metrics" | quote }}
+      {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+
+    {{- with .Values.provisioner.gpu }}
+    {{- if .enabled }}
+    gpu:
+      resources:
+        count: {{ .resources.count | quote }}
+        memory: {{ .resources.memory | default "" | quote }}
+        cores: {{ .resources.cores | default "" | quote }}
+      tolerations:
+      {{- toYaml (.tolerations | default list) | nindent 8 }}
+      nodeSelector:
+      {{- toYaml (.nodeSelector | default dict) | nindent 8 }}
     {{- end }}
     {{- end }}
 

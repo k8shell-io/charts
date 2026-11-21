@@ -11,9 +11,14 @@ allow if {
     input.action in {
         "org:list", "org:create", "org:delete", "org:update", "org:read",
         "org:envvar:read", "org:envvar:write", "org:node:write",
+        "org:quota:write",
     }
     common.is_admin(input.subject)
 }
+
+# org:quota:write (setting or removing an org's quota) is admin-only too: an
+# org-admin must not raise their own org's share of the cluster. Reading the
+# quota and its usage rides on org:read, which an org-admin has for their org.
 
 # org:node:write (replacing an org's node selectors and listing the node
 # selector options, which expose cluster topology) is deliberately absent from

@@ -1,0 +1,32 @@
+{{- $nu := .Values.provisioner.nodeUsage | default dict }}
+{{- $gm := $nu.gpuMetrics | default dict }}
+{{- if and $nu.enabled $gm.enabled }}
+{{- $ns := $gm.namespace | default "hami-system" }}
+{{- $name := printf "provisioner-gpu-metrics-%s" .Release.Namespace | trunc 63 | trimSuffix "-" }}
+# node usage: GPU usage (nodeUsage.gpuMetrics). The provisioner lists the HAMi
+# monitor service's EndpointSlices to find each GPU node's monitor pod, then
+# scrapes the pods directly; nothing else in HAMi's namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $name }}
+  namespace: {{ $ns }}
+rules:
+- apiGroups: ["discovery.k8s.io"]
+  resources: ["endpointslices"]
+  verbs: ["list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $name }}
+  namespace: {{ $ns }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $name }}
+subjects:
+- kind: ServiceAccount
+  name: provisioner
+  namespace: {{ .Release.Namespace }}
+{{- end }}

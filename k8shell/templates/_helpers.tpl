@@ -180,3 +180,70 @@ Rendered as JSON.
 {{- end -}}
 {{- toJson (concat $cms (.Values.provisioner.blueprintFilesConfigMaps | default list) | uniq) -}}
 {{- end }}
+
+{{/*
+Rules the provisioner needs inside a workspace namespace: the target namespace
+(Role provisioner) and every organization namespace (ClusterRole
+provisioner-workspaces-<release namespace>, bound there by the provisioner).
+*/}}
+{{- define "k8shell.provisionerWorkspaceRules" }}
+  - apiGroups: ["", "apps", "metrics.k8s.io"]
+    resources:
+      [
+        "pods",
+        "pods/resize",
+        "pods/exec",
+        "pods/log",
+        "pods/portforward",
+        "pods/attach",
+        "pods/proxy",
+        "pods/binding",
+        "configmaps",
+        "endpoints",
+        "persistentvolumeclaims",
+        "secrets",
+        "events",
+        "services",
+        "services/proxy",
+        "serviceaccounts",
+      ]
+    verbs:
+      [
+        "create",
+        "delete",
+        "deletecollection",
+        "get",
+        "list",
+        "patch",
+        "update",
+        "watch",
+      ]
+  # organization quotas (ResourceQuota and the LimitRange of container defaults)
+  - apiGroups: [""]
+    resources: ["resourcequotas", "limitranges"]
+    verbs: ["create", "delete", "get", "list", "watch", "update", "patch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["create", "get", "list", "delete", "watch", "update", "patch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs:
+      ["create", "delete", "deletecollection", "get", "list", "watch", "update", "patch"]
+{{- if .Capabilities.APIVersions.Has "cilium.io/v2/CiliumNetworkPolicy" }}
+  - apiGroups: ["cilium.io"]
+    resources: ["ciliumnetworkpolicies"]
+    verbs:
+      ["create", "delete", "deletecollection", "get", "list", "watch", "update", "patch"]
+{{- end }}
+{{- if .Values.certManager.enabled }}
+  - apiGroups: ["cert-manager.io"]
+    resources:
+      - certificates
+    verbs: ["create","get","list","watch","update","patch","delete"]
+{{- end }}
+{{- end }}
+
+{{/* Name of the provisioner's workspace ClusterRole. */}}
+{{- define "k8shell.provisionerWorkspaceClusterRole" -}}
+{{- printf "provisioner-workspaces-%s" .Release.Namespace | trunc 63 | trimSuffix "-" -}}
+{{- end }}
