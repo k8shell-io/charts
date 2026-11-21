@@ -43,6 +43,23 @@ spec:
             name: ssh
           - containerPort: 9000
             name: grpc
+          - containerPort: 8022
+            name: health
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: health
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 2
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: health
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
         volumeMounts:
         - name: config-volume
           mountPath: /app/config
