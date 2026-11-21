@@ -109,6 +109,9 @@ sshProxy:
   nodePort:
     enabled: false
     port: 30022
+    # optional NodePort for HTTP GET /healthz (200 while the proxy accepts
+    # SSH connections), for an external load balancer's health checks
+    # healthPort: 30023
 
 # identity is the authentication and user management service.
 identity:

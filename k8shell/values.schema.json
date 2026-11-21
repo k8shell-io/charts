@@ -232,6 +232,11 @@
                             "type": "integer",
                             "minimum": 30000,
                             "maximum": 32767
+                        },
+                        "healthPort": {
+                            "type": "integer",
+                            "minimum": 30000,
+                            "maximum": 32767
                         }
                     }
                 }

@@ -36,6 +36,14 @@ spec:
       targetPort: 2022
       nodePort: {{ .Values.sshProxy.nodePort.port }}
       name: ssh
+    {{- if .Values.sshProxy.nodePort.healthPort }}
+    # HTTP /healthz for an external load balancer's health checks
+    - port: 8022
+      protocol: TCP
+      targetPort: health
+      nodePort: {{ .Values.sshProxy.nodePort.healthPort }}
+      name: health
+    {{- end }}
   selector:
     k8shell.io/app: ssh-proxy
 {{- end }}
