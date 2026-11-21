@@ -50,6 +50,8 @@ tokenExpiration: 600
 # disabled for all services and they will fall back to plaintext communication
 certManager:
   enabled: false
+  # must be a ClusterIssuer: workspace certificates are issued in the
+  # organization namespaces (<provisioner.targetNamespace>-<organization>)
   issuer:
     name: vault-root-issuer
     kind: ClusterIssuer
@@ -214,8 +216,14 @@ identity:
   # in. nodeSelectors (label key -> value) place the workspaces of an
   # organization's users and are set only while the organization has none, so
   # changes made in the admin UI are kept; without any, an admin must set them
-  # before its users can start workspaces. roles are organization-scoped roles
-  # (admin and org-admin cannot be declared here: they are global).
+  # before its users can start workspaces. quota caps what the organization's
+  # running workspaces may use together (requestsCpu, requestsMemory,
+  # limitsCpu, limitsMemory as Kubernetes quantities; gpus; workspaces), set
+  # only while the organization has none, like nodeSelectors. Names are
+  # lowercase DNS labels of at most 40 characters: each organization's
+  # workspaces run in the namespace <provisioner.targetNamespace>-<name>.
+  # roles are organization-scoped roles (admin and org-admin cannot be
+  # declared here: they are global).
   organizations:
     - name: default
       description: Default organization
@@ -348,9 +356,22 @@ provisioner:
   # files (the provisioner refuses duplicates).
   blueprintFilesConfigMaps: []
 
-  # targetNamespace is the namespace where provisioner will create workspaces.
-  # if not set, helm chart installation will fail.
+  # targetNamespace holds the provisioner's own objects and is the prefix of
+  # the organization namespaces: each organization's standalone workspaces run
+  # in "<targetNamespace>-<organization>", created by the provisioner (which
+  # gets the cluster-wide rights for it, see
+  # templates/provisioner/clusterrole-org-namespaces.yaml). Required, an
+  # existing namespace of at most 22 characters.
   targetNamespace: ""
+
+  # orgNamespaces:
+  #   # Requests and limits given (through a LimitRange) to workspace containers
+  #   # that set none, in the namespaces of organizations with a quota: a pod
+  #   # under a CPU or memory quota is rejected unless every container declares
+  #   # that resource. Only the dimensions the quota limits are defaulted.
+  #   containerDefaults:
+  #     requests: {cpu: 10m, memory: 64Mi}
+  #     limits: {cpu: "2", memory: 4Gi}
 
   # Rate limit for the in-cluster Kubernetes client used for all workspace
   # pod/release lookups and mutations. Defaults to 150 QPS / 300 burst when

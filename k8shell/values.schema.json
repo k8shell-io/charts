@@ -516,7 +516,10 @@
                         "properties": {
                             "name": {
                                 "type": "string",
-                                "minLength": 1
+                                "minLength": 1,
+                                "maxLength": 40,
+                                "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+                                "description": "A lowercase DNS label of at most 40 characters: it is part of the organization's namespace name."
                             },
                             "description": {
                                 "type": "string"
@@ -525,6 +528,38 @@
                                 "type": "object",
                                 "additionalProperties": {
                                     "type": "string"
+                                }
+                            },
+                            "quota": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "description": "What the organization's running workspaces may use together; set only while the organization has none.",
+                                "properties": {
+                                    "requestsCpu": {
+                                        "type": "string",
+                                        "description": "Kubernetes quantity, e.g. \"16\", \"500m\", \"64Gi\"."
+                                    },
+                                    "requestsMemory": {
+                                        "type": "string",
+                                        "description": "Kubernetes quantity, e.g. \"16\", \"500m\", \"64Gi\"."
+                                    },
+                                    "limitsCpu": {
+                                        "type": "string",
+                                        "description": "Kubernetes quantity, e.g. \"16\", \"500m\", \"64Gi\"."
+                                    },
+                                    "limitsMemory": {
+                                        "type": "string",
+                                        "description": "Kubernetes quantity, e.g. \"16\", \"500m\", \"64Gi\"."
+                                    },
+                                    "gpus": {
+                                        "type": "integer",
+                                        "minimum": 0
+                                    },
+                                    "workspaces": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "description": "Running workspaces."
+                                    }
                                 }
                             },
                             "roles": {
@@ -651,6 +686,48 @@
                 },
                 "targetNamespace": {
                     "type": "string"
+                },
+                "orgNamespaces": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "description": "Organization namespaces, \"<targetNamespace>-<organization>\", created by the provisioner.",
+                    "properties": {
+                        "containerDefaults": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "Requests and limits given through a LimitRange to workspace containers that set none, in the namespaces of organizations with a quota; only the dimensions the quota limits are defaulted. Defaults: requests 10m CPU and 64Mi memory, limits 2 CPUs and 4Gi memory.",
+                            "properties": {
+                                "requests": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "cpu": {
+                                            "type": "string",
+                                            "description": "Kubernetes CPU quantity, e.g. \"10m\" or \"2\"."
+                                        },
+                                        "memory": {
+                                            "type": "string",
+                                            "description": "Kubernetes memory quantity, e.g. \"64Mi\"."
+                                        }
+                                    }
+                                },
+                                "limits": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "cpu": {
+                                            "type": "string",
+                                            "description": "Kubernetes CPU quantity, e.g. \"10m\" or \"2\"."
+                                        },
+                                        "memory": {
+                                            "type": "string",
+                                            "description": "Kubernetes memory quantity, e.g. \"64Mi\"."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 },
                 "kubeClient": {
                     "type": "object",
