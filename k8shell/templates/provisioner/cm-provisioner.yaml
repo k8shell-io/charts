@@ -1,6 +1,12 @@
 {{- if not .Values.provisioner.targetNamespace }}
 {{- fail "provisioner.targetNamespace is required and it must be an existing namespace name" }}
 {{- end }}
+{{- if and .Values.certManager.enabled (ne .Values.certManager.issuer.kind "ClusterIssuer") }}
+{{- fail "certManager.issuer.kind must be ClusterIssuer: workspace certificates are issued in the organization namespaces, where a namespaced Issuer does not exist" }}
+{{- end }}
+{{- if gt (len .Values.provisioner.targetNamespace) 22 }}
+{{- fail "provisioner.targetNamespace may be at most 22 characters: it is the prefix of the organization namespaces (<targetNamespace>-<organization>)" }}
+{{- end }}
 
 apiVersion: v1
 kind: ConfigMap
@@ -11,6 +17,13 @@ metadata:
 data:
   config.yaml: |
     targetNamespace: {{ .Values.provisioner.targetNamespace }}
+    orgNamespaces:
+      workspaceClusterRole: {{ include "k8shell.provisionerWorkspaceClusterRole" . }}
+      serviceAccount: provisioner
+      {{- with (.Values.provisioner.orgNamespaces | default dict).containerDefaults }}
+      containerDefaults:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 
     {{- if .Values.provisioner.kubeClient }}
     kubeClient:
