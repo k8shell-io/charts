@@ -1,5 +1,6 @@
 {{- if .Values.identity.kubernetes.saToken.enabled }}
-{{- if .Values.provisioner.injectNamespaces }}
+{{- /* explicit inject namespaces: a Role in each; ["*"]: clusterrole-identity-inject.yaml */}}
+{{- if and .Values.provisioner.injectNamespaces (not (include "k8shell.clusterWideInjection" .)) }}
 {{- range .Values.provisioner.injectNamespaces }}
 {{- $injectNamespace := . }}
 {{- if ne $injectNamespace $.Values.provisioner.targetNamespace }}

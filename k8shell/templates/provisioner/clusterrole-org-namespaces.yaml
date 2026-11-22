@@ -1,7 +1,8 @@
 {{- /*
 Standalone workspaces run in one namespace per organization,
-"<targetNamespace>-<organization>", which the provisioner creates on the
-organization's first workspace. It needs, cluster-wide:
+"<targetNamespace>-<organization>", which the provisioner creates with the
+organization. Rendered only with organizations.enabled (see
+single-org-namespace.yaml for organizations off). It needs, cluster-wide:
 - namespaces: to create, label and delete the organization namespaces, and to
   list them for its workspace lookups;
 - rolebindings + bind on the workspace ClusterRole: in each organization
@@ -10,13 +11,14 @@ organization's first workspace. It needs, cluster-wide:
 Its rights on pods, secrets and the rest stay limited to the namespaces where
 that RoleBinding exists.
 */ -}}
+{{- if include "k8shell.organizationsEnabled" . }}
 {{- $workspaceRole := include "k8shell.provisionerWorkspaceClusterRole" . }}
 {{- $name := printf "provisioner-org-namespaces-%s" .Release.Namespace | trunc 63 | trimSuffix "-" }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: {{ $workspaceRole }}
-rules:{{ include "k8shell.provisionerWorkspaceRules" . }}
+rules:{{ include "k8shell.provisionerWorkspaceRules" . }}{{ include "k8shell.provisionerQuotaRules" . }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -46,3 +48,4 @@ subjects:
   - kind: ServiceAccount
     name: provisioner
     namespace: {{ .Release.Namespace }}
+{{- end }}

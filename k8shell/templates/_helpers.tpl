@@ -183,26 +183,30 @@ Rendered as JSON.
 
 {{/*
 Rules the provisioner needs inside a workspace namespace: the target namespace
-(Role provisioner) and every organization namespace (ClusterRole
-provisioner-workspaces-<release namespace>, bound there by the provisioner).
+(Role provisioner), every organization namespace (ClusterRole
+provisioner-workspaces-<release namespace>, bound there by the provisioner) or,
+with organizations off, the single organization's namespace (Role
+provisioner-workspaces). Only what it uses, and all within Kubernetes'
+built-in "admin" role, so that a namespace admin can install k8shell with
+organizations off. Two exceptions are optional for that reason: the quota rules
+(k8shell.provisionerQuotaRules, organizations.defaultNamespace.quota) and
+in-place resize (provisioner.liveResize). CiliumNetworkPolicies are a third on
+clusters where Cilium doesn't aggregate them into "admin".
 */}}
 {{- define "k8shell.provisionerWorkspaceRules" }}
-  - apiGroups: ["", "apps", "metrics.k8s.io"]
+  # workspaces (the workspace chart's pods, PVCs, secrets, config maps,
+  # services), their shells and logs, and Helm's release secrets
+  - apiGroups: [""]
     resources:
       [
         "pods",
-        "pods/resize",
         "pods/exec",
-        "pods/log",
-        "pods/portforward",
         "pods/attach",
+        "pods/portforward",
         "pods/proxy",
-        "pods/binding",
         "configmaps",
-        "endpoints",
         "persistentvolumeclaims",
         "secrets",
-        "events",
         "services",
         "services/proxy",
         "serviceaccounts",
@@ -218,10 +222,20 @@ provisioner-workspaces-<release namespace>, bound there by the provisioner).
         "update",
         "watch",
       ]
-  # organization quotas (ResourceQuota and the LimitRange of container defaults)
   - apiGroups: [""]
-    resources: ["resourcequotas", "limitranges"]
-    verbs: ["create", "delete", "get", "list", "watch", "update", "patch"]
+    resources: ["pods/log", "events", "endpoints"]
+    verbs: ["get", "list", "watch"]
+{{- if ne (toString .Values.provisioner.liveResize) "false" }}
+  # in-place resize (provisioner.liveResize; beyond Kubernetes' built-in
+  # "admin" role)
+  - apiGroups: [""]
+    resources: ["pods/resize"]
+    verbs: ["get", "patch", "update"]
+{{- end }}
+  # workspace usage
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
   - apiGroups: ["coordination.k8s.io"]
     resources: ["leases"]
     verbs: ["create", "get", "list", "delete", "watch", "update", "patch"]
@@ -239,11 +253,81 @@ provisioner-workspaces-<release namespace>, bound there by the provisioner).
   - apiGroups: ["cert-manager.io"]
     resources:
       - certificates
-    verbs: ["create","get","list","watch","update","patch","delete"]
+    verbs: ["create","get","list","watch","update","patch","delete","deletecollection"]
 {{- end }}
+{{- end }}
+
+{{/*
+Rules for organization quotas: the ResourceQuota and the LimitRange of
+container defaults in an organization's namespace. Beyond Kubernetes'
+built-in "admin" role (namespace admins may not change their own quotas).
+*/}}
+{{- define "k8shell.provisionerQuotaRules" }}
+  - apiGroups: [""]
+    resources: ["resourcequotas", "limitranges"]
+    verbs: ["create", "delete", "get", "list", "watch", "update", "patch"]
+{{- end }}
+
+{{/* "true" when the single organization (organizations off) has a quota. */}}
+{{- define "k8shell.singleOrgQuota" -}}
+{{- $d := (.Values.organizations | default dict).defaultNamespace | default dict -}}
+{{- if or (not (hasKey $d "quota")) $d.quota }}true{{ end -}}
 {{- end }}
 
 {{/* Name of the provisioner's workspace ClusterRole. */}}
 {{- define "k8shell.provisionerWorkspaceClusterRole" -}}
 {{- printf "provisioner-workspaces-%s" .Release.Namespace | trunc 63 | trimSuffix "-" -}}
+{{- end }}
+
+{{/*
+With organizations off: the single organization (the only entry of
+identity.organizations) and its workspace namespace
+(organizations.defaultNamespace.name, default <targetNamespace>-<organization>).
+*/}}
+{{- define "k8shell.singleOrganization" -}}
+{{- (first (.Values.identity.organizations | default (list (dict "name" "default")))).name -}}
+{{- end }}
+
+{{- define "k8shell.singleOrgNamespace" -}}
+{{- $ns := ((.Values.organizations | default dict).defaultNamespace | default dict).name -}}
+{{- $ns | default (printf "%s-%s" .Values.provisioner.targetNamespace (include "k8shell.singleOrganization" .)) -}}
+{{- end }}
+
+{{/* "true" when organizations are on (the default). */}}
+{{- define "k8shell.organizationsEnabled" -}}
+{{- $o := .Values.organizations | default dict -}}
+{{- if or (not (hasKey $o "enabled")) $o.enabled }}true{{ end -}}
+{{- end }}
+
+{{/* "true" when injectNamespaces holds "*" (cluster-wide injection). */}}
+{{- define "k8shell.clusterWideInjection" -}}
+{{- if has "*" (.Values.provisioner.injectNamespaces | default list) }}true{{ end -}}
+{{- end }}
+
+{{/*
+Rules the provisioner needs in a namespace it injects workspaces into: in a
+Role per inject namespace, or a ClusterRole with injectNamespaces ["*"].
+*/}}
+{{- define "k8shell.provisionerInjectRules" }}
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["replicasets", "daemonsets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets"]
+  verbs: ["get", "list", "watch", "update", "patch"]
+- apiGroups: [""]
+  resources: ["configmaps", "secrets", "services"]
+  verbs: ["get", "create", "update", "delete"]
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims"]
+  verbs: ["get", "create"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["networkpolicies"]
+  verbs: ["get", "create", "update", "delete", "patch"]
+- apiGroups: ["cert-manager.io"]
+  resources: ["certificates"]
+  verbs: ["get", "create", "update", "patch", "delete"]
 {{- end }}

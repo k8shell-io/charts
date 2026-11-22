@@ -7,6 +7,10 @@ metadata:
   name: provisioner
   namespace: {{ .Values.provisioner.targetNamespace }}
 rules:{{ include "k8shell.provisionerWorkspaceRules" . }}
+{{- /* organizations off with the target namespace as the single organization's: its quota too */}}
+{{- if and (not (include "k8shell.organizationsEnabled" .)) (eq (include "k8shell.singleOrgNamespace" .) .Values.provisioner.targetNamespace) (include "k8shell.singleOrgQuota" .) }}
+{{- include "k8shell.provisionerQuotaRules" . }}
+{{- end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

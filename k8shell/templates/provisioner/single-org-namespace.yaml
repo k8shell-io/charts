@@ -1,0 +1,55 @@
+{{- /*
+Organizations off (organizations.enabled false): the single organization's
+workspaces run in one namespace, set up here with namespaced RBAC only. The
+provisioner never reads or changes Namespace objects then; it gets its
+workspace rights in the namespace from this Role (the rules the organization
+namespaces get from the workspace ClusterRole; the quota rules only with
+organizations.defaultNamespace.quota, as a namespace admin can't grant them). The Namespace itself is
+created only with organizations.defaultNamespace.create, kept on uninstall,
+and labelled like the provisioner's organization namespaces so that it is
+adopted when organizations are turned on.
+*/ -}}
+{{- if not (include "k8shell.organizationsEnabled" .) }}
+{{- $org := include "k8shell.singleOrganization" . }}
+{{- $ns := include "k8shell.singleOrgNamespace" . }}
+{{- $target := .Values.provisioner.targetNamespace }}
+{{- $create := (.Values.organizations.defaultNamespace | default dict).create }}
+{{- if and $create (ne $ns $target) (ne $ns .Release.Namespace) }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $ns }}
+  labels:
+    k8shell.io/workspaces-of: {{ $target }}
+    k8shell.io/organization: {{ $org }}
+  annotations:
+    helm.sh/resource-policy: keep
+---
+{{- end }}
+{{- /* the target namespace already has the same rules (role-target-ns.yaml) */}}
+{{- if ne $ns $target }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: provisioner-workspaces
+  namespace: {{ $ns }}
+rules:{{ include "k8shell.provisionerWorkspaceRules" . }}
+{{- if include "k8shell.singleOrgQuota" . }}
+{{- include "k8shell.provisionerQuotaRules" . }}
+{{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: provisioner-workspaces
+  namespace: {{ $ns }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: provisioner-workspaces
+subjects:
+  - kind: ServiceAccount
+    name: provisioner
+    namespace: {{ .Release.Namespace }}
+{{- end }}
+{{- end }}

@@ -323,6 +323,36 @@ authz:
     flushInterval: 200ms
     dedupWindow: 30s
 
+# organizations turns on several organizations, each with its own workspace
+# namespace <provisioner.targetNamespace>-<organization> that the provisioner
+# creates, labels and deletes. That needs cluster-scoped RBAC: a ClusterRole on
+# namespaces and on binding the provisioner's workspace rights in them
+# (templates/provisioner/clusterrole-org-namespaces.yaml).
+# false: a single organization, the only entry of identity.organizations
+# ("default" unless renamed there); its workspaces run in defaultNamespace,
+# which the chart sets up with namespaced RBAC only. Organizations can't be
+# added. Together with no node features (provisioner.nodeSelectorKeys: [],
+# provisioner.nodeUsage.enabled: false) and no cluster-wide injection, the
+# chart then needs no cluster-scoped RBAC at all.
+organizations:
+  enabled: true
+  # the single organization's workspace namespace (organizations off)
+  defaultNamespace:
+    # default: <provisioner.targetNamespace>-<organization>
+    name: ""
+    # true: the chart creates the namespace (a cluster-scoped object; kept on
+    # uninstall, so the workspaces in it survive) labelled like the
+    # provisioner's organization namespaces, so it is adopted when
+    # organizations are turned on later. false: it must exist, for an
+    # installer that may not create namespaces; it may be
+    # provisioner.targetNamespace.
+    create: true
+    # the organization quota (a ResourceQuota and LimitRange in the
+    # namespace). false: no quota, and the provisioner's Role holds nothing
+    # beyond Kubernetes' built-in "admin" role, so that a namespace admin can
+    # install k8shell (namespace admins may not change their quotas).
+    quota: true
+
 # provisioner manages the lifecycle of k8shell workspace pods.
 provisioner:
   replicas: 1
@@ -386,8 +416,9 @@ provisioner:
 
   # Namespaces where workspace injection is allowed.
   # If omitted or empty, injection is disabled and all inject requests are rejected.
-  # Use explicit namespace names for Role-scoped operation.
-  # When you use ["*"] cluster-wide discovery/injection will be granted (ClusterRole).
+  # Explicit namespace names get a Role in each (namespaced RBAC only).
+  # ["*"] allows injection into every namespace: the provisioner (and identity,
+  # with identity.kubernetes.saToken.enabled) get a ClusterRole instead.
   # injectNamespaces:
   #   - default
 
@@ -399,6 +430,12 @@ provisioner:
   nodeSelectorKeys:
     - k8shell.io/pool
     - kubernetes.io/os
+
+  # liveResize lets a running workspace's CPU and memory be changed in place
+  # (pods/resize). It is a right beyond Kubernetes' built-in "admin" role:
+  # set false when a namespace admin installs k8shell; resources then change
+  # when a workspace is provisioned again.
+  liveResize: true
 
   # schedule: how workspace run schedules (blueprint `schedule`) are read.
   schedule:

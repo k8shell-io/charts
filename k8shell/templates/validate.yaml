@@ -25,12 +25,23 @@
 {{- fail (printf "identity.users: the organization %q of user %q must be declared in identity.organizations (declared: %s)" (toString .organization) .username (join ", " $orgs)) }}
 {{- end }}
 {{- end }}
+{{- if not (include "k8shell.organizationsEnabled" .) }}
+{{- if ne (len $orgs) 1 }}
+{{- fail (printf "organizations.enabled is false: identity.organizations must declare exactly one organization, the single one (declared: %s)" (join ", " $orgs)) }}
+{{- end }}
+{{- if and (not (include "k8shell.singleOrgQuota" .)) (first .Values.identity.organizations).quota }}
+{{- fail "organizations.defaultNamespace.quota is false: the organization in identity.organizations can't have a quota" }}
+{{- end }}
+{{- end }}
 {{- $keys := .Values.provisioner.nodeSelectorKeys | default list }}
+{{- /* without node selector discovery the keys are not checked: the selectors are applied as set */}}
+{{- if $keys }}
 {{- range .Values.identity.organizations }}
 {{- $org := .name }}
 {{- range $k, $v := .nodeSelectors }}
 {{- if not (has $k $keys) }}
 {{- fail (printf "identity.organizations: node selector key %q of organization %q must be one of provisioner.nodeSelectorKeys (%s): the provisioner rejects other keys" $k $org (join ", " $keys)) }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
