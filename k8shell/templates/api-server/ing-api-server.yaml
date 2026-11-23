@@ -10,7 +10,7 @@ metadata:
         deny all;
       }
 spec:
-  ingressClassName: k8shell-ingress
+  ingressClassName: {{ (.Values.ingress | default dict).className | default "k8shell-ingress" }}
   rules:
     - host: "{{ .Values.frontend.host }}"
       http:
