@@ -1,0 +1,29 @@
+{{- /*
+Cluster-wide injection (provisioner.injectNamespaces ["*"]): identity issues
+ServiceAccount tokens for injected workspaces in any namespace. Explicit
+inject namespaces get a Role in each instead (role-identity-inject-ns.yaml).
+*/ -}}
+{{- if and .Values.identity.kubernetes.saToken.enabled (include "k8shell.clusterWideInjection" .) }}
+{{- $name := printf "identity-inject-%s" .Release.Namespace | trunc 63 | trimSuffix "-" }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ $name }}
+rules:
+  - apiGroups: [""]
+    resources: ["serviceaccounts/token"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ $name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ $name }}
+subjects:
+  - kind: ServiceAccount
+    name: identity
+    namespace: {{ .Release.Namespace }}
+{{- end }}

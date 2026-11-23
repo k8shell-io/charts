@@ -1,0 +1,29 @@
+{{- /*
+Cluster-wide injection (provisioner.injectNamespaces ["*"]): the provisioner's
+inject rights in every namespace, plus listing the namespaces it offers.
+Explicit inject namespaces get a Role in each instead (role-inject-ns.yaml).
+*/ -}}
+{{- if include "k8shell.clusterWideInjection" . }}
+{{- $name := printf "provisioner-inject-%s" .Release.Namespace | trunc 63 | trimSuffix "-" }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ $name }}
+rules:{{ include "k8shell.provisionerInjectRules" . }}
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ $name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ $name }}
+subjects:
+- kind: ServiceAccount
+  name: provisioner
+  namespace: {{ .Release.Namespace }}
+{{- end }}

@@ -4,7 +4,7 @@
 {{- if and .Values.certManager.enabled (ne .Values.certManager.issuer.kind "ClusterIssuer") }}
 {{- fail "certManager.issuer.kind must be ClusterIssuer: workspace certificates are issued in the organization namespaces, where a namespaced Issuer does not exist" }}
 {{- end }}
-{{- if gt (len .Values.provisioner.targetNamespace) 22 }}
+{{- if and (include "k8shell.organizationsEnabled" .) (gt (len .Values.provisioner.targetNamespace) 22) }}
 {{- fail "provisioner.targetNamespace may be at most 22 characters: it is the prefix of the organization namespaces (<targetNamespace>-<organization>)" }}
 {{- end }}
 
@@ -18,7 +18,17 @@ data:
   config.yaml: |
     targetNamespace: {{ .Values.provisioner.targetNamespace }}
     orgNamespaces:
+      {{- if include "k8shell.organizationsEnabled" . }}
       workspaceClusterRole: {{ include "k8shell.provisionerWorkspaceClusterRole" . }}
+      {{- else }}
+      {{- /* organizations off: one organization in one namespace (single-org-namespace.yaml) */}}
+      enabled: false
+      organization: {{ include "k8shell.singleOrganization" . }}
+      namespace: {{ include "k8shell.singleOrgNamespace" . }}
+      {{- if not (include "k8shell.singleOrgQuota" .) }}
+      quota: false
+      {{- end }}
+      {{- end }}
       serviceAccount: provisioner
       {{- with (.Values.provisioner.orgNamespaces | default dict).containerDefaults }}
       containerDefaults:
@@ -110,6 +120,11 @@ data:
       {{- end }}
       username: ${PRIVATE_REGISTRY_USERNAME}
       password: ${PRIVATE_REGISTRY_PASSWORD}
+    {{- end }}
+
+    {{- if eq (toString .Values.provisioner.liveResize) "false" }}
+    # in-place resize off (provisioner.liveResize): no pods/resize right
+    liveResize: false
     {{- end }}
 
     k8shellCapabilities:

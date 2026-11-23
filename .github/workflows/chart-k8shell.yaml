@@ -55,6 +55,11 @@ jobs:
           helm dependency build k8shell
           helm package k8shell -d dist/ --version "${{ steps.ver.outputs.chart_version }}"
 
+      - name: Test cluster-scoped RBAC
+        # which cluster-scoped objects each feature combination renders; none
+        # for a minimal installation (needs the dependencies built above)
+        run: k8shell/rbac-tests/run.sh
+
       - name: Push helm chart
         run: |
           helm registry login "${{ secrets.REGISTRY_EXT }}" --username "${{ secrets.HARBOR_USER }}" \

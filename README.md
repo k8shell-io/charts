@@ -39,6 +39,58 @@ Installs k8shell into your cluster with sensible defaults. Run with `--help` for
 
 See [k8shell documentation](https://docs.k8shell.io) for full configuration reference.
 
+## Permissions and minimal installations
+
+The k8shell chart renders cluster-scoped RBAC only for the features that need
+it; there is no separate switch for it. Everything else is namespaced.
+
+| Feature | Values | Needs, cluster-wide |
+|---|---|---|
+| Organizations, each with its own workspace namespace | `organizations.enabled` (default `true`) | namespaces (create, label, delete), RoleBindings and `bind` on the provisioner's workspace ClusterRole |
+| Node pools and placement options | `provisioner.nodeSelectorKeys` (default: two keys) | read nodes |
+| Node usage | `provisioner.nodeUsage.enabled` (default `false`) and its parts | read nodes; node metrics and other pods for the optional parts |
+| Injection into every namespace | `provisioner.injectNamespaces: ["*"]` | the inject rights in every namespace (explicit namespaces get a Role in each) |
+
+With organizations off there is a single organization, the only entry of
+`identity.organizations`; it can't be deleted and no other can be added. Its
+workspaces run in `organizations.defaultNamespace.name` (default
+`<provisioner.targetNamespace>-<organization>`), which the chart sets up with a
+Role. The UI and `GET /api/v1/features` show what is turned off.
+
+A minimal installation, with no cluster-scoped object at all:
+
+```yaml
+organizations:
+  enabled: false
+  defaultNamespace:
+    create: false   # the namespace exists already; true lets the chart create it (a Namespace is cluster-scoped)
+provisioner:
+  nodeSelectorKeys: []
+  nodeUsage:
+    enabled: false
+```
+
+The namespaces it uses (the release namespace, `provisioner.targetNamespace`
+and the workspace namespace, which may be the target namespace) must exist.
+
+**Installing as a namespace admin.** A user bound to Kubernetes' built-in
+`admin` role in those namespaces can install the minimal installation if the
+Roles it creates hold nothing beyond `admin`. Two features need more and can be
+turned off for that:
+
+```yaml
+organizations:
+  defaultNamespace:
+    quota: false      # no organization quota (namespace admins may not change their quotas)
+provisioner:
+  liveResize: false   # no in-place resize (pods/resize); resources change when a workspace is provisioned again
+```
+
+On clusters with Cilium, workspaces also need CiliumNetworkPolicies, which
+Cilium doesn't add to `admin` by default: a cluster admin aggregates them
+first. `k8shell/rbac-tests/run.sh` checks which cluster-scoped objects each
+combination renders.
+
 ## License
 
 AGPL-3.0-or-later. See [LICENSE](LICENSE).
