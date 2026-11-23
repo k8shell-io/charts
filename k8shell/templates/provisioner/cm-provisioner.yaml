@@ -41,6 +41,10 @@ data:
       burst: {{ .Values.provisioner.kubeClient.burst }}
     {{- end }}
 
+    # The provisioner gets the license from identity and verifies it itself.
+    license:
+      hosts: {{ include "k8shell.licenseHosts" . }}
+      checkInterval: {{ .Values.license.checkInterval }}
     {{- if .Values.provisioner.injectNamespaces }}
     injectNamespaces:
     {{- range .Values.provisioner.injectNamespaces }}

@@ -331,3 +331,16 @@ Role per inject namespace, or a ClusterRole with injectNamespaces ["*"].
   resources: ["certificates"]
   verbs: ["get", "create", "update", "patch", "delete"]
 {{- end }}
+
+{{/*
+The hostnames the installation is reached at, as a JSON list for the license
+config: license.hosts, or frontend.host. A license bound to hosts must cover
+all of them.
+*/}}
+{{- define "k8shell.licenseHosts" -}}
+{{- if .Values.license.hosts -}}
+{{- toJson .Values.license.hosts -}}
+{{- else -}}
+{{- toJson (list .Values.frontend.host) -}}
+{{- end -}}
+{{- end }}

@@ -359,6 +359,26 @@ organizations:
 ingress:
   className: k8shell-ingress
 
+# license unlocks limits beyond the free tier: 1 organization, 3 users and 5
+# workspaces per organization (stopped and injected workspaces included).
+# Admins can upload the license in the app (License page); identity stores
+# it. The token set here only seeds it: identity imports it when it first
+# sees it (once per content), if there is no license yet or this one was
+# issued later than the stored one. An upload made in the app since is kept
+# until this value changes again.
+license:
+  # the license token: .value (stored in the chart's Secret int-identity) or
+  # .secretName/.secretKey (an existing Secret; key LICENSE by default)
+  token: {}
+  # import a changed token even when it was issued before the stored license,
+  # e.g. to go back to an older license (still once per content)
+  force: false
+  # the hostnames the installation is reached at; a license bound to hosts
+  # must cover all of them. Default: frontend.host
+  hosts: []
+  # how often the license is evaluated again (expiry, a changed token)
+  checkInterval: 1m
+
 # provisioner manages the lifecycle of k8shell workspace pods.
 provisioner:
   replicas: 1

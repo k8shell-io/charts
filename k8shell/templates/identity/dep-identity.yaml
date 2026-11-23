@@ -101,6 +101,11 @@ spec:
             - name: jwt
               mountPath: /var/run/secrets/k8shell.io
               readOnly: true
+          {{- if or .Values.license.token.value .Values.license.token.secretName }}
+            - name: license
+              mountPath: /app/secrets/license
+              readOnly: true
+          {{- end }}
             - name: jwt-issuer
               mountPath: /run/secrets/jwt-issuer
               readOnly: true
@@ -126,6 +131,15 @@ spec:
         - name: identity-config
           configMap:
             name: identity-config
+        {{- if or .Values.license.token.value .Values.license.token.secretName }}
+        - name: license
+          secret:
+            secretName: {{ .Values.license.token.secretName | default "int-identity" }}
+            optional: true
+            items:
+              - key: {{ .Values.license.token.secretKey | default "LICENSE" }}
+                path: license.jwt
+        {{- end }}
         {{- if .Values.identity.smtp.enabled }}
         - name: identity-smtp-secret
           projected:
