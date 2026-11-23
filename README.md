@@ -68,7 +68,37 @@ The images and the chart come from `registry.k8shell.io` and need credentials
 (`--registry-username`/`--registry-password` or the variables above);
 `--registry ""` with `--chart` installs public images without credentials. On
 clusters with Cilium, the restricted modes need CiliumNetworkPolicy rights in
-the namespace (see below).
+the namespace (see below). Set passwords in single quotes
+(`export K8SHELL_REGISTRY_PASSWORD='...'`): in double quotes the shell expands
+a `!`.
+
+Before installing, the script also checks, where your permissions allow it:
+
+- that k8shell's images are published for the nodes' architectures (linux/amd64
+  and linux/arm64 for release builds);
+- that the cluster has a default StorageClass for the database and NATS volumes
+  (on a local cluster, for example
+  [local-path](https://github.com/rancher/local-path-provisioner));
+- that the web UI's address answers: the IngressClass's controller must be
+  reachable at `--host` (a LoadBalancer address, or hostPort 80/443 on the
+  nodes; on clusters in local VMs a LoadBalancer gets no address);
+- that the SSH NodePort is free;
+
+and builds the dependencies of a local chart directory (`--chart ./k8shell`).
+
+**Apple Silicon and other arm64 clusters.** Release builds of the images,
+`k8shelld` and the default workspace images are multi-arch, so k8shell runs
+natively on arm64 nodes. A local cluster needs a default StorageClass and an
+ingress controller listening on the nodes, for example Traefik:
+
+```bash
+helm repo add traefik https://traefik.github.io/charts
+helm install traefik traefik/traefik -n traefik --create-namespace \
+  --set ingressClass.isDefaultClass=true --set deployment.kind=DaemonSet \
+  --set ports.web.hostPort=80 --set ports.websecure.hostPort=443 \
+  --set 'tolerations[0].key=node-role.kubernetes.io/control-plane' \
+  --set 'tolerations[0].operator=Exists' --set 'tolerations[0].effect=NoSchedule'
+```
 
 See [k8shell documentation](https://docs.k8shell.io) for full configuration reference.
 
