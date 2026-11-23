@@ -155,6 +155,32 @@ first. `k8shell/rbac-tests/run.sh` checks which cluster-scoped objects each
 combination renders. `bin/quickstart-v2.sh` finds out which of these
 installations your permissions allow and sets the values for you.
 
+## License limits
+
+Without a license k8shell runs the free tier: 1 organization, 3 users and 5
+workspaces per organization (stopped and injected workspaces included). A
+license raises or removes these limits. Admins upload it in the app (License
+page, or `PUT /api/v1/license`); identity stores it. The chart can seed it:
+
+```yaml
+license:
+  token:
+    value: "<license token>"        # or secretName/secretKey of an existing Secret
+  force: false                      # import a changed token even if it is older than the stored license
+  hosts: []                         # hostnames the installation is reached at; default frontend.host
+  checkInterval: 1m
+```
+
+The token is imported once per content: when there is no license yet, or it
+was issued later than the stored one (always with `force`). A license
+uploaded in the app since is kept until the token changes again. A license
+bound to hosts must cover every host in `license.hosts`.
+
+At a limit a create is refused with 409 `limit_reached`; while the
+installation is over any limit (for example after a license expired), no new
+organization, user or workspace can be created (409 `over_limit`), but
+nothing existing is locked or deleted.
+
 ## License
 
 AGPL-3.0-or-later. See [LICENSE](LICENSE).

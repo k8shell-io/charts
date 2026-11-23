@@ -1534,6 +1534,30 @@
                     }
                 }
             }
+        },
+        "license": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "The license: seeds the license identity stores; admins can also upload it in the app.",
+            "properties": {
+                "token": {
+                    "$ref": "#/definitions/secretRef"
+                },
+                "force": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "hosts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "checkInterval": {
+                    "type": "string",
+                    "default": "1m"
+                }
+            }
         }
     }
 }

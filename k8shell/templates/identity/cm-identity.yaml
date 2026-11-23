@@ -120,6 +120,14 @@ data:
     singleOrganization: {{ include "k8shell.singleOrganization" . }}
     {{- end }}
 
+    # The license is stored in identity's database; the file (license.token)
+    # only seeds it. Without a license the free tier applies.
+    license:
+      path: /app/secrets/license/license.jwt
+      force: {{ .Values.license.force }}
+      hosts: {{ include "k8shell.licenseHosts" . }}
+      checkInterval: {{ .Values.license.checkInterval }}
+
     # Password brute-force lockout for AuthUserPassword
     passwordLockout:
       maxAttempts: {{ .Values.identity.passwordLockout.maxAttempts }}
