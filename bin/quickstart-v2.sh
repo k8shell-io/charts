@@ -392,6 +392,30 @@ newest_chart_version() {
     echo "$best"
 }
 
+# image_archs IMAGE: the architectures an image is published for, one per
+# line (from its index, or the config of a single-platform image); empty when
+# the registry can't be read
+image_archs() {
+    local image="$1" registry repo tag token hdr=() manifest config
+    registry="${image%%/*}"
+    repo="${image#*/}"
+    tag="${repo##*:}"
+    repo="${repo%:*}"
+    token=$(oci_token "$registry" "$repo")
+    [ -n "$token" ] && hdr=(-H "Authorization: Bearer $token")
+    manifest=$(curl -s ${hdr[@]+"${hdr[@]}"} \
+        -H "Accept: application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json" \
+        "https://$registry/v2/$repo/manifests/$tag")
+    if echo "$manifest" | grep -q '"manifests"'; then
+        echo "$manifest" | tr ',{}' '\n\n\n' | sed -n 's/^ *"architecture" *: *"\([^"]*\)".*/\1/p' | grep -vx unknown | sort -u
+    else
+        config=$(echo "$manifest" | tr '\n' ' ' | sed -n 's/.*"config" *: *{[^}]*"digest" *: *"\([^"]*\)".*/\1/p')
+        [ -n "$config" ] || return 0
+        curl -sL ${hdr[@]+"${hdr[@]}"} "https://$registry/v2/$repo/blobs/$config" |
+            tr ',{}' '\n\n\n' | sed -n 's/^ *"architecture" *: *"\([^"]*\)".*/\1/p' | head -1
+    fi
+}
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -538,16 +562,91 @@ if [ -z "$CHART_VERSION" ] && [[ "$CHART_REF" == oci://* ]]; then
     [ -n "$CHART_VERSION" ] || error "No ${CHART_SERIES}.x version of $CHART_REF found; set --version"
 fi
 
+# the chart is in the registry of the images: log in to read it
+if [ -n "$REGISTRY_HOST" ] && [[ "$CHART_REF" == "oci://$REGISTRY_HOST/"* ]]; then
+    printf '%s' "$REGISTRY_PASSWORD" | helm registry login "$REGISTRY_HOST" \
+        --username "$REGISTRY_USERNAME" --password-stdin >/dev/null 2>&1 || true
+fi
+
+# a local chart directory needs its dependencies (the NATS subchart)
+if [ -d "$CHART_REF" ] && helm dependency list "$CHART_REF" 2>/dev/null | awk 'NR > 1 && NF && $4 != "ok"' | grep -q .; then
+    info "Building the dependencies of $CHART_REF..."
+    helm dependency list "$CHART_REF" 2>/dev/null | awk 'NR > 1 && NF {print $1, $3}' | while read -r name repo; do
+        case "$repo" in http*) helm repo add "$name" "$repo" >/dev/null 2>&1 || true ;; esac
+    done
+    helm dependency build "$CHART_REF" >/dev/null || error "helm dependency build $CHART_REF failed"
+fi
+
 # the chart sets the web UI's IngressClass only from 2.x builds that have
 # the value ingress.className; older ones serve "k8shell-ingress" only
 if [ "$WEB_ENABLED" = "true" ] && [ "$INGRESS_CLASS" != "k8shell-ingress" ]; then
-    if [ -n "$REGISTRY_HOST" ] && [[ "$CHART_REF" == "oci://$REGISTRY_HOST/"* ]]; then
-        printf '%s' "$REGISTRY_PASSWORD" | helm registry login "$REGISTRY_HOST" \
-            --username "$REGISTRY_USERNAME" --password-stdin >/dev/null 2>&1 || true
-    fi
     if ! helm show values "$CHART_REF" ${CHART_VERSION:+--version "$CHART_VERSION"} 2>/dev/null | grep -q '^ingress:'; then
         WEB_ENABLED="false"
         WEB_NOTE="off: chart ${CHART_VERSION:-$CHART_REF} serves the web UI only on the IngressClass k8shell-ingress (--ingress-class k8shell-ingress if the cluster has it)"
+    fi
+fi
+
+# the web UI's address must reach the ingress controller (on a cluster in
+# local VMs a LoadBalancer service gets no address: the controller has to
+# listen on the nodes, e.g. hostPort 80/443)
+WEB_WARNING=""
+if [ "$WEB_ENABLED" = "true" ]; then
+    code=$(curl -sk -o /dev/null --connect-timeout 3 --max-time 5 -w '%{http_code}' "$WEB_SCHEME://$WEB_HOST/" 2>/dev/null || true)
+    if [ "${code:-000}" = "000" ]; then
+        WEB_WARNING="nothing answers on $WEB_SCHEME://$WEB_HOST: the controller of the IngressClass $INGRESS_CLASS must be reachable there (a LoadBalancer address, or hostPort 80/443 on the nodes), or set --host to an address that reaches it"
+    fi
+fi
+
+# a default StorageClass for the volumes of the database and NATS (checked
+# when StorageClasses can be listed)
+if can_i list storageclasses.storage.k8s.io; then
+    defaultSC=$(kubectl get storageclass -o jsonpath='{range .items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")]}{.metadata.name}{"\n"}{end}' 2>/dev/null | head -1 || true)
+    if [ -n "$defaultSC" ]; then
+        STORAGE_NOTE="$defaultSC (the default StorageClass)"
+    elif [ ${#VALUES_FILES[@]} -gt 0 ]; then
+        STORAGE_NOTE="no default StorageClass: your values files must set the storage classes"
+    else
+        STORAGE_NOTE="no default StorageClass"
+        PROBLEMS+=("the cluster has no default StorageClass for the volumes of the database and NATS: make one the default (on a local cluster, for example local-path: https://github.com/rancher/local-path-provisioner), or set the storage classes in a values file (-f)")
+    fi
+else
+    STORAGE_NOTE="not checked (you may not list StorageClasses)"
+fi
+
+# the nodes' architectures must be in k8shell's images (checked when nodes
+# can be read): the images the chart and the values files name, in the
+# registry of the images
+ARCH_NOTE="not checked (you may not read nodes)"
+if [ "$CAN_LIST_NODES" = "yes" ]; then
+    NODE_ARCHS=$(kubectl get nodes -o jsonpath='{range .items[*]}{.status.nodeInfo.architecture}{"\n"}{end}' 2>/dev/null | sort -u | tr '\n' ' ')
+    vf=()
+    for f in ${VALUES_FILES[@]+"${VALUES_FILES[@]}"}; do vf+=(-f "$f"); done
+    images=$(helm template k8shell "$CHART_REF" ${CHART_VERSION:+--version "$CHART_VERSION"} --namespace "${NAMESPACE}" \
+        --set provisioner.targetNamespace=check --set sshProxy.serverKey.value=check \
+        --set postgresql.username.value=check --set postgresql.password.value=check --set nats.password.value=check \
+        ${vf[@]+"${vf[@]}"} 2>/dev/null |
+        grep -oE "${REGISTRY_HOST:-registry.k8shell.io}/[a-z0-9._/-]+:[A-Za-z0-9._-]+" | sort -u || true)
+    if [ -z "$images" ]; then
+        ARCH_NOTE="nodes ${NODE_ARCHS% }; images not checked (the chart could not be rendered)"
+    else
+        archProblems=()
+        for image in $images; do
+            archs=$(image_archs "$image" | tr '\n' ' ')
+            [ -n "$archs" ] || continue
+            for a in $NODE_ARCHS; do
+                if [[ " $archs " != *" $a "* ]]; then
+                    archProblems+=("image $image is published for ${archs% } only, not for the nodes' $a")
+                    break
+                fi
+            done
+        done
+        if [ ${#archProblems[@]} -eq 0 ]; then
+            ARCH_NOTE="nodes ${NODE_ARCHS% }; k8shell's images support them"
+        else
+            ARCH_NOTE="nodes ${NODE_ARCHS% }; ${#archProblems[@]} image(s) don't support them (see below)"
+            PROBLEMS+=("${archProblems[@]}")
+            PROBLEMS+=("use a chart version or images (-f) built for ${NODE_ARCHS% }")
+        fi
     fi
 fi
 
@@ -579,6 +678,8 @@ for f in ${VALUES_FILES[@]+"${VALUES_FILES[@]}"}; do
 echo "  Values file        : $f"
 done
 echo "  Images             : ${REGISTRY_HOST:-public registry}${REGISTRY_HOST:+ (with credentials)}"
+echo "  Architectures      : $ARCH_NOTE"
+echo "  Storage            : $STORAGE_NOTE"
 echo "  Release namespace  : $NAMESPACE"
 echo "  Target namespace   : $TARGET_NAMESPACE"
 [ "$MODE" != "full" ] && \
@@ -592,6 +693,8 @@ echo "  Admin user         : admin (sudo enabled, shell: /bin/bash)"
 echo "  Admin SSH key      : $adminKeySource"
 echo "  Admin web password : $adminPasswordDesc"
 echo
+
+[ -n "$WEB_WARNING" ] && warn "web UI: $WEB_WARNING"
 
 if [ ${#PROBLEMS[@]} -gt 0 ]; then
     for p in "${PROBLEMS[@]}"; do
