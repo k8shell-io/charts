@@ -37,6 +37,39 @@ Helm charts for [k8shell](https://k8shell.io) — Cloud-native Development Envir
 
 Installs k8shell into your cluster with sensible defaults. Run with `--help` for available options.
 
+### Quickstart for k8shell 2.x
+
+```bash
+export K8SHELL_REGISTRY_USERNAME=... K8SHELL_REGISTRY_PASSWORD=...
+./bin/quickstart-v2.sh            # --dry-run to see the plan without installing
+```
+
+Installs the k8shell 2.x chart (the newest 2.x version in the registry unless
+`--version` is given). It first checks what your Kubernetes user may do and
+proposes a mode, which `--mode` overrides:
+
+| Mode | When | What you get |
+|---|---|---|
+| `full` | you may create cluster-scoped RBAC and namespaces (cluster admin) | organizations, node pools, node usage (with metrics-server) |
+| `no-cluster-rbac` | you may create namespaces, but no ClusterRoles | a single organization, no node information; the script creates the namespaces |
+| `namespace-admin` | neither: existing namespaces where you have Kubernetes' built-in `admin` role | a single organization in your namespaces (by default all in your context's namespace), no node information, no organization quota or live resize unless you may grant them |
+
+It shows the plan (mode and why, features on and off, namespaces, chart
+version) and asks before installing. Keys and passwords are kept in
+`~/k8shell-quickstart` (`K8SHELL_QUICKSTART_DIR`), so running it again upgrades
+the same installation. Afterwards it prints how to connect with SSH (a NodePort,
+default `30022`) and the web UI address: the web UI uses the cluster's
+IngressClass (`--ingress-class`, default: the cluster's default class) and the
+host `<node-ip>.nip.io` (`--host`); sign in as `admin` with the password in
+`~/k8shell-quickstart/admin-password` (hashed with `htpasswd`, python3 `bcrypt`
+or `mkpasswd`, whichever is installed).
+
+The images and the chart come from `registry.k8shell.io` and need credentials
+(`--registry-username`/`--registry-password` or the variables above);
+`--registry ""` with `--chart` installs public images without credentials. On
+clusters with Cilium, the restricted modes need CiliumNetworkPolicy rights in
+the namespace (see below).
+
 See [k8shell documentation](https://docs.k8shell.io) for full configuration reference.
 
 ## Permissions and minimal installations
@@ -89,7 +122,8 @@ provisioner:
 On clusters with Cilium, workspaces also need CiliumNetworkPolicies, which
 Cilium doesn't add to `admin` by default: a cluster admin aggregates them
 first. `k8shell/rbac-tests/run.sh` checks which cluster-scoped objects each
-combination renders.
+combination renders. `bin/quickstart-v2.sh` finds out which of these
+installations your permissions allow and sets the values for you.
 
 ## License
 

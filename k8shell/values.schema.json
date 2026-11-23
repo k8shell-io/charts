@@ -58,6 +58,16 @@
         "provisioner"
     ],
     "properties": {
+        "ingress": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "className": {
+                    "type": "string",
+                    "default": "k8shell-ingress"
+                }
+            }
+        },
         "organizations": {
             "type": "object",
             "additionalProperties": false,

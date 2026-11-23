@@ -353,6 +353,12 @@ organizations:
     # install k8shell (namespace admins may not change their quotas).
     quota: true
 
+# ingress: the Ingresses of the web UI and the API (host frontend.host and its
+# subdomains) use this IngressClass; the cluster's ingress controller must
+# serve it (the chart installs none).
+ingress:
+  className: k8shell-ingress
+
 # provisioner manages the lifecycle of k8shell workspace pods.
 provisioner:
   replicas: 1

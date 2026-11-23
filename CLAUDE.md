@@ -22,6 +22,9 @@ helm install k8shell oci://ghcr.io/k8shell-io/charts/k8shell --namespace k8shell
 
 # Quickstart (generates keys, creates namespace, runs helm install)
 ./bin/quickstart.sh --help
+# Quickstart for k8shell 2.x: discovers the user's permissions and proposes a
+# mode (full, no-cluster-rbac, namespace-admin); --dry-run shows the plan
+./bin/quickstart-v2.sh --help
 ```
 
 ## Repository Structure
