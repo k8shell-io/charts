@@ -25,10 +25,12 @@
 #    Kubernetes secret with the specified name and key
 
 # imageRegistry defines a private container registry used to create an image pull secret (regcred).
-# The images are pulled from registry.k8shell.io for now, which requires
-# credentials: set username/password (the chart creates the pull Secret) or
-# existingSecret. Workspaces pull k8shelld from it too: set
-# provisioner.privateRegistry as well (quickstart.sh does both).
+# This chart's images are in the internal registry registry.k8shell.io, which
+# requires credentials: set username/password (the chart creates the pull
+# Secret) or existingSecret. Workspaces pull k8shelld from it too: set
+# provisioner.privateRegistry as well (quickstart-v2.sh does both). The release
+# published on ghcr.io (oci://ghcr.io/k8shell-io/charts/k8shell) uses the public
+# images on ghcr.io/k8shell-io instead, with an empty host: no credentials.
 imageRegistry:
   host: registry.k8shell.io
 
@@ -50,6 +52,8 @@ tokenExpiration: 600
 # disabled for all services and they will fall back to plaintext communication
 certManager:
   enabled: false
+  # must be a ClusterIssuer: workspace certificates are issued in the
+  # organization namespaces (<provisioner.targetNamespace>-<organization>)
   issuer:
     name: vault-root-issuer
     kind: ClusterIssuer
@@ -74,7 +78,7 @@ sshProxy:
   
   image:
     repository: registry.k8shell.io/k8shell-base/ssh-proxy
-    tag: v0.18.6
+    tag: v0.19.0
   
   proxyProtocol: false
   
@@ -107,13 +111,16 @@ sshProxy:
   nodePort:
     enabled: false
     port: 30022
+    # optional NodePort for HTTP GET /healthz (200 while the proxy accepts
+    # SSH connections), for an external load balancer's health checks
+    # healthPort: 30023
 
 # identity is the authentication and user management service.
 identity:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/identity
-    tag: v0.18.6
+    tag: v0.19.0
 
   # jwtIssuer configures JWT token issuance for k8shell services.
   jwtIssuer:
@@ -214,8 +221,14 @@ identity:
   # in. nodeSelectors (label key -> value) place the workspaces of an
   # organization's users and are set only while the organization has none, so
   # changes made in the admin UI are kept; without any, an admin must set them
-  # before its users can start workspaces. roles are organization-scoped roles
-  # (admin and org-admin cannot be declared here: they are global).
+  # before its users can start workspaces. quota caps what the organization's
+  # running workspaces may use together (requestsCpu, requestsMemory,
+  # limitsCpu, limitsMemory as Kubernetes quantities; gpus; workspaces), set
+  # only while the organization has none, like nodeSelectors. Names are
+  # lowercase DNS labels of at most 40 characters: each organization's
+  # workspaces run in the namespace <provisioner.targetNamespace>-<name>.
+  # roles are organization-scoped roles (admin and org-admin cannot be
+  # declared here: they are global).
   organizations:
     - name: default
       description: Default organization
@@ -281,7 +294,7 @@ authz:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/authz
-    tag: v0.3.6
+    tag: v0.4.0
 
   # policiesConfigMap is the name of an existing ConfigMap whose keys are
   # mounted as policy files (*.rego) into /app/policies, replacing the chart's
@@ -312,18 +325,76 @@ authz:
     flushInterval: 200ms
     dedupWindow: 30s
 
+# organizations turns on several organizations, each with its own workspace
+# namespace <provisioner.targetNamespace>-<organization> that the provisioner
+# creates, labels and deletes. That needs cluster-scoped RBAC: a ClusterRole on
+# namespaces and on binding the provisioner's workspace rights in them
+# (templates/provisioner/clusterrole-org-namespaces.yaml).
+# false: a single organization, the only entry of identity.organizations
+# ("default" unless renamed there); its workspaces run in defaultNamespace,
+# which the chart sets up with namespaced RBAC only. Organizations can't be
+# added. Together with no node features (provisioner.nodeSelectorKeys: [],
+# provisioner.nodeUsage.enabled: false) and no cluster-wide injection, the
+# chart then needs no cluster-scoped RBAC at all.
+organizations:
+  enabled: true
+  # the single organization's workspace namespace (organizations off)
+  defaultNamespace:
+    # default: <provisioner.targetNamespace>-<organization>
+    name: ""
+    # true: the chart creates the namespace (a cluster-scoped object; kept on
+    # uninstall, so the workspaces in it survive) labelled like the
+    # provisioner's organization namespaces, so it is adopted when
+    # organizations are turned on later. false: it must exist, for an
+    # installer that may not create namespaces; it may be
+    # provisioner.targetNamespace.
+    create: true
+    # the organization quota (a ResourceQuota and LimitRange in the
+    # namespace). false: no quota, and the provisioner's Role holds nothing
+    # beyond Kubernetes' built-in "admin" role, so that a namespace admin can
+    # install k8shell (namespace admins may not change their quotas).
+    quota: true
+
+# ingress: the Ingresses of the web UI and the API (host frontend.host and its
+# subdomains) use this IngressClass; the cluster's ingress controller must
+# serve it (the chart installs none).
+ingress:
+  className: k8shell-ingress
+
+# license unlocks limits beyond the free tier: 1 organization, 3 users and 5
+# workspaces per organization (stopped and injected workspaces included).
+# Admins can upload the license in the app (License page); identity stores
+# it. The token set here only seeds it: identity imports it when it first
+# sees it (once per content), if there is no license yet or this one was
+# issued later than the stored one. An upload made in the app since is kept
+# until this value changes again.
+license:
+  # the license token: .value (stored in the chart's Secret int-identity) or
+  # .secretName/.secretKey (an existing Secret; key LICENSE by default)
+  token: {}
+  # import a changed token even when it was issued before the stored license,
+  # e.g. to go back to an older license (still once per content)
+  force: false
+  # the hostnames the installation is reached at; a license bound to hosts
+  # must cover all of them. Default: frontend.host
+  hosts: []
+  # how often the license is evaluated again (expiry, a changed token)
+  checkInterval: 1m
+
 # provisioner manages the lifecycle of k8shell workspace pods.
 provisioner:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/provisioner
-    tag: v0.17.10
+    tag: v0.18.0
 
   # k8shelld is the default image for k8shelld defined in base blueprint
   k8shelld:
     image:
       repository: registry.k8shell.io/k8shell-base/k8shelld
-      tag: v0.17.5
+      # multi-arch (linux/amd64, linux/arm64) from v0.17.7; devrun (hot reload in
+      # injected workspaces) from v0.17.8
+      tag: v0.17.8
 
   # blueprintsConfigMap is the name of an existing ConfigMap with blueprint
   # files that replaces the chart's defaults (the ConfigMap blueprint-base-files
@@ -348,9 +419,22 @@ provisioner:
   # files (the provisioner refuses duplicates).
   blueprintFilesConfigMaps: []
 
-  # targetNamespace is the namespace where provisioner will create workspaces.
-  # if not set, helm chart installation will fail.
+  # targetNamespace holds the provisioner's own objects and is the prefix of
+  # the organization namespaces: each organization's standalone workspaces run
+  # in "<targetNamespace>-<organization>", created by the provisioner (which
+  # gets the cluster-wide rights for it, see
+  # templates/provisioner/clusterrole-org-namespaces.yaml). Required, an
+  # existing namespace of at most 22 characters.
   targetNamespace: ""
+
+  # orgNamespaces:
+  #   # Requests and limits given (through a LimitRange) to workspace containers
+  #   # that set none, in the namespaces of organizations with a quota: a pod
+  #   # under a CPU or memory quota is rejected unless every container declares
+  #   # that resource. Only the dimensions the quota limits are defaulted.
+  #   containerDefaults:
+  #     requests: {cpu: 10m, memory: 64Mi}
+  #     limits: {cpu: "2", memory: 4Gi}
 
   # Rate limit for the in-cluster Kubernetes client used for all workspace
   # pod/release lookups and mutations. Defaults to 150 QPS / 300 burst when
@@ -362,10 +446,26 @@ provisioner:
 
   # Namespaces where workspace injection is allowed.
   # If omitted or empty, injection is disabled and all inject requests are rejected.
-  # Use explicit namespace names for Role-scoped operation.
-  # When you use ["*"] cluster-wide discovery/injection will be granted (ClusterRole).
+  # Explicit namespace names get a Role in each (namespaced RBAC only).
+  # ["*"] allows injection into every namespace: the provisioner (and identity,
+  # with identity.kubernetes.saToken.enabled) get a ClusterRole instead.
   # injectNamespaces:
   #   - default
+
+  # injectDevrun: hot reload in injected workspaces. When a workspace is
+  # injected into a workload, its first container is wrapped in devrun (shipped
+  # in the k8shelld image), so the workspace can run a new build of the service
+  # without restarting the container or the pod, and without a special
+  # entrypoint in the service image. The command comes from the container spec,
+  # or from the image config in the registry (read with the pod's image pull
+  # secrets). Liveness probes of the wrapped container are removed while the
+  # workspace is injected. Ejecting the workspace restores the workload. In a
+  # pod with several containers, the workload's annotation
+  # k8shell.io/devrun-container names the one to wrap (default: the container
+  # named like the workload, else the first). See "Hot reload in injected
+  # workspaces" in the README.
+  injectDevrun:
+    enabled: true
 
   # Node label keys whose values are discovered from cluster nodes and offered as
   # placement options (see the GetNodeSelectorOptions RPC). When non-empty, a
@@ -375,6 +475,73 @@ provisioner:
   nodeSelectorKeys:
     - k8shell.io/pool
     - kubernetes.io/os
+
+  # liveResize lets a running workspace's CPU and memory be changed in place
+  # (pods/resize). It is a right beyond Kubernetes' built-in "admin" role:
+  # set false when a namespace admin installs k8shell; resources then change
+  # when a workspace is provisioned again.
+  liveResize: true
+
+  # schedule: how workspace run schedules (blueprint `schedule`) are read.
+  schedule:
+    # IANA zone (e.g. "Europe/Prague") for schedule times without an offset,
+    # unless the blueprint sets its own; empty: the provisioner's local zone
+    # (UTC in the container)
+    timezone: ""
+    # how long a force-started workspace whose schedule has ended may run
+    # when the start names no expiry (e.g. "1h"); empty: 1h
+    forceStartDuration: ""
+
+  # nodeUsage turns on the node usage view (Performance -> Usage; the
+  # GetNodeUsage RPC and GET /nodes/usage) and its optional parts. Off by
+  # default, so a minimal installation needs no extra permissions for it.
+  # Each flag adds the cluster-wide rules it needs to the provisioner's
+  # ClusterRole (clusterrole-nodes.yaml); if a permission is missing anyway,
+  # the provisioner logs a warning and leaves that part out.
+  nodeUsage:
+    # nodes with their allocatable CPU/memory and the requests, limits and
+    # usage of the workspaces on each (needs list on nodes)
+    enabled: false
+    # each node's usage, and so the other pods' usage (metrics.k8s.io nodes)
+    nodeMetrics: false
+    # the requests and limits of the non-workspace pods on each node, so a
+    # node's requested share is complete (list pods in all namespaces)
+    otherPods: false
+    # GPU usage from HAMi's vGPU monitor (GPU capacity and allocations are
+    # shown without it). The provisioner finds each GPU node's monitor pod
+    # through the monitor service's EndpointSlices and scrapes it directly;
+    # role-gpu-metrics.yaml grants list on endpointslices in `namespace`.
+    gpuMetrics:
+      enabled: false
+      # HAMi's namespace and its monitor service (HAMi chart defaults)
+      namespace: hami-system
+      service: hami-device-plugin-monitor
+      # the monitor pods' port; 0 = the EndpointSlice's port
+      port: 0
+      path: /metrics
+
+  # gpu configures GPU support for workspaces: blueprints request GPUs with
+  # resources.gpu (count, optional memory/cores for a slice) and the provisioner
+  # maps the request to these extended resources, tolerations and node selector.
+  # The defaults match HAMi (nvidia.com/gpu, gpumem in MiB, gpucores in %).
+  # enabled: false renders no gpu section (GPU support off, blueprints with
+  # resources.gpu are rejected).
+  gpu:
+    enabled: false
+    # extended resource names; an empty memory/cores disables gpu.memory/gpu.cores in blueprints
+    resources:
+      count: nvidia.com/gpu
+      memory: nvidia.com/gpumem
+      cores: nvidia.com/gpucores
+    # added to the pod of a workspace with a GPU
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+    # added to the node selection of a workspace with a GPU; wins over the
+    # organization's node selector for the same key. {}: the organization's
+    # selectors alone decide.
+    nodeSelector: {}
 
   # defaultRegistry is the default registry host for workspace images when no
   # registry is specified in a blueprint.
@@ -427,7 +594,7 @@ frontend:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/frontend
-    tag: v0.18.6
+    tag: v0.19.1
   scheme: "http"
   host: "localtest.me"
   sessionCookie:
@@ -448,7 +615,7 @@ apiServer:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/api-server
-    tag: v0.19.6
+    tag: v0.20.0
   logging:
     requestHeaders: false
     responseHeaders: false
@@ -472,7 +639,7 @@ session:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-base/session
-    tag: v0.15.3
+    tag: v0.16.0
 
   # Janitor ends sessions that stop sending upserts (e.g. client killed).
   # pg_try_advisory_lock ensures only one replica runs the sweep at a time.
@@ -687,7 +854,7 @@ idpGithub:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-idp/idp-github
-    tag: v0.14.4
+    tag: v0.15.1
 
   github:
     # client ID/secret of the GitHub App
@@ -743,7 +910,7 @@ idpGoogle:
   replicas: 1
   image:
     repository: registry.k8shell.io/k8shell-idp/idp-google
-    tag: v0.1.0
+    tag: v0.2.1
 
   google:
     # OAuth 2.0 "Web application" client from Google Cloud Console (APIs & Services >

@@ -22,6 +22,9 @@ helm install k8shell oci://ghcr.io/k8shell-io/charts/k8shell --namespace k8shell
 
 # Quickstart (generates keys, creates namespace, runs helm install)
 ./bin/quickstart.sh --help
+# Quickstart for k8shell 2.x: discovers the user's permissions and proposes a
+# mode (full, no-cluster-rbac, namespace-admin); --dry-run shows the plan
+./bin/quickstart-v2.sh --help
 ```
 
 ## Repository Structure
@@ -50,6 +53,8 @@ The k8shell chart deploys two tiers of services:
 - `postgresql` — `postgresql.mode`: `simple` (a single-instance StatefulSet `db-postgresql`, official postgres image, PVC kept on uninstall), `cnpg` (a CloudNativePG `Cluster` `db-postgresql`, operator required) or `external`. The Service `db-postgresql` points at the primary in both installed modes.
 - `nats` — `nats.install` adds the official NATS chart as the subchart `natsServer` (values under `natsServer`, `fullnameOverride: nats`). `nats.enabled` still means "the services use NATS"; `templates/validate.yaml` checks that the NATS server reads the same password Secret as the services.
 - `k8shell-infra-versions` ConfigMap (versions of the installed PostgreSQL/NATS for api-server) is created automatically.
+
+**Cluster-scoped RBAC follows the features** (organizations, node features, cluster-wide injection; see the README's "Permissions and minimal installations"). `organizations.enabled: false` renders `templates/provisioner/single-org-namespace.yaml` (the single organization's namespace and Role) instead of the organization-namespace ClusterRoles, and identity gets `singleOrganization`. The provisioner's namespaced rules (`k8shell.provisionerWorkspaceRules`) stay within Kubernetes' built-in `admin` role; the quota rules and `pods/resize` are optional (`organizations.defaultNamespace.quota`, `provisioner.liveResize`) so that a namespace admin can install. `k8shell/rbac-tests/run.sh` (helm only, run in CI) asserts which cluster-scoped objects each combination renders.
 
 **Organizations and roles:** identity has no built-in organization. `identity.organizations` (name, description, nodeSelectors, organization-scoped roles) and `identity.roles` (global roles besides the built-in `admin` and `org-admin`; defaults `developer`, `git-workspace`) are rendered into identity's config and created at startup if missing; node selectors are set only while an organization has none. Every entry of `identity.users` needs an `organization` declared there (`templates/validate.yaml`) and gets an onboarding rule with its organization, roles and sudo.
 

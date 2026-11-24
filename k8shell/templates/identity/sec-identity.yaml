@@ -26,6 +26,10 @@
 {{- end }}
 {{- end }}
 
+{{- with .Values.license.token.value }}
+{{- $_ := set $secrets "LICENSE" . }}
+{{- end }}
+
 {{- if $secrets }}
 apiVersion: v1
 kind: Secret

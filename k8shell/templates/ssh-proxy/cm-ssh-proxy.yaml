@@ -6,6 +6,11 @@ metadata:
     app: ssh-proxy
 data:
   config.yaml: |
+    # HTTP /healthz for probes and load balancer health checks; served by
+    # the main process, never opens an SSH connection
+    health:
+      port: 8022
+
     grpc:
       port: 9000
 

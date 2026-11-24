@@ -1,5 +1,6 @@
 # not part of the packaged chart
 policy-tests/
+rbac-tests/
 .DS_Store
 *.swp
 *.bak

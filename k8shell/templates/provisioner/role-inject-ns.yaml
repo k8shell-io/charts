@@ -1,4 +1,5 @@
-{{- if .Values.provisioner.injectNamespaces }}
+{{- /* explicit inject namespaces: a Role in each; ["*"]: clusterrole-inject.yaml */}}
+{{- if and .Values.provisioner.injectNamespaces (not (include "k8shell.clusterWideInjection" .)) }}
 {{- range .Values.provisioner.injectNamespaces }}
 ---
 {{- $injectNamespace := . }}
@@ -10,28 +11,7 @@ kind: Role
 metadata:
   name: {{ $roleName }}
   namespace: {{ $injectNamespace }}
-rules:
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: ["apps"]
-  resources: ["replicasets", "daemonsets"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: ["apps"]
-  resources: ["deployments", "statefulsets"]
-  verbs: ["get", "list", "watch", "update", "patch"]
-- apiGroups: [""]
-  resources: ["configmaps", "secrets", "services"]
-  verbs: ["get", "create", "update", "delete"]
-- apiGroups: [""]
-  resources: ["persistentvolumeclaims"]
-  verbs: ["get", "create"]
-- apiGroups: ["networking.k8s.io"]
-  resources: ["networkpolicies"]
-  verbs: ["get", "create", "update", "delete", "patch"]
-- apiGroups: ["cert-manager.io"]
-  resources: ["certificates"]
-  verbs: ["get", "create", "update", "patch", "delete"]
+rules:{{ include "k8shell.provisionerInjectRules" $ }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

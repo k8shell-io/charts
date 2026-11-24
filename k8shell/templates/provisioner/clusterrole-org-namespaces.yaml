@@ -1,0 +1,51 @@
+{{- /*
+Standalone workspaces run in one namespace per organization,
+"<targetNamespace>-<organization>", which the provisioner creates with the
+organization. Rendered only with organizations.enabled (see
+single-org-namespace.yaml for organizations off). It needs, cluster-wide:
+- namespaces: to create, label and delete the organization namespaces, and to
+  list them for its workspace lookups;
+- rolebindings + bind on the workspace ClusterRole: in each organization
+  namespace it binds that ClusterRole (its rights inside a workspace
+  namespace) to itself; Kubernetes lets it bind only that ClusterRole.
+Its rights on pods, secrets and the rest stay limited to the namespaces where
+that RoleBinding exists.
+*/ -}}
+{{- if include "k8shell.organizationsEnabled" . }}
+{{- $workspaceRole := include "k8shell.provisionerWorkspaceClusterRole" . }}
+{{- $name := printf "provisioner-org-namespaces-%s" .Release.Namespace | trunc 63 | trimSuffix "-" }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ $workspaceRole }}
+rules:{{ include "k8shell.provisionerWorkspaceRules" . }}{{ include "k8shell.provisionerQuotaRules" . }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ $name }}
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "watch", "create", "patch", "delete"]
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["rolebindings"]
+    verbs: ["get", "create", "delete"]
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["clusterroles"]
+    verbs: ["bind"]
+    resourceNames: [{{ $workspaceRole | quote }}]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ $name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ $name }}
+subjects:
+  - kind: ServiceAccount
+    name: provisioner
+    namespace: {{ .Release.Namespace }}
+{{- end }}
