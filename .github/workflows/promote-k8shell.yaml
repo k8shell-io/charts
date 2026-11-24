@@ -1,0 +1,119 @@
+name: Promote k8shell chart to ghcr.io
+# Publishes a tested release of the k8shell chart on ghcr.io (oci://ghcr.io/k8shell-io/charts/k8shell),
+# where the quickstart and public users install from. The chart is pulled from the internal registry,
+# its image repositories are rewritten from registry.k8shell.io to ghcr.io/k8shell-io and its pull
+# credentials dropped, and it is pushed as the same version. Every image it references must already
+# be on ghcr.io with the digest it has in the internal registry (the services' promote workflows).
+# Run by the release process after the release passed its scratch-namespace test (k8shell-io/k8shell#18).
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Chart version to promote (X.Y.Z)"
+        required: true
+      dry_run:
+        description: "Rewrite and check only; push nothing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: promote-k8shell-chart
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: k8shell-runner
+
+    steps:
+      # registry logins in configs of this job only (the runner is shared)
+      - name: Private registry configs
+        run: |
+          mkdir -p "$RUNNER_TEMP/docker-config"
+          echo "DOCKER_CONFIG=$RUNNER_TEMP/docker-config" >> "$GITHUB_ENV"
+          echo "HELM_REGISTRY_CONFIG=$RUNNER_TEMP/helm-registry.json" >> "$GITHUB_ENV"
+
+      - name: Check the version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::not a release version: $VERSION"; exit 1; }
+
+      - name: Install crane
+        uses: imjasonh/setup-crane@v0.4
+
+      - name: Log in to the registries
+        env:
+          INTERNAL: ${{ secrets.REGISTRY_EXT }}
+          HARBOR_USER: ${{ secrets.HARBOR_USER }}
+          HARBOR_PASSWORD: ${{ secrets.HARBOR_PASSWORD }}
+          GHCR_TOKEN: ${{ secrets.GHCR_PUSH_TOKEN }}
+        run: |
+          printf '%s' "$HARBOR_PASSWORD" | helm registry login "$INTERNAL" -u "$HARBOR_USER" --password-stdin
+          printf '%s' "$HARBOR_PASSWORD" | crane auth login "$INTERNAL" -u "$HARBOR_USER" --password-stdin
+          printf '%s' "$GHCR_TOKEN" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
+          printf '%s' "$GHCR_TOKEN" | crane auth login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Pull the released chart
+        env:
+          INTERNAL: ${{ secrets.REGISTRY_EXT }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          # release versions are immutable on ghcr.io
+          if crane digest "ghcr.io/k8shell-io/charts/k8shell:$VERSION" >/dev/null 2>&1; then
+            echo "::error::k8shell $VERSION is already on ghcr.io"
+            exit 1
+          fi
+          mkdir -p work dist
+          helm pull "oci://$INTERNAL/charts/k8shell" --version "$VERSION" --untar -d work
+          grep -q "^version: $VERSION\$" work/k8shell/Chart.yaml
+
+      - name: Rewrite the images to ghcr.io
+        run: bin/ghcr-chart-rewrite.sh work/k8shell
+
+      - name: Check every image is on ghcr.io with the tested digest
+        run: |
+          fail=0
+          while read -r src dst; do
+            want=$(crane digest "$src") || { echo "::error::$src not found"; fail=1; continue; }
+            have=$(crane digest "$dst" 2>/dev/null) || { echo "::error::$dst missing on ghcr.io (promote its service first)"; fail=1; continue; }
+            if [ "$want" != "$have" ]; then
+              echo "::error::$dst is $have, the tested $src is $want"
+              fail=1
+            else
+              echo "ok  $dst  $have"
+            fi
+          done < work/images.txt
+          exit $fail
+
+      - name: Package and push
+        if: ${{ !inputs.dry_run }}
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          helm package work/k8shell -d dist --version "$VERSION"
+          helm push "dist/k8shell-$VERSION.tgz" oci://ghcr.io/k8shell-io/charts
+
+      - name: Summary
+        if: always()
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          {
+            echo "## ${{ inputs.dry_run && 'Dry run: ' || '' }}k8shell chart $VERSION → oci://ghcr.io/k8shell-io/charts/k8shell"
+            echo ""
+            echo "| Internal image | ghcr.io |"
+            echo "|---|---|"
+            [ -f work/images.txt ] && awk '{print "| `" $1 "` | `" $2 "` |"}' work/images.txt
+            echo ""
+            echo '```bash'
+            echo "helm install k8shell oci://ghcr.io/k8shell-io/charts/k8shell --version $VERSION"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Log out
+        if: always()
+        run: rm -rf "$DOCKER_CONFIG" "$HELM_REGISTRY_CONFIG"

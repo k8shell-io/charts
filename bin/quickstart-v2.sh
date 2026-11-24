@@ -10,7 +10,7 @@
 # prerequisite checks, key and password generation, namespace setup, and
 # prints connection instructions on success.
 #
-# Version : 2.0.0
+# Version : 2.1.0
 # Authors : k8shell Authors
 # License : GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later)
 #           https://www.gnu.org/licenses/agpl-3.0.html
@@ -22,19 +22,22 @@ set -euo pipefail
 # k8shell quickstart v2
 # ---------------------------------------------------------------------------
 
-SCRIPT_VERSION="2.0.0"
+SCRIPT_VERSION="2.1.0"
 # Chart major version this script installs: the newest 2.x version in the
 # registry unless --version is given (Helm's own "latest" would pick the
 # highest version of any series).
 CHART_SERIES="2"
 CHART_VERSION=""
-CHART_REF="oci://registry.k8shell.io/charts/k8shell"
+# the public release on ghcr.io; internal installs and release tests pass
+# --chart oci://registry.k8shell.io/charts/k8shell --registry registry.k8shell.io
+CHART_REF="oci://ghcr.io/k8shell-io/charts/k8shell"
 VALUES_FILES=()
 ASSUME_YES="false"
 DRY_RUN="false"
 # Registry of the images (and of the chart, when the chart reference points
-# there). Empty: public images, no credentials.
-REGISTRY_HOST="registry.k8shell.io"
+# there) that needs credentials. Empty (the default): public images, no
+# credentials, as in the chart published on ghcr.io.
+REGISTRY_HOST=""
 REGISTRY_USERNAME="${K8SHELL_REGISTRY_USERNAME:-}"
 REGISTRY_PASSWORD="${K8SHELL_REGISTRY_PASSWORD:-}"
 MODE=""
@@ -83,8 +86,8 @@ Options:
   -f, --values FILE          Additional values file (repeatable), applied last
   -y, --yes                  Do not ask for confirmation
       --dry-run              Show the plan and the values, install nothing
-      --registry HOST        Registry of the images (default: $REGISTRY_HOST);
-                             "" for public images without credentials
+      --registry HOST        Private registry of the images, with credentials
+                             (default: none, public images from ghcr.io)
       --registry-username U  Username for the registry (or K8SHELL_REGISTRY_USERNAME)
       --registry-password P  Its password (or K8SHELL_REGISTRY_PASSWORD)
   -n, --namespace NS         k8shell release namespace (default: $DEFAULT_NAMESPACE;
@@ -615,7 +618,7 @@ fi
 
 # the nodes' architectures must be in k8shell's images (checked when nodes
 # can be read): the images the chart and the values files name, in the
-# registry of the images
+# private registry or on ghcr.io
 ARCH_NOTE="not checked (you may not read nodes)"
 if [ "$CAN_LIST_NODES" = "yes" ]; then
     NODE_ARCHS=$(kubectl get nodes -o jsonpath='{range .items[*]}{.status.nodeInfo.architecture}{"\n"}{end}' 2>/dev/null | sort -u | tr '\n' ' ')
@@ -625,7 +628,7 @@ if [ "$CAN_LIST_NODES" = "yes" ]; then
         --set provisioner.targetNamespace=check --set sshProxy.serverKey.value=check \
         --set postgresql.username.value=check --set postgresql.password.value=check --set nats.password.value=check \
         ${vf[@]+"${vf[@]}"} 2>/dev/null |
-        grep -oE "${REGISTRY_HOST:-registry.k8shell.io}/[a-z0-9._/-]+:[A-Za-z0-9._-]+" | sort -u || true)
+        grep -oE "(${REGISTRY_HOST:-registry.k8shell.io}|ghcr\.io/k8shell-io)/[a-z0-9._/-]+:[A-Za-z0-9._-]+" | sort -u || true)
     if [ -z "$images" ]; then
         ARCH_NOTE="nodes ${NODE_ARCHS% }; images not checked (the chart could not be rendered)"
     else
