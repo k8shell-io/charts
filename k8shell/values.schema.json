@@ -794,6 +794,17 @@
                         "type": "string"
                     }
                 },
+                "injectDevrun": {
+                    "type": "object",
+                    "description": "Hot reload in injected workspaces: wrap the workload's first container in devrun.",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean",
+                            "default": true
+                        }
+                    }
+                },
                 "liveResize": {
                     "type": "boolean",
                     "default": true

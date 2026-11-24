@@ -51,6 +51,11 @@ data:
       - {{ . }}
     {{- end }}
     {{- end }}
+    {{- if and .Values.provisioner.injectNamespaces (eq (toString (dig "injectDevrun" "enabled" true .Values.provisioner)) "false") }}
+    # hot reload with devrun off for injected workspaces (provisioner.injectDevrun.enabled)
+    injectDevrun:
+      enabled: false
+    {{- end }}
 
     {{- /* Node label keys whose values are discovered from cluster nodes and offered as
     placement options (see the GetNodeSelectorOptions RPC). Requires get/list/watch
