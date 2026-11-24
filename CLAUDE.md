@@ -20,11 +20,10 @@ helm lint <chart>/ --strict
 # Install/upgrade from the OCI registry
 helm install k8shell oci://ghcr.io/k8shell-io/charts/k8shell --namespace k8shell-system --create-namespace
 
-# Quickstart (generates keys, creates namespace, runs helm install)
+# Quickstart (k8shell 2.x, served at https://get.k8shell.io): discovers the
+# user's permissions and proposes a mode (full, no-cluster-rbac,
+# namespace-admin), generates keys, runs helm install; --dry-run shows the plan
 ./bin/quickstart.sh --help
-# Quickstart for k8shell 2.x: discovers the user's permissions and proposes a
-# mode (full, no-cluster-rbac, namespace-admin); --dry-run shows the plan
-./bin/quickstart-v2.sh --help
 ```
 
 ## Repository Structure
