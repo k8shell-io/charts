@@ -40,12 +40,15 @@ Installs k8shell into your cluster with sensible defaults. Run with `--help` for
 ### Quickstart for k8shell 2.x
 
 ```bash
-export K8SHELL_REGISTRY_USERNAME=... K8SHELL_REGISTRY_PASSWORD=...
 ./bin/quickstart-v2.sh            # --dry-run to see the plan without installing
 ```
 
-Installs the k8shell 2.x chart (the newest 2.x version in the registry unless
-`--version` is given). It first checks what your Kubernetes user may do and
+Installs the k8shell 2.x chart released on ghcr.io
+(`oci://ghcr.io/k8shell-io/charts/k8shell`, the newest 2.x version unless
+`--version` is given), with public images and no registry credentials. For the
+internal registry, pass `--chart oci://registry.k8shell.io/charts/k8shell
+--registry registry.k8shell.io` and the credentials in
+`K8SHELL_REGISTRY_USERNAME` / `K8SHELL_REGISTRY_PASSWORD`. It first checks what your Kubernetes user may do and
 proposes a mode, which `--mode` overrides:
 
 | Mode | When | What you get |

@@ -25,10 +25,12 @@
 #    Kubernetes secret with the specified name and key
 
 # imageRegistry defines a private container registry used to create an image pull secret (regcred).
-# The images are pulled from registry.k8shell.io for now, which requires
-# credentials: set username/password (the chart creates the pull Secret) or
-# existingSecret. Workspaces pull k8shelld from it too: set
-# provisioner.privateRegistry as well (quickstart.sh does both).
+# This chart's images are in the internal registry registry.k8shell.io, which
+# requires credentials: set username/password (the chart creates the pull
+# Secret) or existingSecret. Workspaces pull k8shelld from it too: set
+# provisioner.privateRegistry as well (quickstart-v2.sh does both). The release
+# published on ghcr.io (oci://ghcr.io/k8shell-io/charts/k8shell) uses the public
+# images on ghcr.io/k8shell-io instead, with an empty host: no credentials.
 imageRegistry:
   host: registry.k8shell.io
 
