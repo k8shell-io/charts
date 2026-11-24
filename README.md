@@ -155,6 +155,52 @@ first. `k8shell/rbac-tests/run.sh` checks which cluster-scoped objects each
 combination renders. `bin/quickstart-v2.sh` finds out which of these
 installations your permissions allow and sets the values for you.
 
+## Hot reload in injected workspaces
+
+A workspace can be injected into an existing workload (a Deployment,
+StatefulSet or DaemonSet in a namespace listed in `provisioner.injectNamespaces`):
+the provisioner adds the workspace as a sidecar to the workload's pods, so you
+can work on a service next to it. To let you run a new build of the service
+there without rebuilding its image or restarting the pod, the provisioner also
+wraps the service container in **devrun**, a small supervisor shipped in the
+k8shelld image:
+
+- An init container copies devrun into a shared `emptyDir` mounted at
+  `/devrun` in the service container and in the workspace.
+- The service container's command becomes
+  `/devrun/devrun run --dir /devrun -- <original command>`. The original
+  command comes from the container spec, or else from the image's
+  `ENTRYPOINT`/`CMD`, read from the registry with the pod's image pull
+  secrets. The working directory, user and environment are unchanged, and the
+  service's output still goes to `kubectl logs`.
+- The container's liveness probe is removed while the workspace is injected:
+  a debugger breakpoint or a reload would otherwise fail it and restart the
+  container. Readiness probes stay.
+- Ejecting the workspace restores the workload as it was.
+
+In the workspace, `/devrun/devrun reload <binary>` runs a new build with the
+original arguments and waits until it has kept running for two seconds (or
+reports how it exited); `/devrun/devrun reload --original` goes back to the
+image's binary, and `/devrun/devrun status` shows what runs. The k8shell
+services wrap this in `make reload` and `make reload-original`. If a build
+crashes, devrun restarts it with a backoff while the container keeps running,
+and a container restart runs the last reloaded build again. Files the build
+reads at startup from the image (for example database migrations) are still
+the image's.
+
+| Setting | Values |
+|---|---|
+| `provisioner.injectDevrun.enabled` | `true` (default): wrap the service container; `false`: inject the workspace only |
+| Annotation `k8shell.io/devrun-container` on the workload | the container to wrap when the pod has several; otherwise the container named like the workload, or the first one |
+
+When the command can't be determined (an unreachable registry, missing
+credentials), the workspace is injected without devrun and the provisioning
+progress shows a warning. A command that runs a shell (`sh -c ...`) is wrapped
+but can't be reloaded: devrun replaces the program the container starts, so
+the container must start the service binary itself. No extra RBAC is needed:
+the provisioner already patches the workload and reads the pull secrets with
+its inject rights.
+
 ## License limits
 
 Without a license k8shell runs the free tier: 1 organization, 3 users and 5

@@ -390,8 +390,9 @@ provisioner:
   k8shelld:
     image:
       repository: registry.k8shell.io/k8shell-base/k8shelld
-      # multi-arch (linux/amd64, linux/arm64) from v0.17.7
-      tag: v0.17.7
+      # multi-arch (linux/amd64, linux/arm64) from v0.17.7; devrun (hot reload in
+      # injected workspaces) from v0.17.8
+      tag: v0.17.8
 
   # blueprintsConfigMap is the name of an existing ConfigMap with blueprint
   # files that replaces the chart's defaults (the ConfigMap blueprint-base-files
@@ -448,6 +449,21 @@ provisioner:
   # with identity.kubernetes.saToken.enabled) get a ClusterRole instead.
   # injectNamespaces:
   #   - default
+
+  # injectDevrun: hot reload in injected workspaces. When a workspace is
+  # injected into a workload, its first container is wrapped in devrun (shipped
+  # in the k8shelld image), so the workspace can run a new build of the service
+  # without restarting the container or the pod, and without a special
+  # entrypoint in the service image. The command comes from the container spec,
+  # or from the image config in the registry (read with the pod's image pull
+  # secrets). Liveness probes of the wrapped container are removed while the
+  # workspace is injected. Ejecting the workspace restores the workload. In a
+  # pod with several containers, the workload's annotation
+  # k8shell.io/devrun-container names the one to wrap (default: the container
+  # named like the workload, else the first). See "Hot reload in injected
+  # workspaces" in the README.
+  injectDevrun:
+    enabled: true
 
   # Node label keys whose values are discovered from cluster nodes and offered as
   # placement options (see the GetNodeSelectorOptions RPC). When non-empty, a
