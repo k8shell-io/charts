@@ -390,8 +390,9 @@ provisioner:
   k8shelld:
     image:
       repository: registry.k8shell.io/k8shell-base/k8shelld
-      # multi-arch (linux/amd64, linux/arm64) from v0.17.7
-      tag: v0.17.7
+      # multi-arch (linux/amd64, linux/arm64) from v0.17.7; devrun (hot reload in
+      # injected workspaces) from v0.17.8
+      tag: v0.17.8
 
   # blueprintsConfigMap is the name of an existing ConfigMap with blueprint
   # files that replaces the chart's defaults (the ConfigMap blueprint-base-files
