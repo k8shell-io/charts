@@ -32,15 +32,8 @@ Helm charts for [k8shell](https://k8shell.io) — Cloud-native Development Envir
 ## Quickstart
 
 ```bash
-./bin/quickstart.sh
-```
-
-Installs k8shell into your cluster with sensible defaults. Run with `--help` for available options.
-
-### Quickstart for k8shell 2.x
-
-```bash
-./bin/quickstart-v2.sh            # --dry-run to see the plan without installing
+curl -sSfL https://get.k8shell.io | bash               # or ./bin/quickstart.sh
+curl -sSfL https://get.k8shell.io | bash -s -- --dry-run   # the plan, nothing installed
 ```
 
 Installs the k8shell 2.x chart released on ghcr.io
@@ -155,7 +148,7 @@ provisioner:
 On clusters with Cilium, workspaces also need CiliumNetworkPolicies, which
 Cilium doesn't add to `admin` by default: a cluster admin aggregates them
 first. `k8shell/rbac-tests/run.sh` checks which cluster-scoped objects each
-combination renders. `bin/quickstart-v2.sh` finds out which of these
+combination renders. `bin/quickstart.sh` finds out which of these
 installations your permissions allow and sets the values for you.
 
 ## Hot reload in injected workspaces
