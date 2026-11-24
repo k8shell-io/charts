@@ -360,7 +360,8 @@ detect_ingress_class() {
 # (anonymous without credentials); empty when the registry needs none.
 oci_token() {
     local registry="$1" repo="$2" challenge realm service auth=()
-    challenge=$(curl -sI "https://$registry/v2/" | tr -d '\r' | grep -i '^www-authenticate: bearer' || true)
+    # GET, not HEAD: ghcr.io answers HEAD /v2/ with 405 and no challenge
+    challenge=$(curl -s -D - -o /dev/null "https://$registry/v2/" | tr -d '\r' | grep -i '^www-authenticate: bearer' || true)
     [ -n "$challenge" ] || return 0
     realm=$(echo "$challenge" | sed -n 's/.*realm="\([^"]*\)".*/\1/p')
     service=$(echo "$challenge" | sed -n 's/.*service="\([^"]*\)".*/\1/p')
