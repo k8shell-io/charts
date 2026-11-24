@@ -268,7 +268,11 @@ ensure_password() {
     local file="$1"
     if [ ! -f "$file" ]; then
         info "Generating password: $file"
-        (umask 077; openssl rand -hex 24 > "$file")
+        # a letter first: the NATS server reads NATS_K8SHELL_PASSWORD as an
+        # unquoted config value, and one starting with a digit parses as a
+        # number and stops the server ("Expected a top-level value to end
+        # with a new line")
+        (umask 077; printf 'k%s\n' "$(openssl rand -hex 24)" > "$file")
     fi
     cat "$file"
 }
